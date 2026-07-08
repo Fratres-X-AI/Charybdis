@@ -23,6 +23,7 @@ def test_pf_unit_predict_update():
     assert np.all(np.linalg.eigvalsh(C) >= -1e-9)
 
 
+@pytest.mark.slow
 def test_pf_competitive_nominal():
     cfg = SimConfig(duration=45.0, n_particles=500)
     res = run_simulation(cfg)
@@ -33,6 +34,7 @@ def test_pf_competitive_nominal():
     assert s["pf_final_m"] < 100.0
 
 
+@pytest.mark.slow
 def test_pf_recovers_large_initial_error():
     """TRN-only with a 450 m initial error: PF converges from a wide prior."""
     base = SimConfig(duration=55.0, init_pos_error=450.0, init_pos_std=500.0,
@@ -43,6 +45,7 @@ def test_pf_recovers_large_initial_error():
         assert s["pf_final_m"] < s["ins_final_m"]
 
 
+@pytest.mark.slow
 def test_pmf_recovers_large_initial_error():
     """Marginalized PMF: grid TRN resolves large initial position ambiguity."""
     base = SimConfig(duration=55.0, init_pos_error=450.0, init_pos_std=500.0,
@@ -53,6 +56,7 @@ def test_pmf_recovers_large_initial_error():
         assert s["pmf_final_m"] < s["ins_final_m"]
 
 
+@pytest.mark.slow
 def test_montecarlo_cep_and_nees():
     cfg = SimConfig(duration=45.0, n_particles=400)
     mc = run_montecarlo(cfg, n_runs=4)

@@ -1,9 +1,12 @@
 from dataclasses import replace
 
+import pytest
+
 from charybdis.stress import (default_stress_cases, evaluate_gates, run_stress_case,
                               run_stress_harness, stress_report)
 
 
+@pytest.mark.slow
 def test_stress_case_runs_and_reports():
     case = next(c for c in default_stress_cases() if c.name == "trn_only")
     case = replace(case, sim=replace(case.sim, duration=35.0, n_particles=400))
@@ -15,6 +18,7 @@ def test_stress_case_runs_and_reports():
     assert len(r.gates) > 0
 
 
+@pytest.mark.slow
 def test_stress_harness_subset():
     cases = []
     for c in default_stress_cases():

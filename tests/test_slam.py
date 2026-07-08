@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from charybdis import SimConfig, Terrain, generate_truth
 from charybdis.slam import (SlamState, gicp_align, init_slam, optimize,
@@ -17,6 +18,7 @@ def test_gicp_recovers_translation():
     assert np.linalg.norm(t - t_true) < 8.0
 
 
+@pytest.mark.slow
 def test_slam_loop_reduces_error():
     cfg = SimConfig(duration=35.0, seed=4)
     terrain = Terrain.synthetic(cfg)
