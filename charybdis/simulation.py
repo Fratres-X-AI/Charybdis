@@ -55,9 +55,10 @@ class SimResult:
         return out
 
 
-def run_simulation(cfg: SimConfig | None = None) -> SimResult:
+def run_simulation(cfg: SimConfig | None = None,
+                   terrain: Terrain | None = None) -> SimResult:
     cfg = cfg or SimConfig()
-    terrain = Terrain.synthetic(cfg)
+    terrain = terrain or Terrain.synthetic(cfg)
     truth = generate_truth(cfg, terrain)
     imu = IMU(cfg, terrain)
 
