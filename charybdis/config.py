@@ -35,6 +35,7 @@ class SimConfig:
     radar_noise: float = 1.5        # radar altimeter (AGL) noise std [m]
 
     # --- TERCOM ---
+    use_tercom: bool = True         # batch correlation position fixes (off => grid/TRN only)
     tercom_period: float = 6.0      # seconds between correlation fixes
     tercom_strip: int = 48          # samples per correlation strip
     tercom_search: float = 450.0    # +/- search half-window [m]
@@ -57,6 +58,18 @@ class SimConfig:
     pf_vel_floor: float = 0.4       # min velocity roughening [m/s]
     pf_inject: float = 0.25         # fraction of particles relocalised on a fix
     pf_inject_std_max: float = 160.0  # skip injection if fix worse than this [m]
+
+    # --- Point-mass filter (grid Bayesian, terrain-referenced) ---
+    use_pmf: bool = True            # run the marginalized PMF alongside EKF/PF
+    pmf_res: float = 25.0           # grid spacing [m]
+    pmf_halfwidth: float = 500.0    # grid half-window [m] (auto-grows w/ init_pos_std)
+    pmf_meas_dof: float = 5.0       # Student-t dof for robust terrain likelihood
+    pmf_process_infl: float = 1.0   # process-noise inflation (anti-overconfidence)
+    pmf_meas_infl: float = 1.5      # terrain measurement-noise inflation (NEES/robustness)
+    pmf_use_tercom: bool = False    # feed batch TERCOM fixes to the PMF; off by default
+                                    # since the grid update already does robust,
+                                    # full-likelihood terrain referencing and a single
+                                    # correlation peak can be ambiguous/wrong
 
     def steps(self) -> int:
         return int(round(self.duration / self.dt))
