@@ -24,6 +24,8 @@ from .imu_model import (IMU_GRADES, allan_deviation, apply_imu_grade,
 from .slam import (SlamState, gicp_align, init_slam, slam_step, optimize,
                    position_error)
 from .swarm import SwarmConfig, SwarmResult, montecarlo_swarm, run_swarm
+from .bathy import (load_bathymetry, load_gebco_netcdf, load_npz,
+                    terrain_from_grid, terrain_suitability)
 
 __all__ = [
     "SimConfig",
@@ -68,4 +70,9 @@ __all__ = [
     "SwarmResult",
     "run_swarm",
     "montecarlo_swarm",
+    "load_bathymetry",
+    "load_gebco_netcdf",
+    "load_npz",
+    "terrain_from_grid",
+    "terrain_suitability",
 ]
