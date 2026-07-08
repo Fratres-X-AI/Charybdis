@@ -80,7 +80,43 @@ def load_bathymetry(path: str,
             b = ds.bounds
             return GriddedBathymetry(z, (b.left, b.right, b.bottom, b.top))
 
+    if ext in (".nc", ".netcdf"):
+        return load_gebco_netcdf(path, extent=extent)
+
     raise ValueError(f"Unsupported bathymetry format: {ext}")
+
+
+def load_gebco_netcdf(path: str,
+                      extent: tuple[float, float, float, float] | None = None,
+                      lon_var: str = "lon", lat_var: str = "lat",
+                      z_var: str = "elevation") -> GriddedBathymetry:
+    """Load a GEBCO (or compatible) NetCDF tile into a gridded sampler."""
+    try:
+        import netCDF4
+    except ImportError as exc:
+        raise RuntimeError("NetCDF support requires 'netCDF4'") from exc
+    with netCDF4.Dataset(path) as ds:  # pragma: no cover - needs file
+        lon = np.asarray(ds.variables[lon_var][:], float)
+        lat = np.asarray(ds.variables[lat_var][:], float)
+        z = np.asarray(ds.variables[z_var][:], float)
+        if z.ndim == 3:
+            z = z[0]
+    e = extent or (float(lon.min()), float(lon.max()),
+                   float(lat.min()), float(lat.max()))
+    return GriddedBathymetry(z, e)
+
+
+def export_gebco_region(path: str, out_npz: str, extent: tuple[float, float, float, float],
+                          n: int = 200) -> str:
+    """Crop/resample a GEBCO NetCDF to a simulation-sized ``.npz`` tile."""
+    grid = load_gebco_netcdf(path, extent=extent)
+    x0, x1, y0, y1 = extent
+    xs = np.linspace(x0, x1, n)
+    ys = np.linspace(y0, y1, n)
+    gx, gy = np.meshgrid(xs, ys)
+    z = grid(gx, gy)
+    np.savez(out_npz, z=z, extent=np.array(extent))
+    return out_npz
 
 
 def sample_synthetic_to_grid(func, extent=(-10.0, 135.0, -10.0, 135.0),

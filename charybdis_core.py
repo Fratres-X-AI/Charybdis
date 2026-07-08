@@ -142,6 +142,10 @@ class SimParams:
     spoof_radius: float = 12.0
     spoof_amp: float = 45.0          # amplitude of injected false micro-relief
 
+    # --- learned TCM (optional torch) ------------------------------------ #
+    use_nn_tcm: bool = False
+    nn_model_path: str = "models/tcm_cnn.pt"
+
 
 @dataclass
 class SimState:
@@ -486,13 +490,26 @@ def _spoof_distort(s: SimState, params: SimParams | None):
 def _run_tcm(s: SimState, params: SimParams | None = None) -> None:
     """Contour match on entry into a lock radius, with spoof-resistant gating."""
     gate = getattr(params, "tcm_quality_gate", 0.0) if params else 0.0
+    use_nn = bool(params and getattr(params, "use_nn_tcm", False))
+    distort = _spoof_distort(s, params)
     for name, center in ANOMALIES.items():
         d = float(np.hypot(*(s.true_pos - center)))
         if d <= TCM_RADIUS:
             if name not in s.active_features:
                 s.active_features.add(name)
-                corrected, peak, _ = tcm_cross_correlation(
-                    s.true_pos, s.est_pos, distort=_spoof_distort(s, params))
+                if use_nn:
+                    try:
+                        import charybdis_nn as nn
+                        corrected, peak, _ = nn.tcm_nn_match(
+                            s.true_pos, s.est_pos, bathymetry,
+                            model_path=getattr(params, "nn_model_path", None),
+                            distort=distort)
+                    except Exception:
+                        corrected, peak, _ = tcm_cross_correlation(
+                            s.true_pos, s.est_pos, distort=distort)
+                else:
+                    corrected, peak, _ = tcm_cross_correlation(
+                        s.true_pos, s.est_pos, distort=distort)
                 if peak < gate:
                     s.spoof_detected = True
                     _log(s, "ALERT", f"{name}: LOW-CONFIDENCE contour r={peak:.2f} "
