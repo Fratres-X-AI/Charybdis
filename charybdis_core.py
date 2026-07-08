@@ -1,4 +1,4 @@
-"""BLACK SEA SENTRY - GNC core for GPS-denied UUV navigation and TCM.
+"""CHARYBDIS - GNC core for GPS-denied UUV navigation and TCM.
 
 Pure NumPy engine, fully decoupled from any UI. Three isolated scopes:
 
@@ -15,6 +15,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import numpy as np
+
+import charybdis_sensors as sensors
+import charybdis_tracking as tracking
+import charybdis_autonomy as autonomy
 
 # --------------------------------------------------------------------------- #
 #  MISSION CONSTANTS
@@ -48,12 +52,8 @@ _ANOMALY_SIG: dict[str, tuple[float, float]] = {
 # --------------------------------------------------------------------------- #
 #  BATHYMETRY (stored high-fidelity sea-floor map)
 # --------------------------------------------------------------------------- #
-def bathymetry(x, y):
-    """Sea-floor depth [m] at continuous coord(s). Vectorised over arrays.
-
-    A gently deepening regional slope with three localized Gaussian anomalies
-    that give the seabed a locally unique, correlatable contour signature.
-    """
+def _synthetic_bathymetry(x, y):
+    """Analytic fallback map: deepening slope + three Gaussian anomalies."""
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
     z = -120.0 - 0.35 * (x + y)
@@ -65,15 +65,82 @@ def bathymetry(x, y):
     return z
 
 
+_BATHY_PROVIDER = None   # optional real-data override (see charybdis_bathy)
+
+
+def set_bathymetry(func) -> None:
+    """Swap in a real bathymetric field (any callable ``f(x, y) -> depth``)."""
+    global _BATHY_PROVIDER
+    _BATHY_PROVIDER = func
+
+
+def reset_bathymetry() -> None:
+    """Restore the built-in synthetic map."""
+    global _BATHY_PROVIDER
+    _BATHY_PROVIDER = None
+
+
+def bathymetry(x, y):
+    """Sea-floor depth [m] at continuous coord(s), vectorised over arrays.
+
+    Uses a loaded real-data provider when one is installed via
+    :func:`set_bathymetry`, otherwise the analytic synthetic map.
+    """
+    if _BATHY_PROVIDER is not None:
+        return _BATHY_PROVIDER(x, y)
+    return _synthetic_bathymetry(x, y)
+
+
 # --------------------------------------------------------------------------- #
 #  PARAMETERS AND STATE
 # --------------------------------------------------------------------------- #
 @dataclass
 class SimParams:
-    """Operator-tunable degradation factors (sidebar sliders)."""
+    """Operator-tunable degradation factors and autonomy configuration."""
+    # --- core degradation (sidebar sliders) ------------------------------- #
     tidal: float = 1.0      # Tidal Current Intensity
     drift: float = 12.0     # IMU Drift Coefficient
     dvl: float = 1.0        # DVL Noise Factor
+
+    # --- DVL/IMU sensor realism ------------------------------------------- #
+    dvl_scale: float = 0.01     # velocity scale-factor 1-sigma (sound-speed cal)
+    dvl_dropout: float = 0.0    # per-beam bottom-lock dropout probability
+
+    # --- autonomy master switches ---------------------------------------- #
+    autonomy: bool = False      # enable the mission FSM / active behaviours
+    adaptive_tcm: bool = True   # divert to a contour when uncertainty is high
+    acoustic_mgmt: bool = True  # manage passive/active acoustic posture
+    avoid: bool = True          # reactive vertical terrain avoidance
+
+    # --- mission / endurance --------------------------------------------- #
+    inspect_ticks: int = 8
+    arrival_radius: float = ARRIVAL_RADIUS
+    endurance: float = 320.0    # cruise endurance [ticks] at full power
+    rtb_frac: float = 0.20      # battery fraction that forces return-to-base
+
+    # --- terrain-fix triggering ------------------------------------------ #
+    tcm_trigger: float = 18.0       # 1-sigma error [m] that triggers a divert
+    tcm_clear: float = 4.0          # error [m] considered "fixed"
+    tcm_quality_gate: float = 0.55  # min correlation peak to accept a fix
+    active_ping_trigger: float = 40.0
+    threat_level: float = 0.3       # 0 (benign) .. 1 (hostile)
+    threat_tolerance: float = 0.6   # max threat at which we will radiate
+
+    # --- multi-contact tracking ------------------------------------------ #
+    n_contacts: int = 3
+
+    # --- vertical terrain avoidance (bottom-following) ------------------- #
+    cruise_altitude: float = 40.0   # nominal height above seabed [m]
+    min_clearance: float = 20.0     # avoidance alerts below this altitude
+    max_depth_shallow: float = -8.0 # shallowest allowed depth (no broaching)
+    max_depth_rate: float = 6.0     # max vertical rate [m/tick]
+    lookahead: float = 10.0         # forward-look sonar range [units]
+
+    # --- adversarial spoofing scenario ----------------------------------- #
+    spoof: bool = False
+    spoof_center: tuple = (70.0, 85.0)
+    spoof_radius: float = 12.0
+    spoof_amp: float = 45.0          # amplitude of injected false micro-relief
 
 
 @dataclass
@@ -97,11 +164,43 @@ class SimState:
     last_deflection: float = 0.0
     drift_rate: float = 0.0
     rng: np.random.Generator = field(default_factory=lambda: np.random.default_rng())
+    # --- autonomy / subsystem state --------------------------------------- #
+    rng_aux: np.random.Generator = field(default_factory=lambda: np.random.default_rng())
+    mission_state: str = "PATROL"
+    mission_target: np.ndarray = field(default_factory=lambda: WAYPOINT.copy())
+    wp_idx: int = 0
+    inspect_ticks: int = 0
+    energy_frac: float = 1.0
+    vehicle_depth: float = -60.0
+    altitude: float = 0.0
+    avoid_active: bool = False
+    acoustic_mode: str = "PASSIVE"
+    exposure: float = 0.0
+    dvl_quality: float = 1.0
+    heading_bias: float = 0.0
+    last_est_vel: np.ndarray = field(default_factory=lambda: np.zeros(2))
+    world: object = None
+    spoof_detected: bool = False
 
 
-def init_state(seed: int | None = None) -> SimState:
+def _geom() -> dict:
+    """Mission geometry: inspect the three contours, then push to the waypoint."""
+    return {
+        "route": [ANOMALIES["TRENCH ALPHA"], ANOMALIES["RIDGE BRAVO"],
+                  ANOMALIES["SEAMOUNT CHARLIE"], WAYPOINT],
+        "base": START, "final": WAYPOINT, "anomalies": ANOMALIES,
+    }
+
+
+def init_state(seed: int | None = None, params: SimParams | None = None) -> SimState:
+    params = params or SimParams()
     s = SimState()
     s.rng = np.random.default_rng(seed)
+    s.rng_aux = np.random.default_rng(None if seed is None else seed + 4041)
+    s.vehicle_depth = float(bathymetry(*START)) + params.cruise_altitude
+    s.altitude = s.vehicle_depth - float(bathymetry(*START))
+    if params.n_contacts > 0:
+        s.world = tracking.spawn(params.n_contacts, s.rng_aux)
     s.telemetry.append(_telemetry_row(s))
     _log(s, "INFO", "Nav filter initialised. Bottom-lock acquired. Departing origin.")
     return s
@@ -110,9 +209,9 @@ def init_state(seed: int | None = None) -> SimState:
 # --------------------------------------------------------------------------- #
 #  1. TRUE PHYSICS
 # --------------------------------------------------------------------------- #
-def guidance_velocity(pos: np.ndarray) -> np.ndarray:
-    """Commanded body velocity: steer straight at the waypoint, cap speed."""
-    to_wp = WAYPOINT - pos
+def guidance_velocity(pos: np.ndarray, target: np.ndarray = WAYPOINT) -> np.ndarray:
+    """Commanded body velocity: steer straight at the target, cap speed."""
+    to_wp = np.asarray(target, float) - pos
     dist = float(np.hypot(*to_wp))
     if dist < 1e-9:
         return np.zeros(2)
@@ -131,16 +230,14 @@ def ocean_current(tick: int, tidal: float) -> np.ndarray:
 # --------------------------------------------------------------------------- #
 def dvl_measure(true_vel: np.ndarray, params: SimParams,
                 rng: np.random.Generator) -> np.ndarray:
-    """Doppler Velocity Log: true seabed-relative velocity + white noise."""
-    std = params.dvl * 0.05
-    return true_vel + rng.normal(0.0, std, size=2)
+    """Compat shim: horizontal velocity from the Janus beam model."""
+    return sensors.dvl_beam_measure(true_vel, params, rng).velocity
 
 
 def imu_walk(bias: np.ndarray, params: SimParams,
              rng: np.random.Generator) -> np.ndarray:
     """Advance the IMU accelerometer/rate bias by one random-walk increment."""
-    std = 0.002 * params.drift
-    return bias + rng.normal(0.0, std, size=2)
+    return sensors.imu_velocity_bias_walk(bias, params, rng)
 
 
 # --------------------------------------------------------------------------- #
@@ -201,7 +298,8 @@ def ellipse_points(center: np.ndarray, P: np.ndarray, n: int = 72,
 # --------------------------------------------------------------------------- #
 def tcm_cross_correlation(true_pos: np.ndarray, est_pos: np.ndarray,
                           patch: int = 9, span: float = 6.0,
-                          search: float = 10.0, step: float = 0.5
+                          search: float = 10.0, step: float = 0.5,
+                          distort=None
                           ) -> tuple[np.ndarray, float, np.ndarray]:
     """Correlate the observed seabed profile against the stored map.
 
@@ -211,11 +309,16 @@ def tcm_cross_correlation(true_pos: np.ndarray, est_pos: np.ndarray,
     normalised cross-correlation. The winning offset is added to the estimate
     to yield a bounded, high-confidence position fix.
 
+    ``distort(obs, gx, gy) -> obs`` optionally corrupts the observed patch to
+    model an adversary spoofing the returned bathymetry.
+
     Returns (corrected_position, peak_correlation, correlation_surface).
     """
     axis = np.linspace(-span, span, patch)
     gx, gy = np.meshgrid(axis, axis)
     observed = bathymetry(true_pos[0] + gx, true_pos[1] + gy)
+    if distort is not None:
+        observed = distort(observed, gx, gy)
     o = observed - observed.mean()
     o_norm = np.sqrt(np.sum(o * o)) + 1e-12
 
@@ -275,16 +378,34 @@ def step(s: SimState, params: SimParams) -> None:
         return
     s.tick += 1
 
+    # --- 0. GUIDANCE (mission FSM when autonomous, else straight run) ------ #
+    if params.autonomy:
+        prev = s.mission_state
+        target = autonomy.plan_guidance(s, params, _geom())
+        if s.mission_state != prev:
+            _log(s, "INFO", f"MISSION STATE -> {s.mission_state}.")
+    else:
+        target = WAYPOINT
+    vehicle_vel = guidance_velocity(s.true_pos, target)
+    speed = float(np.hypot(*vehicle_vel))
+    heading = vehicle_vel / speed if speed > 1e-9 else np.array([1.0, 0.0])
+
     # --- 1. TRUE PHYSICS -------------------------------------------------- #
-    vehicle_vel = guidance_velocity(s.true_pos)
     current = ocean_current(s.tick, params.tidal)
     true_vel = vehicle_vel + current
     s.true_pos = s.true_pos + true_vel * DT
 
-    # --- 2. SENSORS ------------------------------------------------------- #
-    dvl = dvl_measure(true_vel, params, s.rng)
-    s.imu_bias = imu_walk(s.imu_bias, params, s.rng)
-    est_vel = dvl + s.imu_bias                     # drift corrupts the belief
+    # --- 2. SENSORS (Janus DVL + IMU heading/velocity bias) --------------- #
+    dvl = sensors.dvl_beam_measure(true_vel, params, s.rng)
+    s.dvl_quality = dvl.quality
+    s.heading_bias = sensors.imu_heading_bias_walk(s.heading_bias, params, s.rng)
+    s.imu_bias = sensors.imu_velocity_bias_walk(s.imu_bias, params, s.rng)
+    if dvl.quality > 0.0:
+        est_vel = sensors.rotate(dvl.velocity, s.heading_bias) + s.imu_bias
+        s.last_est_vel = est_vel.copy()
+    else:                                    # bottom-lock lost: coast
+        est_vel = s.last_est_vel.copy()
+        _log(s, "WARN", "DVL bottom-lock DEGRADED - coasting on inertial only.")
 
     # --- 3. DEAD-RECKONING BELIEF ---------------------------------------- #
     s.est_pos = s.est_pos + est_vel * DT
@@ -293,23 +414,44 @@ def step(s: SimState, params: SimParams) -> None:
     s.true_path.append(s.true_pos.copy())
     s.est_path.append(s.est_pos.copy())
 
-    # --- 4. FIXES (ping overrides scheduled TCM) ------------------------- #
+    # --- 4. FIXES (manual ping > autonomous ping > terrain contour) ------- #
     if s.ping_request:
         s.ping_request = False
         s.ping_ticks = PING_DURATION
         _apply_fix(s, s.true_pos.copy(), "PING",
                    "ACTIVE ACOUSTIC PING - transponder fix accepted")
         _log(s, "ALERT", "EW STATE -> COMPROMISED. Radiating acoustic signature.")
+    elif autonomy.wants_active_ping(s, params):
+        s.ping_ticks = PING_DURATION
+        _apply_fix(s, s.true_pos.copy(), "PING",
+                   "AUTONOMOUS ACOUSTIC FIX - severe drift, threat tolerable")
+        _log(s, "ALERT", "ACOUSTIC MGMT -> ACTIVE. Radiating to bound drift.")
     else:
-        _run_tcm(s)
+        _run_tcm(s, params)
 
-    # --- EW / risk bookkeeping ------------------------------------------- #
+    # --- EW / acoustic posture ------------------------------------------- #
     if s.ping_ticks > 0:
         s.ping_ticks -= 1
         s.ew_state = "COMPROMISED - RADIATING ACOUSTIC SIGNATURE"
         if s.ping_ticks == 0:
             s.ew_state = "RUNNING SILENT"
             _log(s, "INFO", "Acoustic emission ceased. Returning to silent running.")
+    s.acoustic_mode = "ACTIVE" if s.ping_ticks > 0 else "PASSIVE"
+
+    # --- 5. ENDURANCE + VERTICAL AVOIDANCE + CONTACTS -------------------- #
+    autonomy.update_energy(s, params, speed, BASE_SPEED)
+    if params.avoid:
+        was = s.avoid_active
+        autonomy.update_avoidance(s, params, bathymetry, heading)
+        if s.avoid_active and not was:
+            _log(s, "WARN", f"TERRAIN AVOIDANCE - rising seabed, altitude "
+                            f"{s.altitude:.0f} m. Ascending.")
+    if s.world is not None:
+        tracking.step(s.world, s.est_pos, DT, s.rng_aux)
+
+    # --- counter-detection exposure integral ----------------------------- #
+    s.exposure += {"LOW": 0.0, "HIGH": 1.0, "CRITICAL": 5.0}.get(
+        counter_detection_risk(s), 0.0)
 
     # --- telemetry -------------------------------------------------------- #
     deflection = float(np.hypot(*(s.true_pos - s.est_pos)))
@@ -317,20 +459,46 @@ def step(s: SimState, params: SimParams) -> None:
     s.last_deflection = deflection
     s.telemetry.append(_telemetry_row(s))
 
-    if float(np.hypot(*(WAYPOINT - s.true_pos))) <= ARRIVAL_RADIUS:
+    # --- arrival ---------------------------------------------------------- #
+    if params.autonomy:
+        if autonomy.mission_complete(s, params, _geom()):
+            s.reached = True
+            s.mission_state = "ON STATION"
+            _log(s, "INFO", "OBJECTIVE SECURED. Asset on station. All stop.")
+    elif float(np.hypot(*(WAYPOINT - s.true_pos))) <= ARRIVAL_RADIUS:
         s.reached = True
         _log(s, "INFO", "WAYPOINT REACHED. Mission phase complete. All stop.")
 
 
-def _run_tcm(s: SimState) -> None:
-    """Trigger a contour match on entry into any anomaly's lock radius."""
+def _spoof_distort(s: SimState, params: SimParams | None):
+    """Return a patch-distortion callable if the vehicle is inside a spoof zone."""
+    if not params or not getattr(params, "spoof", False):
+        return None
+    c = np.asarray(params.spoof_center, float)
+    if float(np.hypot(*(s.true_pos - c))) > params.spoof_radius:
+        return None
+
+    def distort(obs, gx, gy):                # inject false high-frequency relief
+        return obs + params.spoof_amp * np.sin(2.4 * gx) * np.cos(2.4 * gy)
+    return distort
+
+
+def _run_tcm(s: SimState, params: SimParams | None = None) -> None:
+    """Contour match on entry into a lock radius, with spoof-resistant gating."""
+    gate = getattr(params, "tcm_quality_gate", 0.0) if params else 0.0
     for name, center in ANOMALIES.items():
         d = float(np.hypot(*(s.true_pos - center)))
         if d <= TCM_RADIUS:
             if name not in s.active_features:
                 s.active_features.add(name)
-                corrected, peak, _ = tcm_cross_correlation(s.true_pos, s.est_pos)
-                _apply_fix(s, corrected, "TCM", name, peak)
+                corrected, peak, _ = tcm_cross_correlation(
+                    s.true_pos, s.est_pos, distort=_spoof_distort(s, params))
+                if peak < gate:
+                    s.spoof_detected = True
+                    _log(s, "ALERT", f"{name}: LOW-CONFIDENCE contour r={peak:.2f} "
+                                     f"- possible spoofing. FIX REJECTED.")
+                else:
+                    _apply_fix(s, corrected, "TCM", name, peak)
         else:
             s.active_features.discard(name)
 
@@ -339,7 +507,8 @@ def _run_tcm(s: SimState) -> None:
 #  TELEMETRY / RISK / LOG
 # --------------------------------------------------------------------------- #
 def counter_detection_risk(s: SimState) -> str:
-    if s.ping_ticks > 0:
+    """Loudness-based EW posture: radiating is worst, then predictable transits."""
+    if s.ping_ticks > 0 or getattr(s, "acoustic_mode", "PASSIVE") == "ACTIVE":
         return "CRITICAL"
     near = any(np.hypot(*(s.true_pos - c)) <= TCM_RADIUS + 3.0
                for c in ANOMALIES.values())
@@ -367,6 +536,9 @@ def _telemetry_row(s: SimState) -> dict:
         "drift_rate": s.drift_rate,
         "true_x": s.true_pos[0], "true_y": s.true_pos[1],
         "est_x": s.est_pos[0], "est_y": s.est_pos[1],
+        "altitude": s.altitude,
+        "energy": s.energy_frac,
+        "dvl_q": s.dvl_quality,
     }
 
 
@@ -380,18 +552,22 @@ def _log(s: SimState, level: str, text: str) -> None:
 #  HEADLESS SELF-TEST
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
-    p = SimParams()
-    st_ = init_state(seed=7)
+    p = SimParams(autonomy=True)
+    st_ = init_state(seed=7, params=p)
     max_defl = 0.0
-    while not st_.reached and st_.tick < 400:
+    while not st_.reached and st_.tick < 600:
         step(st_, p)
         max_defl = max(max_defl, st_.telemetry[-1]["deflection"])
-        if st_.tick % 10 == 0:
+        if st_.tick % 15 == 0:
             r = st_.telemetry[-1]
             print(f"t={st_.tick:3d} true=({r['true_x']:6.1f},{r['true_y']:6.1f}) "
                   f"defl={r['deflection']:6.2f} err_r={r['error_radius']:6.2f} "
-                  f"risk={counter_detection_risk(st_):8s} {mission_phase(st_)}")
+                  f"alt={r['altitude']:5.0f} batt={r['energy']*100:4.0f}% "
+                  f"{st_.mission_state:9s} {counter_detection_risk(st_)}")
     print("\n--- FIXES ---")
     for tick, kind, pos in st_.fixes:
         print(f"  t={tick:3d} {kind:4s} -> ({pos[0]:6.1f},{pos[1]:6.1f})")
-    print(f"\nticks={st_.tick} reached={st_.reached} peak_deflection={max_defl:.2f}")
+    trk = tracking.track_error(st_.world) if st_.world else 0.0
+    print(f"\nticks={st_.tick} reached={st_.reached} peak_defl={max_defl:.2f} "
+          f"batt={st_.energy_frac*100:.0f}% contacts={len(st_.world.contacts) if st_.world else 0} "
+          f"track_err={trk:.2f}m exposure={st_.exposure:.0f}")
