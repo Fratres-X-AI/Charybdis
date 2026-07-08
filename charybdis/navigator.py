@@ -15,6 +15,7 @@ from .ins import StrapdownINS
 from .tercom import Tercom, TercomFix
 from .ekf import NavEKF
 from .pf import TerrainParticleFilter
+from .pmf import TerrainPointMassFilter
 
 
 @dataclass
@@ -25,6 +26,9 @@ class NavRecord:
     ins_pos: list = field(default_factory=list)
     pf_pos: list = field(default_factory=list)
     pf_std: list = field(default_factory=list)
+    pmf_pos: list = field(default_factory=list)
+    pmf_std: list = field(default_factory=list)
+    pmf_pcov: list = field(default_factory=list)     # 2x2 position covariance
     tercom_fix: list = field(default_factory=list)   # (t, pos, cost)
     trn_nis: list = field(default_factory=list)
 
@@ -39,6 +43,8 @@ class Navigator:
         self.tercom = Tercom(cfg, terrain)
         self.pf = TerrainParticleFilter(cfg, terrain, pos0, vel0, rng) \
             if cfg.use_pf else None
+        self.pmf = TerrainPointMassFilter(cfg, terrain, pos0, vel0) \
+            if cfg.use_pmf else None
         self.rec = NavRecord()
         self._last_trn = -1e9
         self._last_tercom = -1e9
@@ -50,6 +56,8 @@ class Navigator:
         self.ins.propagate(s.accel, cfg.dt)
         if self.pf is not None:
             self.pf.predict(s.accel, cfg.dt)
+        if self.pmf is not None:
+            self.pmf.predict(s.accel, cfg.dt)
 
         # Feed TERCOM the current best position estimate + terrain reading.
         self.tercom.push(self.ekf.pos, s.ground_elev)
@@ -60,15 +68,20 @@ class Navigator:
             self.rec.trn_nis.append((t, info.nis, info.accepted))
             if self.pf is not None:
                 self.pf.update_trn(s.ground_elev)
+            if self.pmf is not None:
+                self.pmf.update_trn(s.ground_elev, t)
             self._last_trn = t
 
         # Periodic TERCOM correlation fix.
-        if (t - self._last_tercom) >= cfg.tercom_period and self.tercom.ready():
+        if cfg.use_tercom and (t - self._last_tercom) >= cfg.tercom_period \
+                and self.tercom.ready():
             fix: TercomFix | None = self.tercom.correlate()
             if fix is not None and fix.valid:
                 self.ekf.update_position(fix.pos, fix.cov)
                 if self.pf is not None:
                     self.pf.update_position(fix.pos, fix.cov, t)
+                if self.pmf is not None and cfg.pmf_use_tercom:
+                    self.pmf.update_position(fix.pos, fix.cov, t)
                 self.rec.tercom_fix.append((t, fix.pos.copy(), fix.cost))
             self._last_tercom = t
 
@@ -79,6 +92,10 @@ class Navigator:
         if self.pf is not None:
             self.rec.pf_pos.append(self.pf.pos)
             self.rec.pf_std.append(self.pf.pos_std)
+        if self.pmf is not None:
+            self.rec.pmf_pos.append(self.pmf.pos)
+            self.rec.pmf_std.append(self.pmf.pos_std)
+            self.rec.pmf_pcov.append(self.pmf.pos_cov())
 
     def arrays(self) -> dict:
         out = {
@@ -90,4 +107,8 @@ class Navigator:
         if self.pf is not None:
             out["pf_pos"] = np.array(self.rec.pf_pos)
             out["pf_std"] = np.array(self.rec.pf_std)
+        if self.pmf is not None:
+            out["pmf_pos"] = np.array(self.rec.pmf_pos)
+            out["pmf_std"] = np.array(self.rec.pmf_std)
+            out["pmf_pcov"] = np.array(self.rec.pmf_pcov)
         return out

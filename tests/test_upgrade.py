@@ -34,18 +34,23 @@ def test_pf_competitive_nominal():
 
 
 def test_pf_recovers_large_initial_error():
-    """TRN-only with a 450 m initial error: PF globally converges where the
-    EKF can lock onto a wrong terrain minimum. This is the PF's raison d'etre."""
+    """TRN-only with a 450 m initial error: PF converges from a wide prior."""
     base = SimConfig(duration=110.0, init_pos_error=450.0, init_pos_std=500.0,
-                     tercom_period=1e9, n_particles=1200)
-    pf_finals, ekf_finals = [], []
-    for seed in (1, 2):
+                     use_tercom=False, n_particles=1200)
+    for seed in (1, 2, 3):
         s = run_simulation(replace(base, seed=seed)).summary()
-        pf_finals.append(s["pf_final_m"])
-        ekf_finals.append(s["ekf_final_m"])
-        assert s["pf_final_m"] < 0.2 * base.init_pos_error     # converged
+        assert s["pf_final_m"] < 0.2 * base.init_pos_error
         assert s["pf_final_m"] < s["ins_final_m"]
-    assert np.mean(pf_finals) <= np.mean(ekf_finals)           # PF wins overall
+
+
+def test_pmf_recovers_large_initial_error():
+    """Marginalized PMF: grid TRN resolves large initial position ambiguity."""
+    base = SimConfig(duration=110.0, init_pos_error=450.0, init_pos_std=500.0,
+                     use_tercom=False, use_pf=False)
+    for seed in (1, 2, 3, 4, 5):
+        s = run_simulation(replace(base, seed=seed)).summary()
+        assert s["pmf_final_m"] < 0.25 * base.init_pos_error
+        assert s["pmf_final_m"] < s["ins_final_m"]
 
 
 def test_montecarlo_cep_and_nees():

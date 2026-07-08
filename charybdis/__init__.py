@@ -11,6 +11,7 @@ from .ins import StrapdownINS
 from .tercom import Tercom, TercomFix
 from .ekf import NavEKF
 from .pf import TerrainParticleFilter
+from .pmf import TerrainPointMassFilter
 from .navigator import Navigator
 from .simulation import run_simulation, SimResult
 from .evaluate import run_montecarlo, MonteCarloResult
@@ -27,6 +28,7 @@ __all__ = [
     "TercomFix",
     "NavEKF",
     "TerrainParticleFilter",
+    "TerrainPointMassFilter",
     "Navigator",
     "run_simulation",
     "SimResult",

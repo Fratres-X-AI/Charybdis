@@ -27,6 +27,10 @@ class SimResult:
     pf_pos: np.ndarray | None = None
     pf_std: np.ndarray | None = None
     pf_err: np.ndarray | None = None
+    pmf_pos: np.ndarray | None = None
+    pmf_std: np.ndarray | None = None
+    pmf_pcov: np.ndarray | None = None
+    pmf_err: np.ndarray | None = None
 
     def summary(self) -> dict:
         def rmse(e):
@@ -44,6 +48,10 @@ class SimResult:
             out["pf_rmse_m"] = rmse(self.pf_err)
             out["pf_final_m"] = float(self.pf_err[-1])
             out["pf_max_m"] = float(self.pf_err.max())
+        if self.pmf_err is not None:
+            out["pmf_rmse_m"] = rmse(self.pmf_err)
+            out["pmf_final_m"] = float(self.pmf_err[-1])
+            out["pmf_max_m"] = float(self.pmf_err.max())
         return out
 
 
@@ -70,6 +78,10 @@ def run_simulation(cfg: SimConfig | None = None) -> SimResult:
     pf_pos = a.get("pf_pos")
     pf_std = a.get("pf_std")
     pf_err = None if pf_pos is None else np.linalg.norm(pf_pos - truth.pos, axis=1)
+    pmf_pos = a.get("pmf_pos")
+    pmf_std = a.get("pmf_std")
+    pmf_pcov = a.get("pmf_pcov")
+    pmf_err = None if pmf_pos is None else np.linalg.norm(pmf_pos - truth.pos, axis=1)
     return SimResult(
         cfg=cfg,
         terrain=terrain,
@@ -85,4 +97,8 @@ def run_simulation(cfg: SimConfig | None = None) -> SimResult:
         pf_pos=pf_pos,
         pf_std=pf_std,
         pf_err=pf_err,
+        pmf_pos=pmf_pos,
+        pmf_std=pmf_std,
+        pmf_pcov=pmf_pcov,
+        pmf_err=pmf_err,
     )
