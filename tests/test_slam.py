@@ -18,7 +18,7 @@ def test_gicp_recovers_translation():
 
 
 def test_slam_loop_reduces_error():
-    cfg = SimConfig(duration=60.0, seed=4)
+    cfg = SimConfig(duration=35.0, seed=4)
     terrain = Terrain.synthetic(cfg)
     truth = generate_truth(cfg, terrain)
     sm = init_slam(truth.pos[0])

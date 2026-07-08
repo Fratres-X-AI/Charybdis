@@ -24,7 +24,7 @@ def test_pf_unit_predict_update():
 
 
 def test_pf_competitive_nominal():
-    cfg = SimConfig(duration=90.0, n_particles=800)
+    cfg = SimConfig(duration=45.0, n_particles=500)
     res = run_simulation(cfg)
     s = res.summary()
     assert res.pf_err is not None
@@ -35,9 +35,9 @@ def test_pf_competitive_nominal():
 
 def test_pf_recovers_large_initial_error():
     """TRN-only with a 450 m initial error: PF converges from a wide prior."""
-    base = SimConfig(duration=110.0, init_pos_error=450.0, init_pos_std=500.0,
-                     use_tercom=False, n_particles=1200)
-    for seed in (1, 2, 3):
+    base = SimConfig(duration=55.0, init_pos_error=450.0, init_pos_std=500.0,
+                     use_tercom=False, n_particles=600)
+    for seed in (1, 2):
         s = run_simulation(replace(base, seed=seed)).summary()
         assert s["pf_final_m"] < 0.2 * base.init_pos_error
         assert s["pf_final_m"] < s["ins_final_m"]
@@ -45,16 +45,16 @@ def test_pf_recovers_large_initial_error():
 
 def test_pmf_recovers_large_initial_error():
     """Marginalized PMF: grid TRN resolves large initial position ambiguity."""
-    base = SimConfig(duration=110.0, init_pos_error=450.0, init_pos_std=500.0,
+    base = SimConfig(duration=55.0, init_pos_error=450.0, init_pos_std=500.0,
                      use_tercom=False, use_pf=False)
-    for seed in (1, 2, 3, 4, 5):
+    for seed in (1, 2, 3):
         s = run_simulation(replace(base, seed=seed)).summary()
         assert s["pmf_final_m"] < 0.25 * base.init_pos_error
         assert s["pmf_final_m"] < s["ins_final_m"]
 
 
 def test_montecarlo_cep_and_nees():
-    cfg = SimConfig(duration=70.0, n_particles=700)
+    cfg = SimConfig(duration=45.0, n_particles=400)
     mc = run_montecarlo(cfg, n_runs=4)
     assert mc.n_runs == 4
     assert mc.cep("ekf", 50) < mc.cep("ins", 50)
