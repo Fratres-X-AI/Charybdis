@@ -21,6 +21,8 @@ from .stress import (default_stress_cases, evaluate_gates, run_stress_case,
                      run_stress_harness, stress_report)
 from .imu_model import (IMU_GRADES, allan_deviation, apply_imu_grade,
                         characterize_allan, grade_allan_table)
+from .bathy import (load_bathymetry, load_gebco_netcdf, load_npz,
+                    terrain_from_grid, terrain_suitability)
 
 __all__ = [
     "SimConfig",
@@ -55,4 +57,9 @@ __all__ = [
     "allan_deviation",
     "characterize_allan",
     "grade_allan_table",
+    "load_bathymetry",
+    "load_gebco_netcdf",
+    "load_npz",
+    "terrain_from_grid",
+    "terrain_suitability",
 ]
