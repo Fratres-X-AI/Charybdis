@@ -45,6 +45,21 @@ def extract_patches(true_pos: np.ndarray, est_pos: np.ndarray, bathy) -> tuple[n
     return obs, mp
 
 
+def extract_patches_batch(centers: np.ndarray, bathy) -> np.ndarray:
+    """Vectorised patch extraction for many centers at once.
+
+    ``centers`` is [N, 2]. Returns normalised float32 patches [N, 1, P, P] in a
+    single broadcast bathymetry() call - orders of magnitude faster than looping.
+    """
+    cx = centers[:, 0][:, None, None] + _GX[None]      # [N, P, P]
+    cy = centers[:, 1][:, None, None] + _GY[None]
+    z = bathy(cx, cy).astype(np.float32)
+    mu = z.mean(axis=(1, 2), keepdims=True)
+    sd = z.std(axis=(1, 2), keepdims=True) + 1e-3
+    z = (z - mu) / sd
+    return z[:, None]                                    # [N, 1, P, P]
+
+
 def build_model():
     torch, nn = _require_torch()
 
@@ -151,7 +166,6 @@ def train(model_path: str | Path | None = None, n_samples: int = 12000,
     opt = torch.optim.Adam(model.parameters(), lr=1e-3)
     loss_fn = nn.MSELoss()
     bathy = core.bathymetry
-    nw = max(0, min(num_workers, 31))
 
     for ep in range(epochs):
         total = 0.0
@@ -162,21 +176,10 @@ def train(model_path: str | Path | None = None, n_samples: int = 12000,
             err += rng.uniform(-8, 8, size=(batch, 2)) * (rng.random((batch, 1)) < 0.3)
             est = true + err
             target = true - est
-            if nw > 0:
-                from concurrent.futures import ThreadPoolExecutor
-                def _one(i):
-                    return extract_patches(true[i], est[i], bathy)
-                with ThreadPoolExecutor(max_workers=nw) as ex:
-                    pairs = list(ex.map(_one, range(batch)))
-                obs_list = [p[0] for p in pairs]
-                mp_list = [p[1] for p in pairs]
-            else:
-                obs_list, mp_list = [], []
-                for i in range(batch):
-                    o, m = extract_patches(true[i], est[i], bathy)
-                    obs_list.append(o); mp_list.append(m)
-            t_obs = torch.from_numpy(np.stack(obs_list)[:, None]).to(device)
-            t_mp = torch.from_numpy(np.stack(mp_list)[:, None]).to(device)
+            obs = extract_patches_batch(true, bathy)        # [B,1,P,P] vectorised
+            mp = extract_patches_batch(est, bathy)
+            t_obs = torch.from_numpy(obs).to(device)
+            t_mp = torch.from_numpy(mp).to(device)
             t_y = torch.from_numpy(target.astype(np.float32)).to(device)
             pred = model(t_obs, t_mp)
             loss = loss_fn(pred, t_y)
