@@ -34,15 +34,20 @@ class IMU:
         self.heading_bias = np.deg2rad(
             self.rng.normal(0.0, cfg.heading_bias0_deg)
         )
+        self.svp_bias = self.rng.normal(0.0, cfg.svp_bias0, size=2) \
+            if cfg.svp_tidal_bias else np.zeros(2)
 
     def sample(self, truth: Trajectory, k: int) -> ImuSample:
         cfg = self.cfg
         dt = cfg.dt
         # Bias random walk.
         self.accel_bias += self.rng.normal(0.0, cfg.accel_bias_rw * np.sqrt(dt), size=2)
+        if cfg.svp_tidal_bias:
+            self.svp_bias += self.rng.normal(0.0, cfg.svp_bias_rw * np.sqrt(dt), size=2)
         accel = (
             truth.acc[k]
             + self.accel_bias
+            + (self.svp_bias if cfg.svp_tidal_bias else 0.0)
             + self.rng.normal(0.0, cfg.accel_noise / np.sqrt(dt), size=2)
         )
         heading = truth.heading[k] + self.heading_bias \
