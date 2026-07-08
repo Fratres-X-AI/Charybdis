@@ -45,7 +45,18 @@ class SimConfig:
     trn_period: float = 0.2         # seconds between TRN updates
     init_pos_std: float = 120.0     # initial position uncertainty [m]
     init_vel_std: float = 3.0
+    init_pos_error: float = 0.0     # actual initial position error injected [m]
     gate_chi2: float = 13.8         # 2-dof 99.9% gate
+
+    # --- Particle filter (terrain-aided, non-Gaussian) ---
+    use_pf: bool = True             # run the particle filter alongside the EKF
+    n_particles: int = 1500
+    pf_neff_frac: float = 0.5       # resample when Neff/N drops below this
+    pf_roughen: float = 0.2         # roughening coefficient after resampling
+    pf_pos_floor: float = 12.0      # min position roughening [m] (anti-impoverishment)
+    pf_vel_floor: float = 0.4       # min velocity roughening [m/s]
+    pf_inject: float = 0.25         # fraction of particles relocalised on a fix
+    pf_inject_std_max: float = 160.0  # skip injection if fix worse than this [m]
 
     def steps(self) -> int:
         return int(round(self.duration / self.dt))

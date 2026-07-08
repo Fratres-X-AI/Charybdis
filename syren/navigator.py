@@ -14,33 +14,42 @@ from .imu import ImuSample
 from .ins import StrapdownINS
 from .tercom import Tercom, TercomFix
 from .ekf import NavEKF
+from .pf import TerrainParticleFilter
 
 
 @dataclass
 class NavRecord:
     ekf_pos: list = field(default_factory=list)
     ekf_std: list = field(default_factory=list)
+    ekf_pcov: list = field(default_factory=list)     # 2x2 position covariance
     ins_pos: list = field(default_factory=list)
+    pf_pos: list = field(default_factory=list)
+    pf_std: list = field(default_factory=list)
     tercom_fix: list = field(default_factory=list)   # (t, pos, cost)
     trn_nis: list = field(default_factory=list)
 
 
 class Navigator:
-    def __init__(self, cfg: SimConfig, terrain: Terrain, pos0, vel0):
+    def __init__(self, cfg: SimConfig, terrain: Terrain, pos0, vel0,
+                 rng: np.random.Generator | None = None):
         self.cfg = cfg
         self.terrain = terrain
         self.ekf = NavEKF(cfg, terrain, pos0, vel0)
         self.ins = StrapdownINS(pos0, vel0)
         self.tercom = Tercom(cfg, terrain)
+        self.pf = TerrainParticleFilter(cfg, terrain, pos0, vel0, rng) \
+            if cfg.use_pf else None
         self.rec = NavRecord()
         self._last_trn = -1e9
         self._last_tercom = -1e9
 
     def step(self, s: ImuSample, t: float) -> None:
         cfg = self.cfg
-        # Prediction (dead reckoning inside the EKF) + baseline INS.
+        # Prediction (dead reckoning inside the EKF) + baseline INS + PF.
         self.ekf.predict(s.accel, cfg.dt)
         self.ins.propagate(s.accel, cfg.dt)
+        if self.pf is not None:
+            self.pf.predict(s.accel, cfg.dt)
 
         # Feed TERCOM the current best position estimate + terrain reading.
         self.tercom.push(self.ekf.pos, s.ground_elev)
@@ -49,6 +58,8 @@ class Navigator:
         if cfg.trn_update and (t - self._last_trn) >= cfg.trn_period:
             info = self.ekf.update_trn(s.ground_elev)
             self.rec.trn_nis.append((t, info.nis, info.accepted))
+            if self.pf is not None:
+                self.pf.update_trn(s.ground_elev)
             self._last_trn = t
 
         # Periodic TERCOM correlation fix.
@@ -56,16 +67,27 @@ class Navigator:
             fix: TercomFix | None = self.tercom.correlate()
             if fix is not None and fix.valid:
                 self.ekf.update_position(fix.pos, fix.cov)
+                if self.pf is not None:
+                    self.pf.update_position(fix.pos, fix.cov, t)
                 self.rec.tercom_fix.append((t, fix.pos.copy(), fix.cost))
             self._last_tercom = t
 
         self.rec.ekf_pos.append(self.ekf.pos)
         self.rec.ekf_std.append(self.ekf.pos_std)
+        self.rec.ekf_pcov.append(self.ekf.P[0:2, 0:2].copy())
         self.rec.ins_pos.append(self.ins.pos.copy())
+        if self.pf is not None:
+            self.rec.pf_pos.append(self.pf.pos)
+            self.rec.pf_std.append(self.pf.pos_std)
 
     def arrays(self) -> dict:
-        return {
+        out = {
             "ekf_pos": np.array(self.rec.ekf_pos),
             "ekf_std": np.array(self.rec.ekf_std),
+            "ekf_pcov": np.array(self.rec.ekf_pcov),
             "ins_pos": np.array(self.rec.ins_pos),
         }
+        if self.pf is not None:
+            out["pf_pos"] = np.array(self.rec.pf_pos)
+            out["pf_std"] = np.array(self.rec.pf_std)
+        return out

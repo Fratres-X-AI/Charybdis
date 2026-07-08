@@ -10,8 +10,10 @@ from .imu import IMU, ImuSample
 from .ins import StrapdownINS
 from .tercom import Tercom, TercomFix
 from .ekf import NavEKF
+from .pf import TerrainParticleFilter
 from .navigator import Navigator
 from .simulation import run_simulation, SimResult
+from .evaluate import run_montecarlo, MonteCarloResult
 
 __all__ = [
     "SimConfig",
@@ -24,7 +26,10 @@ __all__ = [
     "Tercom",
     "TercomFix",
     "NavEKF",
+    "TerrainParticleFilter",
     "Navigator",
     "run_simulation",
     "SimResult",
+    "run_montecarlo",
+    "MonteCarloResult",
 ]
