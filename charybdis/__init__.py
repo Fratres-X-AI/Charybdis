@@ -17,6 +17,8 @@ from .simulation import run_simulation, SimResult
 from .evaluate import run_montecarlo, MonteCarloResult
 from .pcrb import (efficiency_report, filter_efficiency, navigability_map,
                    posterior_crb, terrain_fisher_information)
+from .stress import (default_stress_cases, evaluate_gates, run_stress_case,
+                     run_stress_harness, stress_report)
 
 __all__ = [
     "SimConfig",
@@ -41,4 +43,9 @@ __all__ = [
     "posterior_crb",
     "filter_efficiency",
     "efficiency_report",
+    "default_stress_cases",
+    "run_stress_case",
+    "run_stress_harness",
+    "stress_report",
+    "evaluate_gates",
 ]
