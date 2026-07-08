@@ -21,6 +21,9 @@ from .stress import (default_stress_cases, evaluate_gates, run_stress_case,
                      run_stress_harness, stress_report)
 from .imu_model import (IMU_GRADES, allan_deviation, apply_imu_grade,
                         characterize_allan, grade_allan_table)
+from .slam import (SlamState, gicp_align, init_slam, slam_step, optimize,
+                   position_error)
+from .swarm import SwarmConfig, SwarmResult, montecarlo_swarm, run_swarm
 
 __all__ = [
     "SimConfig",
@@ -55,4 +58,14 @@ __all__ = [
     "allan_deviation",
     "characterize_allan",
     "grade_allan_table",
+    "SlamState",
+    "init_slam",
+    "slam_step",
+    "gicp_align",
+    "optimize",
+    "position_error",
+    "SwarmConfig",
+    "SwarmResult",
+    "run_swarm",
+    "montecarlo_swarm",
 ]

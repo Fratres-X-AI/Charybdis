@@ -13,6 +13,7 @@ os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 from dataclasses import replace
 from multiprocessing import Pool
+from charybdis.parallel import pool_workers
 from charybdis import SimConfig, run_simulation
 
 INFLS = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 6.0]
@@ -44,7 +45,7 @@ def main():
             for mode in ("trn", "large")
             for infl in INFLS
             for seed in range(1, n + 1)]
-    with Pool(processes=31) as pool:
+    with Pool(processes=pool_workers(31)) as pool:
         rows = pool.map(one, jobs)
     for mode in ("trn", "large"):
         print(f"[{mode}] ({n} seeds)")

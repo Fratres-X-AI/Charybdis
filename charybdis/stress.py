@@ -12,6 +12,8 @@ from typing import Callable
 
 import numpy as np
 
+from .parallel import pool_workers
+
 from .config import SimConfig
 from .evaluate import FILTERS, MonteCarloResult, _nees_second_half
 from .simulation import run_simulation
@@ -166,7 +168,7 @@ def run_stress_case(case: StressCase, seeds: list[int] | None = None,
                 for f in case.cfg.__dataclass_fields__.values()}
     jobs = [(case.name, s, cfg_dict, terrain_kind) for s in seeds]
     os.environ.setdefault("OMP_NUM_THREADS", "1")
-    with Pool(processes=n_workers) as pool:
+    with Pool(processes=pool_workers(n_workers)) as pool:
         rows = pool.map(_run_one, jobs)
     mc = _aggregate(rows, len(seeds))
     gates = evaluate_gates(mc, case.gates)

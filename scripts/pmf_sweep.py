@@ -16,6 +16,7 @@ os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 from dataclasses import replace
 from multiprocessing import Pool
+from charybdis.parallel import pool_workers
 
 from charybdis import SimConfig, run_simulation
 
@@ -78,7 +79,7 @@ def main():
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 64
     seeds = list(range(1, n + 1))
     jobs = [(s, m) for m in ("nominal", "trn", "large") for s in seeds]
-    with Pool(processes=31) as pool:
+    with Pool(processes=pool_workers(31)) as pool:
         rows = pool.map(one, jobs)
     for mode in ("nominal", "trn", "large"):
         print(f"[{mode}]  ({n} seeds)")

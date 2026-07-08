@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Pod setup: serial pytest only (31 workers reserved for MC scripts, not xdist).
 set -e
 ts(){ date -u +"%H:%M:%S"; }
 log(){ echo "[$(ts)] $*"; }
@@ -10,16 +11,15 @@ if [ -d Charybdis/.git ]; then
 else
   git clone -q https://github.com/Fratres-X-AI/Charybdis.git && cd Charybdis
 fi
-git log --oneline -1
 
-log "venv + base deps"
+log "venv + deps"
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -q -U pip
-pip install -q numpy scipy matplotlib pandas pytest pytest-xdist
+pip install -q numpy scipy matplotlib pandas pytest
 
-log "base pytest"
-python -m pytest -q -n 16 2>&1 | tail -3
-
+export PYTHONPATH=. OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+log "pytest serial (no xdist)"
+python -m pytest -q -n 0
 log "SETUP DONE"
 echo done > /root/setup.done
