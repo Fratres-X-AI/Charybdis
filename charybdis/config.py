@@ -30,6 +30,11 @@ class SimConfig:
     gyro_noise: float = 0.02        # [deg/s]
     heading_bias0_deg: float = 0.4
 
+    # --- SVP / tidal unmodeled dynamics (slow horizontal accel bias) ---
+    svp_tidal_bias: bool = False    # enable slow sound-velocity / tidal bias state
+    svp_bias0: float = 0.02       # initial SVP bias std [m/s^2]
+    svp_bias_rw: float = 0.0008   # SVP bias random walk [m/s^2 /sqrt(s)]
+
     # --- Altimeters (terrain measurement chain) ---
     baro_noise: float = 3.0         # barometric altitude noise std [m]
     radar_noise: float = 1.5        # radar altimeter (AGL) noise std [m]

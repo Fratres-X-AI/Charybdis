@@ -19,6 +19,8 @@ from .pcrb import (efficiency_report, filter_efficiency, navigability_map,
                    posterior_crb, terrain_fisher_information)
 from .stress import (default_stress_cases, evaluate_gates, run_stress_case,
                      run_stress_harness, stress_report)
+from .imu_model import (IMU_GRADES, allan_deviation, apply_imu_grade,
+                        characterize_allan, grade_allan_table)
 
 __all__ = [
     "SimConfig",
@@ -48,4 +50,9 @@ __all__ = [
     "run_stress_harness",
     "stress_report",
     "evaluate_gates",
+    "IMU_GRADES",
+    "apply_imu_grade",
+    "allan_deviation",
+    "characterize_allan",
+    "grade_allan_table",
 ]
