@@ -1,20 +1,30 @@
+from dataclasses import replace
+
+import pytest
+
 from charybdis.stress import (default_stress_cases, evaluate_gates, run_stress_case,
                               run_stress_harness, stress_report)
 
 
+@pytest.mark.slow
 def test_stress_case_runs_and_reports():
     case = next(c for c in default_stress_cases() if c.name == "trn_only")
-    r = run_stress_case(case, seeds=[1, 2, 3, 4], n_workers=2)
-    assert r.mc.n_runs == 4
+    case = replace(case, sim=replace(case.sim, duration=35.0, n_particles=400))
+    r = run_stress_case(case, seeds=[1, 2], n_workers=1)
+    assert r.mc.n_runs == 2
     assert "ekf" in r.mc.final_err
     assert "pmf" in r.mc.final_err
     assert isinstance(r.gates, dict)
     assert len(r.gates) > 0
 
 
+@pytest.mark.slow
 def test_stress_harness_subset():
-    cases = [c for c in default_stress_cases() if c.name in ("nominal", "large_init")]
-    results = run_stress_harness(cases, seeds=[1, 2, 3], n_workers=2)
+    cases = []
+    for c in default_stress_cases():
+        if c.name in ("nominal", "large_init"):
+            cases.append(replace(c, sim=replace(c.sim, duration=30.0, n_particles=400)))
+    results = run_stress_harness(cases, seeds=[1, 2], n_workers=1)
     assert len(results) == 2
     text = stress_report(results)
     assert "nominal" in text

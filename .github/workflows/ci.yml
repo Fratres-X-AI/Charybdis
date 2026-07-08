@@ -5,6 +5,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -38,4 +39,4 @@ jobs:
       - name: Run test suite
         env:
           MPLBACKEND: Agg
-        run: python -m pytest -q
+        run: python -m pytest -q --timeout=120 --timeout-method=thread
