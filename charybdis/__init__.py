@@ -15,6 +15,8 @@ from .pmf import TerrainPointMassFilter
 from .navigator import Navigator
 from .simulation import run_simulation, SimResult
 from .evaluate import run_montecarlo, MonteCarloResult
+from .pcrb import (efficiency_report, filter_efficiency, navigability_map,
+                   posterior_crb, terrain_fisher_information)
 
 __all__ = [
     "SimConfig",
@@ -34,4 +36,9 @@ __all__ = [
     "SimResult",
     "run_montecarlo",
     "MonteCarloResult",
+    "terrain_fisher_information",
+    "navigability_map",
+    "posterior_crb",
+    "filter_efficiency",
+    "efficiency_report",
 ]
