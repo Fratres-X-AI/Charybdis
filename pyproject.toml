@@ -1,7 +1,7 @@
 [project]
 name = "charybdis"
 version = "0.1.0"
-description = "Charybdis - GPS-denied inertial + terrain-contour-matching navigation: an airborne interceptor GDI stack and a UUV tactical Streamlit console."
+description = "Charybdis - GPS-denied terrain-aided navigation (GDI library + UUV tactical console)."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "pytest-timeout>=2.3"]
 nn = ["torch>=2.0"]
 gebco = ["netCDF4>=1.6", "rasterio>=1.3"]
 
@@ -32,3 +32,6 @@ packages = ["charybdis"]
 addopts = "-q"
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "slow: long-running sim/MC; skipped on CI unless RUN_SLOW=1",
+]

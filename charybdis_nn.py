@@ -1,4 +1,4 @@
-"""Learned terrain contour matching for Charybdis.
+"""Learned terrain contour matching for Charybdis. [Experimental — see docs/MATURITY.md]
 
 Small Siamese CNN predicts the est->true horizontal offset from a pair of
 bathymetric patches (sonar observation vs stored map at the dead-reckoned fix).

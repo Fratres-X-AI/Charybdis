@@ -1,8 +1,8 @@
-"""Online terrain SLAM for Charybdis UUV navigation.
+"""Online terrain SLAM for Charybdis UUV navigation. [Experimental]
 
-Maintains a growing pose graph with local bathymetric submaps. Loop closures
-are detected by correlating a live submap against prior submaps; pose nodes
-are refined with sparse nonlinear least squares (scipy).
+See docs/MATURITY.md. Maintains a growing pose graph with local bathymetric
+submaps. Loop closures are detected by correlating a live submap against prior
+submaps; pose nodes are refined with sparse nonlinear least squares (scipy).
 """
 from __future__ import annotations
 

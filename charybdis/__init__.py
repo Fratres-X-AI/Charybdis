@@ -2,6 +2,9 @@
 
 Inertial (dead-reckoning) + Terrain-Contour Matching (TERCOM) fused with an
 Extended Kalman Filter for navigation without GNSS.
+
+Stable/Beta APIs are exported here. Experimental modules (NN matcher, SLAM,
+swarm) live under ``charybdis.experimental`` — see docs/MISSION.md.
 """
 from .config import SimConfig
 from .terrain import Terrain
@@ -12,7 +15,7 @@ from .tercom import Tercom, TercomFix
 from .ekf import NavEKF
 from .pf import TerrainParticleFilter
 from .pmf import TerrainPointMassFilter
-from .navigator import Navigator
+from .navigator import Navigator, NavEstimate
 from .simulation import run_simulation, SimResult
 from .evaluate import run_montecarlo, MonteCarloResult
 from .pcrb import (efficiency_report, filter_efficiency, navigability_map,
@@ -21,9 +24,6 @@ from .stress import (default_stress_cases, evaluate_gates, run_stress_case,
                      run_stress_harness, stress_report)
 from .imu_model import (IMU_GRADES, allan_deviation, apply_imu_grade,
                         characterize_allan, grade_allan_table)
-from .slam import (SlamState, gicp_align, init_slam, slam_step, optimize,
-                   position_error)
-from .swarm import SwarmConfig, SwarmResult, montecarlo_swarm, run_swarm
 from .bathy import (load_bathymetry, load_gebco_netcdf, load_npz,
                     terrain_from_grid, terrain_suitability)
 
@@ -41,6 +41,7 @@ __all__ = [
     "TerrainParticleFilter",
     "TerrainPointMassFilter",
     "Navigator",
+    "NavEstimate",
     "run_simulation",
     "SimResult",
     "run_montecarlo",
@@ -60,16 +61,6 @@ __all__ = [
     "allan_deviation",
     "characterize_allan",
     "grade_allan_table",
-    "SlamState",
-    "init_slam",
-    "slam_step",
-    "gicp_align",
-    "optimize",
-    "position_error",
-    "SwarmConfig",
-    "SwarmResult",
-    "run_swarm",
-    "montecarlo_swarm",
     "load_bathymetry",
     "load_gebco_netcdf",
     "load_npz",

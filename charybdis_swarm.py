@@ -1,8 +1,8 @@
-"""Multi-agent UUV coordination for Charybdis.
+"""Multi-agent UUV coordination for Charybdis. [Experimental]
 
-Runs 2-3 vehicles through the shared ``charybdis_core`` engine. Agents exchange
-TCM fixes and noisy relative-range measurements when within comm range, then
-apply a lightweight consensus update to bound team drift.
+See docs/MATURITY.md. Runs 2-3 vehicles through the shared ``charybdis_core``
+engine. Agents exchange TCM fixes and noisy relative-range measurements when
+within comm range, then apply a lightweight consensus update to bound team drift.
 """
 from __future__ import annotations
 

@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from charybdis import SimConfig, Terrain, generate_truth
-from charybdis.slam import (SlamState, gicp_align, init_slam, optimize,
-                            position_error, slam_step)
+from charybdis.experimental.slam import (SlamState, gicp_align, init_slam,
+                                         optimize, position_error, slam_step)
 
 
 def test_gicp_recovers_translation():

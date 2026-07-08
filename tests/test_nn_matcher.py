@@ -6,7 +6,7 @@ from charybdis import SimConfig, Terrain
 
 def test_so2_model_forward():
     torch = pytest.importorskip("torch")
-    from charybdis.nn_matcher import build_model, extract_patch
+    from charybdis.experimental.nn_matcher import build_model, extract_patch
 
     model = build_model()
     cfg = SimConfig(seed=1)
@@ -23,7 +23,7 @@ def test_so2_model_forward():
 
 def test_match_position_cpu():
     pytest.importorskip("torch")
-    from charybdis.nn_matcher import match_position
+    from charybdis.experimental.nn_matcher import match_position
 
     cfg = SimConfig(seed=2)
     terr = Terrain.synthetic(cfg)

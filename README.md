@@ -1,11 +1,22 @@
-# Charybdis GDI — GPS-Denied Interceptor
+# Charybdis — GPS-Denied Terrain-Aided Navigation
+
+**Primary goal:** a trustworthy GPS-denied navigation research stack
+(INS + TERCOM/TRN + EKF/PF/PMF) with honest Monte-Carlo evaluation.
+
+**Secondary:** a UUV tactical Streamlit console (separate spine under
+`charybdis_*.py`).
+
+See [`docs/MISSION.md`](docs/MISSION.md), [`docs/MATURITY.md`](docs/MATURITY.md),
+and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## GDI stack (airborne interceptor)
 
 Terrain-aided inertial navigation for a GNSS-denied interceptor. Charybdis fuses a
 strapdown **INS (dead-reckoning)** with **TERCOM** terrain-contour matching and a
 recursive **terrain-referenced (TRN)** update inside an **Extended Kalman Filter**,
 so the vehicle keeps an accurate fix with no GPS. A **terrain-aided particle
-filter** runs in parallel as a non-Gaussian estimator, and a Monte-Carlo harness
-reports CEP and filter-consistency (NEES) metrics.
+filter** (and optional **PMF**) runs in parallel as a non-Gaussian estimator, and a
+Monte-Carlo harness reports CEP and filter-consistency (NEES) metrics.
 
 ## How it works
 
@@ -23,6 +34,7 @@ reports CEP and filter-consistency (NEES) metrics.
 - **TRN update** (`ekf.py`): recursive single-point update using measured terrain elevation vs. DEM, Jacobian = local terrain slope.
 - **EKF** (`ekf.py`): state `[px, py, vx, vy, bax, bay]`, IMU-driven prediction, Joseph-form covariance, χ² innovation gating.
 - **Particle filter** (`pf.py`): bootstrap SIR over the same 6-state model. Weights come from the *exact* (non-linearised) terrain-elevation likelihood, so it represents the multi-modal position posterior instead of a single Gaussian. Systematic resampling with floored roughening prevents impoverishment; TERCOM fixes are χ²-gated and used to relocalise the cloud (with velocity recovered by differencing consecutive fixes). This is what lets it recover from large initial errors the EKF cannot.
+- **Navigator** (`navigator.py`): fusion loop; exposes **`NavEstimate`** (pos + 2×2 cov) for autonomy/UI.
 - **Evaluation** (`evaluate.py`): Monte-Carlo over seeds → CEP50/CEP95, mean RMSE, and EKF **NEES** (a 2-DOF-consistent filter averages ≈ 2.0).
 
 ## Run
@@ -32,6 +44,8 @@ pip install -r requirements.txt
 python run_sim.py                 # writes outputs/map.png, outputs/error.png
 python run_sim.py --duration 300 --seed 12
 python run_sim.py --montecarlo 15 # CEP / NEES evaluation table
+python scripts/mc_real_region.py  # synthetic MC; pass --npz for a real tile
+python scripts/stress_run.py      # stress harness
 pytest -q
 ```
 
@@ -50,20 +64,24 @@ Monte-Carlo (8 seeds): EKF CEP50 **24 m** / CEP95 **59 m**, PF CEP50 **27 m**; E
 ## Layout
 
 ```
-charybdis/
-  config.py       tunable parameters
-  terrain.py      DEM + interpolation/gradient
-  trajectory.py   truth flight path
-  imu.py          IMU + altimeter sensor models
-  ins.py          strapdown dead-reckoning
-  tercom.py       terrain-contour matching
-  ekf.py          EKF fusion (TRN + TERCOM)
-  pf.py           terrain-aided particle filter
-  navigator.py    full nav loop (INS + EKF + PF)
-  simulation.py   end-to-end harness
-  evaluate.py     Monte-Carlo CEP / NEES
-run_sim.py        CLI + plots + --montecarlo
-tests/            pytest suite
+charybdis/                 # GDI library (Stable/Beta default API)
+  navigator.py             # NavEstimate + fusion loop
+  ekf.py / pf.py / pmf.py
+  bathy.py                 # GEBCO / grid loaders (Beta)
+  experimental/            # NN matcher, SLAM, swarm (opt-in)
+docs/                      # MISSION, MATURITY, ARCHITECTURE
+scripts/                   # product MC / stress / train
+scripts/pod/               # RunPod helpers (not product API)
+tests/
+run_sim.py
+charybdis_*.py             # UUV console spine (secondary product)
+```
+
+Experimental imports:
+
+```python
+from charybdis.experimental import run_swarm, init_slam
+from charybdis.experimental.nn_matcher import match_position, train
 ```
 
 ---
@@ -115,6 +133,7 @@ pytest tests/test_charybdis_uuv.py tests/test_upgrade2.py tests/test_final4.py -
 python scripts/benchmark_15of15.py          # SLAM / swarm / NN metrics (NN needs torch)
 bash scripts/ros2_smoke.sh                  # Docker + ROS2 jazzy (optional)
 python scripts/train_tcm_nn.py              # GPU train -> models/tcm_cnn.pt
+# RunPod helpers live under scripts/pod/ (see scripts/pod/README.md)
 ```
 
-> Research/simulation only.
+> Research/simulation only. Feature maturity: [`docs/MATURITY.md`](docs/MATURITY.md).
