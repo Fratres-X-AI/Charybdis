@@ -1,4 +1,4 @@
-"""Syren navigator: fuses INS dead-reckoning with TERCOM/TRN via the EKF.
+"""Charybdis navigator: fuses INS dead-reckoning with TERCOM/TRN via the EKF.
 
 Owns the full GPS-denied navigation loop. Also runs an unaided strapdown INS
 in parallel as a drift baseline for comparison.

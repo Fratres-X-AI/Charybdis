@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from syren import SimConfig, Terrain, Tercom, run_simulation
-from syren.trajectory import generate_truth
+from charybdis import SimConfig, Terrain, Tercom, run_simulation
+from charybdis.trajectory import generate_truth
 
 
 @pytest.fixture(scope="module")

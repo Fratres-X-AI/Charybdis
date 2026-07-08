@@ -1,4 +1,4 @@
-"""End-to-end simulation harness for Syren."""
+"""End-to-end simulation harness for Charybdis."""
 from __future__ import annotations
 
 from dataclasses import dataclass

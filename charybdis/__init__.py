@@ -1,4 +1,4 @@
-"""Syren - GPS-Denied Interceptor Navigation.
+"""Charybdis - GPS-Denied Interceptor Navigation.
 
 Inertial (dead-reckoning) + Terrain-Contour Matching (TERCOM) fused with an
 Extended Kalman Filter for navigation without GNSS.

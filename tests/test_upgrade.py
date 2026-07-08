@@ -3,8 +3,8 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from syren import (SimConfig, Terrain, TerrainParticleFilter, run_simulation,
-                   run_montecarlo)
+from charybdis import (SimConfig, Terrain, TerrainParticleFilter, run_simulation,
+                       run_montecarlo)
 
 
 def test_pf_unit_predict_update():

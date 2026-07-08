@@ -1,12 +1,12 @@
-"""BLACK SEA SENTRY - Tactical Command Console.
+"""CHARYBDIS - Tactical Command Console.
 
 Real-time Streamlit + Plotly console for a GPS-denied UUV running dead-reckoned
 inertial navigation aided by Terrain Contour Matching (TCM). The GNC engine
-lives in `sentry_core`; this module is purely the operator-facing console and
+lives in `charybdis_core`; this module is purely the operator-facing console and
 the ~5 Hz real-time loop.
 
     uv add streamlit numpy plotly pandas
-    uv run streamlit run blacksea_sentry.py
+    uv run streamlit run charybdis_console.py
 """
 from __future__ import annotations
 
@@ -18,9 +18,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-import sentry_core as core
+import charybdis_core as core
 
-st.set_page_config(page_title="BLACK SEA SENTRY // TCM CONSOLE",
+st.set_page_config(page_title="CHARYBDIS // TCM CONSOLE",
                    page_icon="\U0001F6F0", layout="wide")
 
 # --------------------------------------------------------------------------- #
@@ -70,8 +70,8 @@ def bathy_grid(lo: float = -10.0, hi: float = 135.0, n: int = 150):
 # --------------------------------------------------------------------------- #
 #  SESSION STATE
 # --------------------------------------------------------------------------- #
-def boot(seed: int = 7):
-    st.session_state.sim = core.init_state(seed=seed)
+def boot(seed: int = 7, params: "core.SimParams | None" = None):
+    st.session_state.sim = core.init_state(seed=seed, params=params or core.SimParams())
     st.session_state.running = True
 
 
@@ -85,20 +85,36 @@ sim: core.SimState = st.session_state.sim
 # --------------------------------------------------------------------------- #
 with st.sidebar:
     st.markdown("### \u2699\ufe0f CONTROL UNIT")
+    tidal = st.slider("Tidal Current Intensity", 0.0, 3.0, 1.0, 0.1)
+    drift = st.slider("IMU Drift Coefficient", 0.0, 30.0, 12.0, 0.5)
+    dvl = st.slider("DVL Noise Factor", 0.0, 5.0, 1.0, 0.1)
+    dvl_dropout = st.slider("DVL Beam Dropout p", 0.0, 0.5, 0.0, 0.02)
+
+    st.markdown("**\U0001F9ED AUTONOMY**")
+    autonomy = st.checkbox("Autonomous mission (FSM)", True)
+    acoustic_mgmt = st.checkbox("Active-acoustic management", True)
+    avoid = st.checkbox("Reactive terrain avoidance", True)
+    threat = st.slider("Threat Environment", 0.0, 1.0, 0.3, 0.05)
+
+    st.markdown("**\U0001F6F0\ufe0f SENSING / CONTESTED**")
+    n_contacts = st.slider("Tracked Contacts", 0, 6, 3, 1)
+    spoof = st.checkbox("Inject bathymetry spoof", False)
+
     params = core.SimParams(
-        tidal=st.slider("Tidal Current Intensity", 0.0, 3.0, 1.0, 0.1),
-        drift=st.slider("IMU Drift Coefficient", 0.0, 30.0, 12.0, 0.5),
-        dvl=st.slider("DVL Noise Factor", 0.0, 5.0, 1.0, 0.1),
-    )
+        tidal=tidal, drift=drift, dvl=dvl, dvl_dropout=dvl_dropout,
+        autonomy=autonomy, acoustic_mgmt=acoustic_mgmt, avoid=avoid,
+        threat_level=threat, n_contacts=n_contacts, spoof=spoof)
+
     st.divider()
     c1, c2 = st.columns(2)
     if c1.button("\u25B6 ARM" if not st.session_state.running else "\u23F8 HOLD"):
         st.session_state.running = not st.session_state.running
     if c2.button("\u21BA RESET"):
-        boot(seed=int(st.session_state.get("seed", 7)))
+        boot(seed=int(st.session_state.get("seed", 7)), params=params)
         sim = st.session_state.sim
     st.session_state.seed = st.number_input("Nav seed", 0, 9999,
                                             int(st.session_state.get("seed", 7)))
+    st.caption("Contact count applies on RESET.")
     st.divider()
     if st.button("\U0001F6A8 EMERGENCY ACOUSTIC PING", type="primary"):
         core.request_ping(sim)
@@ -112,7 +128,7 @@ with st.sidebar:
 # --------------------------------------------------------------------------- #
 #  HEADER + TELEMETRY MATRIX
 # --------------------------------------------------------------------------- #
-st.markdown('<div class="hud-title">BLACK SEA SENTRY</div>', unsafe_allow_html=True)
+st.markdown('<div class="hud-title">CHARYBDIS</div>', unsafe_allow_html=True)
 st.markdown('<div class="hud-sub">GPS-DENIED UUV // INERTIAL + TERRAIN CONTOUR '
             'MATCHING // TACTICAL COMMAND CONSOLE</div>', unsafe_allow_html=True)
 st.write("")
@@ -143,11 +159,41 @@ m4.markdown(f'<div class="metric-card"><div class="metric-label">UNCERTAINTY / '
 
 st.write("")
 
+# --- second row: autonomy / endurance / avoidance / contacts -------------- #
+n_det = sum(1 for c in sim.world.contacts if c.detected) if sim.world else 0
+n_tot = len(sim.world.contacts) if sim.world else 0
+trk_err = core.tracking.track_error(sim.world) if sim.world else 0.0
+batt = sim.energy_frac * 100.0
+batt_col = "#39FF14" if batt > 40 else ("#FFB000" if batt > 20 else "#FF4B4B")
+alt_col = "#FF4B4B" if sim.avoid_active else "#39FF14"
+acu_col = "#FF4B4B" if sim.acoustic_mode == "ACTIVE" else "#39FF14"
+
+o1, o2, o3, o4 = st.columns(4)
+o1.markdown(f'<div class="metric-card"><div class="metric-label">MISSION STATE</div>'
+            f'<div class="metric-value" style="color:#00E5FF;font-size:20px">'
+            f'{sim.mission_state}</div><div class="metric-label">acoustic: '
+            f'<span style="color:{acu_col}">{sim.acoustic_mode}</span></div></div>',
+            unsafe_allow_html=True)
+o2.markdown(f'<div class="metric-card"><div class="metric-label">ENDURANCE</div>'
+            f'<div class="metric-value" style="color:{batt_col}">{batt:4.0f}%</div>'
+            f'<div class="metric-label">battery / propulsion</div></div>',
+            unsafe_allow_html=True)
+o3.markdown(f'<div class="metric-card"><div class="metric-label">SEABED CLEARANCE</div>'
+            f'<div class="metric-value" style="color:{alt_col}">{sim.altitude:5.0f} m</div>'
+            f'<div class="metric-label">{"AVOIDING" if sim.avoid_active else "nominal"}'
+            f' \u2022 depth {sim.vehicle_depth:.0f} m</div></div>', unsafe_allow_html=True)
+o4.markdown(f'<div class="metric-card"><div class="metric-label">CONTACTS</div>'
+            f'<div class="metric-value" style="color:#FFD400">{n_det}/{n_tot}</div>'
+            f'<div class="metric-label">track err {trk_err:4.1f} m</div></div>',
+            unsafe_allow_html=True)
+
+st.write("")
+
 
 # --------------------------------------------------------------------------- #
 #  TACTICAL PLOT
 # --------------------------------------------------------------------------- #
-def build_map(sim: core.SimState) -> go.Figure:
+def build_map(sim: core.SimState, params: core.SimParams) -> go.Figure:
     axis, Z = bathy_grid()
     fig = go.Figure()
     fig.add_trace(go.Contour(
@@ -200,6 +246,31 @@ def build_map(sim: core.SimState) -> go.Figure:
                   marker=dict(symbol="triangle-up-open", size=16, color="#FF4B4B"),
                   name="Asset (belief)"))
 
+    # tracked contacts (estimated positions from the passive-sonar trackers)
+    if sim.world is not None:
+        det = [c for c in sim.world.contacts if c.detected]
+        if det:
+            cx = [c.est[0] for c in det]
+            cy = [c.est[1] for c in det]
+            syms = ["square" if c.kind == "SURFACE" else "circle" for c in det]
+            labels = [c.cid for c in det]
+            fig.add_trace(go.Scatter(
+                x=cx, y=cy, mode="markers+text", text=labels,
+                textposition="top center", textfont=dict(color="#FFB000", size=9),
+                marker=dict(symbol=syms, size=11, color="rgba(255,176,0,0.85)",
+                            line=dict(color="#000", width=1)), name="Contact track"))
+
+    # adversarial spoof zone
+    if getattr(params, "spoof", False):
+        c = np.asarray(params.spoof_center, float)
+        th = np.linspace(0, 2 * np.pi, 60)
+        fig.add_trace(go.Scatter(
+            x=c[0] + params.spoof_radius * np.cos(th),
+            y=c[1] + params.spoof_radius * np.sin(th), mode="lines",
+            line=dict(color="#FF00E5", width=1.5, dash="dot"),
+            name="SPOOF ZONE" + (" (DETECTED)" if sim.spoof_detected else ""),
+            hoverinfo="skip"))
+
     fig.update_layout(
         height=640, margin=dict(l=10, r=10, t=30, b=10),
         paper_bgcolor="#05080B", plot_bgcolor="#05080B",
@@ -217,7 +288,7 @@ def build_map(sim: core.SimState) -> go.Figure:
 
 left, right = st.columns([3, 2])
 with left:
-    st.plotly_chart(build_map(sim), use_container_width=True,
+    st.plotly_chart(build_map(sim, params), use_container_width=True,
                     config={"displayModeBar": False})
 
 with right:
@@ -243,6 +314,24 @@ with right:
         st.plotly_chart(tfig, use_container_width=True,
                         config={"displayModeBar": False})
 
+        if "altitude" in df:
+            afig = go.Figure()
+            afig.add_trace(go.Scatter(x=df["t"], y=df["altitude"], mode="lines",
+                           line=dict(color="#00E5FF", width=2), name="Clearance [m]",
+                           fill="tozeroy", fillcolor="rgba(0,229,255,0.08)"))
+            afig.add_hline(y=params.min_clearance, line=dict(
+                color="#FF4B4B", width=1, dash="dot"))
+            afig.update_layout(height=170, margin=dict(l=10, r=10, t=28, b=10),
+                               paper_bgcolor="#05080B", plot_bgcolor="#05080B",
+                               font=dict(color="#8FF0C0", size=10, family="monospace"),
+                               showlegend=False,
+                               xaxis=dict(title="MISSION TIME [s]", gridcolor="#0d1f26"),
+                               yaxis=dict(title="ALT [m]", gridcolor="#0d1f26"),
+                               title=dict(text="SEABED CLEARANCE (forward-look)", x=0.5,
+                                          font=dict(color="#00E5FF", size=12)))
+            st.plotly_chart(afig, use_container_width=True,
+                            config={"displayModeBar": False})
+
     st.markdown("**\U0001F4E1 TACTICAL LOG**")
     colors = {"INFO": "#8FF0C0", "FIX": "#39FF14", "ALERT": "#FF4B4B", "WARN": "#FFB000"}
     rows = []
@@ -260,7 +349,7 @@ with right:
 # --------------------------------------------------------------------------- #
 #  REAL-TIME LOOP (~5 Hz)
 # --------------------------------------------------------------------------- #
-_LOOP_ENABLED = os.environ.get("SENTRY_NO_LOOP") != "1"  # test hook
+_LOOP_ENABLED = os.environ.get("CHARYBDIS_NO_LOOP") != "1"  # test hook
 if _LOOP_ENABLED and st.session_state.running and not sim.reached:
     core.step(sim, params)
     time.sleep(core.TICK_SECONDS)

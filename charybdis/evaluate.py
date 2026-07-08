@@ -1,4 +1,4 @@
-"""Monte-Carlo evaluation of the Syren navigation filters.
+"""Monte-Carlo evaluation of the Charybdis navigation filters.
 
 Runs the full simulation across many random seeds and reports the metrics a
 GNC engineer actually signs off on:
