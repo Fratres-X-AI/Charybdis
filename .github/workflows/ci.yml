@@ -33,7 +33,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Compile all sources
-        run: python -m compileall -q charybdis charybdis_core.py charybdis_console.py charybdis_sensors.py charybdis_tracking.py charybdis_autonomy.py charybdis_bathy.py run_sim.py
+        run: python -m compileall -q charybdis charybdis_core.py charybdis_console.py charybdis_sensors.py charybdis_tracking.py charybdis_autonomy.py charybdis_bathy.py charybdis_nn.py charybdis_slam.py charybdis_swarm.py run_sim.py scripts
 
       - name: Run test suite
         env:

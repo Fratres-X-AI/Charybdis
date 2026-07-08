@@ -99,9 +99,8 @@ Real bathymetry loading · adaptive/active TCM triggering · improved error-elli
 + loudness-based counter-detection risk · DVL beam-geometry + scale + IMU bias
 fusion upgrade · mission planner FSM · adaptive TCM · terrain avoidance · energy
 / endurance · multi-contact tracking · active-acoustic management · spoofing +
-detection. **Deferred** (need heavy runtime/data, not portably testable):
-SLAM-style online mapping, ROS2 nodes, learned (NN) terrain matching, multi-agent
-coordination.
+detection · learned NN TCM · online terrain SLAM · multi-agent coordination ·
+ROS2 bridge · GEBCO NetCDF ingestion.
 
 ### Bathymetric nodes
 Trench Alpha `(35, 25)` · Ridge Bravo `(70, 85)` · Seamount Charlie `(100, 105)`, lock radius `5.0 u`.
@@ -112,7 +111,10 @@ Trench Alpha `(35, 25)` · Ridge Bravo `(70, 85)` · Seamount Charlie `(100, 105
 uv add streamlit numpy plotly pandas          # or: pip install -r requirements.txt
 uv run streamlit run charybdis_console.py      # or: streamlit run charybdis_console.py
 python charybdis_core.py                         # headless autonomous-mission self-test
-pytest tests/test_charybdis_uuv.py tests/test_upgrade2.py -q
+pytest tests/test_charybdis_uuv.py tests/test_upgrade2.py tests/test_final4.py -q
+python scripts/benchmark_15of15.py          # SLAM / swarm / NN metrics (NN needs torch)
+bash scripts/ros2_smoke.sh                  # Docker + ROS2 jazzy (optional)
+python scripts/train_tcm_nn.py              # GPU train -> models/tcm_cnn.pt
 ```
 
 > Research/simulation only.
