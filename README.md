@@ -9,7 +9,7 @@
 See [`docs/MISSION.md`](docs/MISSION.md), [`docs/MATURITY.md`](docs/MATURITY.md),
 and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## GDI stack (airborne interceptor)
+## GDI stack
 
 Terrain-aided inertial navigation for a GNSS-denied interceptor. Charybdis fuses a
 strapdown **INS (dead-reckoning)** with **TERCOM** terrain-contour matching and a
