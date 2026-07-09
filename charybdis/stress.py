@@ -43,6 +43,8 @@ class StressGates:
     ekf_nees_max: float = 30.0
     pmf_nees_min: float = 0.05
     pmf_nees_max: float = 10.0
+    pf_nees_min: float = 0.05
+    pf_nees_max: float = 20.0
     divergence_m: float = 150.0
     max_div_rate: float = 0.05
 
@@ -92,35 +94,55 @@ def _run_one(args: tuple) -> MonteCarloResult:
             continue
         out[f"{f}_final"] = float(err[-1])
         out[f"{f}_rmse"] = float(np.sqrt(np.mean(err ** 2)))
-    out["ekf_nees"] = float(np.mean(
-        _nees_second_half(res.ekf_pos, res.ekf_pcov, res.truth.pos)))
+    ekf_s = _nees_second_half(res.ekf_pos, res.ekf_pcov, res.truth.pos)
+    out["ekf_nees"] = float(np.mean(ekf_s))
+    out["ekf_nees_s"] = ekf_s
     if res.pmf_err is not None:
-        out["pmf_nees"] = float(np.mean(
-            _nees_second_half(res.pmf_pos, res.pmf_pcov, res.truth.pos)))
+        pmf_s = _nees_second_half(res.pmf_pos, res.pmf_pcov, res.truth.pos)
+        out["pmf_nees"] = float(np.mean(pmf_s))
+        out["pmf_nees_s"] = pmf_s
+    if res.pf_err is not None and res.pf_pcov is not None:
+        pf_s = _nees_second_half(res.pf_pos, res.pf_pcov, res.truth.pos)
+        out["pf_nees"] = float(np.mean(pf_s))
+        out["pf_nees_s"] = pf_s
+    out["n_ekf_resets"] = int(res.n_ekf_resets)
+    out["n_ambiguous"] = int(res.n_ambiguous)
     return out
 
 
 def _aggregate(rows: list[dict], n_runs: int) -> MonteCarloResult:
     final = {f: [] for f in FILTERS}
     rmse = {f: [] for f in FILTERS}
-    nees_all, pmf_nees_all = [], []
+    nees_all = {"ekf": [], "pf": [], "pmf": []}
+    nees_samp = {"ekf": [], "pf": [], "pmf": []}
+    resets, ambig = [], []
     for r in rows:
         for f in FILTERS:
             kf, kr = f"{f}_final", f"{f}_rmse"
             if kf in r:
                 final[f].append(r[kf])
                 rmse[f].append(r[kr])
-        if "ekf_nees" in r:
-            nees_all.append(r["ekf_nees"])
-        if "pmf_nees" in r:
-            pmf_nees_all.append(r["pmf_nees"])
+        for f in ("ekf", "pf", "pmf"):
+            if f"{f}_nees" in r:
+                nees_all[f].append(r[f"{f}_nees"])
+            if f"{f}_nees_s" in r:
+                nees_samp[f].append(np.asarray(r[f"{f}_nees_s"]))
+        if "n_ekf_resets" in r:
+            resets.append(r["n_ekf_resets"])
+        if "n_ambiguous" in r:
+            ambig.append(r["n_ambiguous"])
     final = {f: np.array(v) for f, v in final.items() if v}
     rmse = {f: np.array(v) for f, v in rmse.items() if v}
+    samples = {f: np.concatenate(v) for f, v in nees_samp.items() if v}
     seeds = [r["seed"] for r in rows]
     return MonteCarloResult(
         n_runs=n_runs, seeds=seeds, final_err=final, rmse=rmse,
-        ekf_nees=float(np.mean(nees_all)) if nees_all else 0.0,
-        pmf_nees=float(np.mean(pmf_nees_all)) if pmf_nees_all else 0.0,
+        ekf_nees=float(np.mean(nees_all["ekf"])) if nees_all["ekf"] else 0.0,
+        pmf_nees=float(np.mean(nees_all["pmf"])) if nees_all["pmf"] else 0.0,
+        pf_nees=float(np.mean(nees_all["pf"])) if nees_all["pf"] else 0.0,
+        nees_samples=samples,
+        n_resets=float(np.mean(resets)) if resets else 0.0,
+        n_ambiguous=float(np.mean(ambig)) if ambig else 0.0,
     )
 
 
@@ -139,6 +161,8 @@ def evaluate_gates(mc: MonteCarloResult, gates: StressGates) -> dict[str, bool]:
     if "pf" in mc.final_err:
         out["pf_cep95"] = mc.cep("pf", 95) <= gates.pf_cep95_max_m
         out["pf_div"] = float(np.mean(mc.final_err["pf"] > div)) <= gates.max_div_rate
+        if mc.pf_nees > 0.0:
+            out["pf_nees"] = gates.pf_nees_min <= mc.pf_nees <= gates.pf_nees_max
     if "ins" in mc.final_err:
         out["ins_cep95"] = mc.cep("ins", 95) <= gates.ins_cep95_max_m
     return out

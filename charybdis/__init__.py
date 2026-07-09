@@ -16,6 +16,9 @@ from .ekf import NavEKF
 from .pf import TerrainParticleFilter
 from .pmf import TerrainPointMassFilter
 from .navigator import Navigator, NavEstimate
+from .estimation import (InnovationMonitor, covariance_intersection,
+                         cluster_modes, grid_multimodality, nees,
+                         stochastic_linearize, terrain_meas_var)
 from .action_envelope import ActionEnvelope, ACTIONS, compute_action_envelope
 from .simulation import run_simulation, SimResult
 from .evaluate import run_montecarlo, MonteCarloResult
@@ -43,6 +46,13 @@ __all__ = [
     "TerrainPointMassFilter",
     "Navigator",
     "NavEstimate",
+    "InnovationMonitor",
+    "covariance_intersection",
+    "cluster_modes",
+    "grid_multimodality",
+    "nees",
+    "stochastic_linearize",
+    "terrain_meas_var",
     "ActionEnvelope",
     "ACTIONS",
     "compute_action_envelope",

@@ -26,11 +26,15 @@ class SimResult:
     ins_err: np.ndarray
     pf_pos: np.ndarray | None = None
     pf_std: np.ndarray | None = None
+    pf_pcov: np.ndarray | None = None
     pf_err: np.ndarray | None = None
     pmf_pos: np.ndarray | None = None
     pmf_std: np.ndarray | None = None
     pmf_pcov: np.ndarray | None = None
     pmf_err: np.ndarray | None = None
+    n_ekf_resets: int = 0            # PF-driven EKF recoveries
+    n_ambiguous: int = 0            # ambiguity-flagged coordination checks
+    n_coord_checks: int = 0         # total coordination checks
 
     def summary(self) -> dict:
         def rmse(e):
@@ -78,6 +82,7 @@ def run_simulation(cfg: SimConfig | None = None,
     ins_err = np.linalg.norm(a["ins_pos"] - truth.pos, axis=1)
     pf_pos = a.get("pf_pos")
     pf_std = a.get("pf_std")
+    pf_pcov = a.get("pf_pcov")
     pf_err = None if pf_pos is None else np.linalg.norm(pf_pos - truth.pos, axis=1)
     pmf_pos = a.get("pmf_pos")
     pmf_std = a.get("pmf_std")
@@ -97,9 +102,13 @@ def run_simulation(cfg: SimConfig | None = None,
         ins_err=ins_err,
         pf_pos=pf_pos,
         pf_std=pf_std,
+        pf_pcov=pf_pcov,
         pf_err=pf_err,
         pmf_pos=pmf_pos,
         pmf_std=pmf_std,
         pmf_pcov=pmf_pcov,
         pmf_err=pmf_err,
+        n_ekf_resets=len(nav.rec.ekf_reset),
+        n_ambiguous=int(sum(1 for _, _, amb in nav.rec.ambiguity if amb)),
+        n_coord_checks=len(nav.rec.ambiguity),
     )

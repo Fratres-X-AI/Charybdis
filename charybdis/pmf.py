@@ -31,6 +31,7 @@ import numpy as np
 
 from .config import SimConfig
 from .terrain import Terrain
+from . import estimation as est
 
 
 class TerrainPointMassFilter:
@@ -60,8 +61,11 @@ class TerrainPointMassFilter:
 
         # Terrain-match noise inflated over raw sensor noise to account for DEM
         # interpolation error and terrain non-linearity (keeps the filter
-        # consistent - a valid posterior stays no wider than the prior).
-        self._R = cfg.pmf_meas_infl * (cfg.radar_noise ** 2 + cfg.baro_noise ** 2)
+        # consistent - a valid posterior stays no wider than the prior), plus an
+        # explicit stored-map vertical error term (the bathymetry is not ground
+        # truth).
+        self._R = (cfg.pmf_meas_infl * est.sensor_elev_var(cfg)
+                   + cfg.map_sigma ** 2)
         self._cov_floor = (0.35 * self.res) ** 2
 
     # ---- prediction (IMU driven, same model as the EKF) ---------------- #
@@ -77,7 +81,7 @@ class TerrainPointMassFilter:
         F[0:2, 4:6] = -0.5 * dt * dt * np.eye(2)
         F[2:4, 4:6] = -dt * np.eye(2)
 
-        q_a = cfg.accel_noise ** 2 * cfg.pmf_process_infl
+        q_a = cfg.accel_noise ** 2 * cfg.pmf_process_infl * self._q_scale()
         q_b = cfg.accel_bias_rw ** 2
         Q = np.zeros((self.N, self.N))
         for i in range(2):
@@ -86,6 +90,19 @@ class TerrainPointMassFilter:
             Q[i + 2, i + 2] = q_a * dt
             Q[i + 4, i + 4] = q_b * dt
         self.P = F @ self.P @ F.T + Q
+
+    def _q_scale(self) -> float:
+        """Terrain-driven process inflation: in low-information terrain the grid
+        update barely moves, so extra process noise keeps the posterior from
+        becoming over-confident before distinctive terrain returns."""
+        cfg = self.cfg
+        if not cfg.adapt_q_terrain:
+            return 1.0
+        grad = self.terrain.gradient(self.x[0], self.x[1])
+        info = float(grad @ grad)
+        ref = cfg.adapt_q_terrain_ref ** 2
+        factor = 1.0 + (cfg.adapt_q_terrain_max - 1.0) / (1.0 + info / max(ref, 1e-9))
+        return float(np.clip(factor, 1.0, cfg.adapt_q_terrain_max))
 
     # ---- terrain update (non-linear grid + marginalized linear states) - #
     def update_trn(self, ground_elev_meas: float, t: float | None = None) -> None:
@@ -167,6 +184,14 @@ class TerrainPointMassFilter:
         A = np.eye(self.N) - K @ H
         self.P = A @ self.P @ A.T + K @ R @ K.T
         self.P = 0.5 * (self.P + self.P.T)
+
+    # ---- mode / ambiguity awareness ------------------------------------ #
+    def multimodality(self) -> tuple[int, float]:
+        """(n_significant_peaks, secondary_mass_fraction) of the grid posterior."""
+        return est.grid_multimodality(self.p, self.cfg.mode_grid_frac)
+
+    def n_modes(self) -> int:
+        return self.multimodality()[0]
 
     # ---- estimates ----------------------------------------------------- #
     @property

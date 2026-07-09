@@ -17,6 +17,7 @@ import numpy as np
 
 from .config import SimConfig
 from .terrain import Terrain
+from . import estimation as est
 
 
 @dataclass
@@ -58,6 +59,10 @@ class Tercom:
                 cost[i, j] = np.mean(np.abs(elev - meas))
 
         i0, j0 = np.unravel_index(np.argmin(cost), cost.shape)
+        if not self._peak_is_distinct(cost, i0, j0):
+            return TercomFix(pos=pts[-1].copy(), offset=np.zeros(2),
+                             cost=float(cost[i0, j0]), cov=np.eye(2) * 1e9,
+                             valid=False)
         dx, dy = self._subcell(offs, cost, i0, j0)
         fix = pts[-1] + np.array([dx, dy])
 
@@ -65,6 +70,18 @@ class Tercom:
         cov = self._cov_from_surface(offs, cost, i0, j0)
         return TercomFix(pos=fix, offset=np.array([dx, dy]),
                          cost=float(cost[i0, j0]), cov=cov, valid=True)
+
+    def _peak_is_distinct(self, cost: np.ndarray, i0: int, j0: int) -> bool:
+        """Reject flat or multi-peak correlation surfaces."""
+        mask = np.ones(cost.shape, dtype=bool)
+        i1, i2 = max(0, i0 - 1), min(cost.shape[0], i0 + 2)
+        j1, j2 = max(0, j0 - 1), min(cost.shape[1], j0 + 2)
+        mask[i1:i2, j1:j2] = False
+        if not np.any(mask):
+            return True
+        second = float(np.min(cost[mask]))
+        best = float(cost[i0, j0])
+        return (second - best) >= self.cfg.tercom_min_cost_margin
 
     @staticmethod
     def _subcell(offs, cost, i0, j0):
@@ -97,4 +114,4 @@ class Tercom:
         return np.diag([cxx, cyy])
 
     def _noise(self) -> float:
-        return self.cfg.radar_noise ** 2 + self.cfg.baro_noise ** 2
+        return est.terrain_meas_var(self.cfg)

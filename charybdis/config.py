@@ -45,6 +45,12 @@ class SimConfig:
     tercom_strip: int = 48          # samples per correlation strip
     tercom_search: float = 450.0    # +/- search half-window [m]
     tercom_search_step: float = 15.0
+    tercom_min_cost_margin: float = 0.25  # reject nearly-tied correlation peaks [m]
+
+    # --- Map / bathymetry uncertainty (map is NOT ground truth) ---
+    map_sigma: float = 2.0          # stored-DEM vertical error std [m]
+    map_interp_frac: float = 0.5    # sub-cell interpolation error as frac of a
+                                    # cell, projected through terrain slope
 
     # --- EKF ---
     trn_update: bool = True         # recursive single-point terrain update
@@ -53,6 +59,43 @@ class SimConfig:
     init_vel_std: float = 3.0
     init_pos_error: float = 0.0     # actual initial position error injected [m]
     gate_chi2: float = 13.8         # 2-dof 99.9% gate
+
+    # --- EKF stochastic (unscented) linearisation of the DEM ---
+    # Point-slope Jacobians are inaccurate exactly when the position error is
+    # large (the divergence regime); fit the slope over the position prior and
+    # add the residual as measurement noise for consistency.
+    ekf_stochastic_lin: bool = True
+    ekf_sl_kappa: float = 1.0       # unscented spread parameter
+    ekf_sl_min_frac: float = 0.75   # min sigma-point radius as frac of a cell
+    ekf_sl_max_radius: float = 400.0  # max sigma-point radius [m]
+
+    # --- Adaptive process noise (innovation-based / covariance matching) ---
+    adapt_q: bool = True            # scale Q from recent innovation statistics
+    adapt_q_window: int = 40        # innovation window length [updates]
+    adapt_q_min: float = 1.0        # never shrink Q (guards overconfidence)
+    adapt_q_max: float = 12.0       # cap Q inflation
+    adapt_q_min_count: int = 15     # updates required before adapting
+    adapt_q_terrain: bool = True    # extra Q inflation in low-information terrain
+    adapt_q_terrain_max: float = 4.0
+    adapt_q_terrain_ref: float = 0.06  # slope Fisher scale for "informative"
+
+    # --- EKF <-> PF interaction (divergence detection + recovery) ---
+    filter_fusion: bool = True      # let the robust filters rescue the EKF
+    fusion_period: float = 1.0      # seconds between coordination checks
+    ekf_div_maha: float = 30.0      # cross-filter disagreement gate (2-dof)
+    ekf_div_nis: float = 5.0        # sustained EKF NIS ratio => faulted
+    ekf_reset_infl: float = 1.5     # covariance inflation on an EKF reset
+    ekf_reset_cooldown: float = 4.0 # seconds between resets (anti-thrash)
+    fusion_ci_help_std: float = 60.0  # soft CI correction only when EKF this lost [m]
+    ref_confident_std: float = 160.0  # reference trusted for reset below this [m]
+    ref_confident_neff: float = 0.30  # PF Neff/N required to trust a reset
+
+    # --- Multi-hypothesis / mode management (ambiguous terrain) ---
+    mode_mgmt: bool = True          # detect PF ambiguity and adapt behaviour
+    mode_period: float = 1.0        # seconds between ambiguity checks
+    mode_cluster_radius: float = 120.0  # particle clustering radius [m]
+    mode_mass_frac: float = 0.15    # min mass fraction for a distinct mode
+    mode_grid_frac: float = 0.45    # grid peak threshold (PMF multimodality)
 
     # --- Particle filter (terrain-aided, non-Gaussian) ---
     use_pf: bool = True             # run the particle filter alongside the EKF
@@ -64,8 +107,8 @@ class SimConfig:
     pf_inject: float = 0.25         # fraction of particles relocalised on a fix
     pf_inject_std_max: float = 160.0  # skip injection if fix worse than this [m]
 
-    # --- Point-mass filter (grid Bayesian, terrain-referenced) ---
-    use_pmf: bool = True            # run the marginalized PMF alongside EKF/PF
+    # --- Point-mass filter (legacy comparison, not core recovery path) ---
+    use_pmf: bool = True            # keep available for existing eval scripts
     pmf_res: float = 25.0           # grid spacing [m]
     pmf_halfwidth: float = 500.0    # grid half-window [m] (auto-grows w/ init_pos_std)
     pmf_meas_dof: float = 5.0       # Student-t dof for robust terrain likelihood
