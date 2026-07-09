@@ -7,10 +7,12 @@ management, reactive terrain avoidance, and spoof-resistant TCM gating.
 import numpy as np
 import pytest
 
-import charybdis_core as core
-import charybdis_sensors as sensors
-import charybdis_tracking as tracking
-import charybdis_bathy as bathy
+pytestmark = pytest.mark.console
+
+from console import charybdis_bathy as bathy
+from console import charybdis_core as core
+from console import charybdis_sensors as sensors
+from console import charybdis_tracking as tracking
 
 
 def _run(params, seed=7, cap=600):
@@ -130,7 +132,7 @@ def test_adaptive_tcm_diverts_when_uncertain():
 
 
 def test_active_acoustic_policy_threat_gated():
-    import charybdis_autonomy as autonomy
+    from console import charybdis_autonomy as autonomy
     hot = core.SimParams(autonomy=True, acoustic_mgmt=True,
                          active_ping_trigger=20.0, threat_level=0.2)
     cold = core.SimParams(autonomy=True, acoustic_mgmt=True,

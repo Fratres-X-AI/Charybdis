@@ -9,13 +9,13 @@ from pathlib import Path
 # repo root on PYTHONPATH when launched from ros2_ws after colcon build
 ROOT = Path(__file__).resolve()
 for candidate in [ROOT, *ROOT.parents]:
-    if (candidate / "charybdis_core.py").exists():
+    if (candidate / "console" / "charybdis_core.py").exists():
         ROOT = candidate
         break
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-import charybdis_core as core
+from console import charybdis_core as core
 
 
 def main():

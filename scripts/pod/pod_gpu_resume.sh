@@ -8,8 +8,8 @@ log(){ echo "[$(ts)] $*"; }
 log "TRAIN NN ON GPU (vectorised data-gen, device=cuda)"
 python - <<'PY'
 import time, numpy as np, torch
-from charybdis_nn import train, load_model, tcm_nn_match
-import charybdis_core as core
+from console.charybdis_nn import train, load_model, tcm_nn_match
+from console import charybdis_core as core
 assert torch.cuda.is_available()
 t0=time.time()
 train(model_path="models/tcm_cnn.pt", n_samples=120000, epochs=40, batch=4096, seed=0, device="cuda")

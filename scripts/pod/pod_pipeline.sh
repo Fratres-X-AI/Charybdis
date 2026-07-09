@@ -17,7 +17,7 @@ python -m compileall -q -j 31 charybdis . 2>/dev/null || python -m compileall -q
 log "base pytest x31"
 python -m pytest -q --ignore=tests/test_final4.py -n 31
 log "train NN GPU batch=1024 workers=31"
-python -c "from charybdis_nn import train; train(n_samples=24000, epochs=12, batch=1024, seed=0)"
+python -c "from console.charybdis_nn import train; train(n_samples=24000, epochs=12, batch=1024, seed=0)"
 log "final4 pytest x31"
 python -m pytest tests/test_final4.py -q -n 31
 log "benchmark (swarm workers=31)"

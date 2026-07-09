@@ -15,7 +15,7 @@ If a change does not improve filter correctness, evaluation honesty, or the abil
 
 ## Secondary product
 
-**UUV tactical console** (`charybdis_core.py` + Streamlit UI) is an application layer that demonstrates contested underwater TCM, autonomy, and tracking. It shares the *problem domain* (GPS-denied terrain aiding) but is a separate codebase spine from the airborne GDI package (`charybdis/`).
+**UUV tactical console** (`console/charybdis_*.py` + Streamlit UI) is an application layer that demonstrates contested underwater TCM, autonomy, and tracking. It is **paused** while we finish the airborne GDI package (`charybdis/`).
 
 Do not force a premature merge of the two stacks. Share ideas and APIs (`NavEstimate`, bathymetry loaders) first; share implementations only when adapters are clean.
 

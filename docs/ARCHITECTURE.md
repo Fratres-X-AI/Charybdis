@@ -26,7 +26,7 @@ charybdis/                 # installable GDI library
   __init__.py              # Stable/Beta exports only
   experimental/            # opt-in research modules
   *.py                     # nav + data + eval
-apps via root: run_sim.py, charybdis_console.py
+apps via root: run_sim.py; UUV console (paused): console/charybdis_console.py
 scripts/                   # product MC / train / stress
 scripts/pod/               # RunPod one-offs
 docs/                      # MISSION, MATURITY, ARCHITECTURE

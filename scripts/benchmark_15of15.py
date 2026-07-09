@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
-import charybdis_core as core
-import charybdis_slam as slam
-import charybdis_swarm as swarm
+from console import charybdis_core as core
+from console import charybdis_slam as slam
+from console import charybdis_swarm as swarm
 
 
 def bench_slam(ticks: int = 100) -> float:
@@ -30,7 +30,7 @@ def bench_swarm() -> dict:
 def bench_nn() -> dict:
     pytest = __import__("pytest")
     torch = pytest.importorskip("torch")
-    import charybdis_nn as nn
+    from console import charybdis_nn as nn
     from pathlib import Path
     tmp = Path("models/tcm_cnn.pt")
     if not tmp.is_file():

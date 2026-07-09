@@ -13,7 +13,7 @@ import numpy as np
 
 PATCH = 9
 SPAN = 6.0
-DEFAULT_MODEL = Path(__file__).resolve().parent / "models" / "tcm_cnn.pt"
+DEFAULT_MODEL = Path(__file__).resolve().parent.parent / "models" / "tcm_cnn.pt"
 
 _model = None
 _device = "cpu"
@@ -158,7 +158,7 @@ def train(model_path: str | Path | None = None, n_samples: int = 12000,
           epochs: int = 8, batch: int = 256, seed: int = 0, device: str | None = None,
           num_workers: int = 0):
     """Train on synthetic bathymetry; writes ``models/tcm_cnn.pt``."""
-    import charybdis_core as core
+    from console import charybdis_core as core
     torch, nn = _require_torch()
     device = _pick_device(device)
     rng = np.random.default_rng(seed)

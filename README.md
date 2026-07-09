@@ -1,12 +1,13 @@
 # Charybdis — GPS-Denied Terrain-Aided Navigation
 
-**Primary goal:** a trustworthy GPS-denied navigation research stack
-(INS + TERCOM/TRN + EKF/PF/PMF) with honest Monte-Carlo evaluation.
+**Current focus:** the core GPS-denied navigation stack in the `charybdis/` package
+(INS + TERCOM/TRN + EKF + particle filter), with honest Monte-Carlo evaluation.
 
-**Secondary:** a UUV tactical Streamlit console (separate spine under
-`charybdis_*.py`).
+**Paused:** the UUV tactical Streamlit console and autonomy layer live under
+[`console/`](console/) and are not part of active development until core navigation
+is in good shape. See [`console/README.md`](console/README.md).
 
-See [`docs/MISSION.md`](docs/MISSION.md), [`docs/MATURITY.md`](docs/MATURITY.md),
+See also [`docs/MISSION.md`](docs/MISSION.md), [`docs/MATURITY.md`](docs/MATURITY.md),
 and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## GDI stack
@@ -34,7 +35,7 @@ Monte-Carlo harness reports CEP and filter-consistency (NEES) metrics.
 - **TRN update** (`ekf.py`): recursive single-point update using measured terrain elevation vs. DEM, Jacobian = local terrain slope.
 - **EKF** (`ekf.py`): state `[px, py, vx, vy, bax, bay]`, IMU-driven prediction, Joseph-form covariance, χ² innovation gating.
 - **Particle filter** (`pf.py`): bootstrap SIR over the same 6-state model. Weights come from the *exact* (non-linearised) terrain-elevation likelihood, so it represents the multi-modal position posterior instead of a single Gaussian. Systematic resampling with floored roughening prevents impoverishment; TERCOM fixes are χ²-gated and used to relocalise the cloud (with velocity recovered by differencing consecutive fixes). This is what lets it recover from large initial errors the EKF cannot.
-- **Navigator** (`navigator.py`): fusion loop; exposes **`NavEstimate`** (pos + 2×2 cov) for autonomy/UI.
+- **Navigator** (`navigator.py`): fusion loop; exposes **`NavEstimate`** (pos + 2×2 cov) for downstream consumers.
 - **Evaluation** (`evaluate.py`): Monte-Carlo over seeds → CEP50/CEP95, mean RMSE, and EKF **NEES** (a 2-DOF-consistent filter averages ≈ 2.0).
 
 ## Run
@@ -46,8 +47,10 @@ python run_sim.py --duration 300 --seed 12
 python run_sim.py --montecarlo 15 # CEP / NEES evaluation table
 python scripts/mc_real_region.py  # synthetic MC; pass --npz for a real tile
 python scripts/stress_run.py      # stress harness
-pytest -q
+pytest -q                         # core navigation tests (console tests excluded)
 ```
+
+Console tests (paused layer): `RUN_CONSOLE=1 pytest -m console -q`
 
 ## Representative results (180 s, 50 Hz)
 
@@ -64,76 +67,38 @@ Monte-Carlo (8 seeds): EKF CEP50 **24 m** / CEP95 **59 m**, PF CEP50 **27 m**; E
 ## Layout
 
 ```
-charybdis/                 # GDI library (Stable/Beta default API)
+charybdis/                 # Core GDI library (active development)
   navigator.py             # NavEstimate + fusion loop
-  ekf.py / pf.py / pmf.py
-  bathy.py                 # GEBCO / grid loaders (Beta)
+  ekf.py / pf.py / pmf.py / tercom.py / ins.py
+  bathy.py                 # GEBCO / grid loaders
   experimental/            # NN matcher, SLAM, swarm (opt-in)
+console/                   # UUV tactical console + autonomy (PAUSED)
 docs/                      # MISSION, MATURITY, ARCHITECTURE
-scripts/                   # product MC / stress / train
-scripts/pod/               # RunPod helpers (not product API)
-tests/
+scripts/                   # MC / stress / train / pod helpers
+tests/                     # Core nav tests; console tests marked @console
 run_sim.py
-charybdis_*.py             # UUV console spine (secondary product)
 ```
 
-Experimental imports:
+Experimental imports (core package):
 
 ```python
 from charybdis.experimental import run_swarm, init_slam
 from charybdis.experimental.nn_matcher import match_position, train
 ```
 
----
+## UUV console (paused)
 
-# Charybdis — UUV TCM Tactical Console
+The Streamlit tactical console, autonomy FSM, multi-contact tracking, learned TCM
+CNN, SLAM, and swarm modules were moved from the repo root into `console/`. They
+remain in the repository but are isolated until the core navigation stack is
+production-ready.
 
-A second, self-contained deliverable: a real-time **Streamlit + Plotly**
-"Tactical Command Console" for a **GPS-denied unmanned underwater vehicle**.
-It runs dead-reckoned inertial navigation (noisy DVL + drifting IMU), grows a
-2-D error-covariance ellipse, and bounds the drift with **Terrain Contour
-Matching** fixes computed by real normalized cross-correlation of the seabed
-profile against a stored bathymetric map — now wrapped in a full **autonomy
-layer** (mission FSM, adaptive fixing, endurance, acoustic management, terrain
-avoidance) plus contested-environment behaviour (spoof resistance, contact
-tracking).
-
-- `charybdis_core.py` — pure-NumPy GNC engine (true physics, sensor models, dead-reckoning covariance, TCM correlation + spoof-resistant gating, active-ping override) that orchestrates the subsystem modules. No UI coupling.
-- `charybdis_sensors.py` — **Janus 4-beam DVL** (per-beam Doppler projection, least-squares velocity reconstruction, scale-factor error, beam dropout → bottom-lock loss) and an **IMU** with a random-walk heading (attitude) bias that mis-resolves body velocity into the nav frame — the dominant dead-reckoning error.
-- `charybdis_autonomy.py` — mission **FSM** `PATROL → INSPECT → TCM FIX → RTB → ON STATION`, normalised **energy/endurance** model (hotel + cubic propulsion + sonar) that forces return-to-base, **adaptive terrain fixing** (divert to the nearest contour when 1σ error exceeds a trigger), passive-first **active-acoustic management** (radiate only when badly lost *and* the threat tolerates it), and reactive **vertical terrain avoidance** (forward-look bottom-following).
-- `charybdis_tracking.py` — **multi-contact tracking**: independent constant-velocity Kalman filters fed noisy range/bearing from the *believed* ownship position, so track quality degrades with nav drift.
-- `charybdis_bathy.py` — **real bathymetry loading** (`.npy` / `.npz` / GeoTIFF-if-`rasterio`) as a bilinearly-sampled provider swapped in via `set_bathymetry`; falls back to the synthetic map.
-- `charybdis_console.py` — military-spec console: live tactical plot (true vs INS path, moving 1σ ellipse, contours, tracked contacts, spoof zone, waypoint, asset), sidebar controls (tidal / IMU drift / DVL noise + beam dropout, autonomy toggles, threat level, contact count, spoof injection), **EMERGENCY ACOUSTIC PING**, a two-row telemetry matrix (deflection, drift accel, counter-detection risk, uncertainty, mission state, endurance, seabed clearance, contacts), seabed-clearance chart, and a scrolling tactical log. Asynchronous ~5 Hz loop.
-
-The nav filter is strictly isolated from ground truth; TCM/ping fixes are the
-only re-coupling. Error growth is the exact constant-velocity covariance model
-(position variance ~ cubic in time), so the plotted ellipse is statistically
-consistent with the true deflection, and collapses to ~0 on each fix.
-Autonomy/tracking run on a **separate RNG stream**, so the seeded nav-sensor
-noise (and the classic non-autonomous behaviour) is bit-for-bit unchanged.
-
-### Delivered from the enhancement list
-Real bathymetry loading · adaptive/active TCM triggering · improved error-ellipse
-+ loudness-based counter-detection risk · DVL beam-geometry + scale + IMU bias
-fusion upgrade · mission planner FSM · adaptive TCM · terrain avoidance · energy
-/ endurance · multi-contact tracking · active-acoustic management · spoofing +
-detection · learned NN TCM · online terrain SLAM · multi-agent coordination ·
-ROS2 bridge · GEBCO NetCDF ingestion.
-
-### Bathymetric nodes
-Trench Alpha `(35, 25)` · Ridge Bravo `(70, 85)` · Seamount Charlie `(100, 105)`, lock radius `5.0 u`.
-
-### Run
+To run when resuming work on that layer:
 
 ```bash
-uv add streamlit numpy plotly pandas          # or: pip install -r requirements.txt
-uv run streamlit run charybdis_console.py      # or: streamlit run charybdis_console.py
-python charybdis_core.py                         # headless autonomous-mission self-test
-pytest tests/test_charybdis_uuv.py tests/test_upgrade2.py tests/test_final4.py -q
-python scripts/benchmark_15of15.py          # SLAM / swarm / NN metrics (NN needs torch)
-bash scripts/ros2_smoke.sh                  # Docker + ROS2 jazzy (optional)
-python scripts/train_tcm_nn.py              # GPU train -> models/tcm_cnn.pt
-# RunPod helpers live under scripts/pod/ (see scripts/pod/README.md)
+streamlit run console/charybdis_console.py
+python console/charybdis_core.py
+pytest -m console -q
 ```
 
 > Research/simulation only. Feature maturity: [`docs/MATURITY.md`](docs/MATURITY.md).

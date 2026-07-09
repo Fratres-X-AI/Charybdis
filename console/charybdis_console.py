@@ -6,19 +6,25 @@ lives in `charybdis_core`; this module is purely the operator-facing console and
 the ~5 Hz real-time loop.
 
     uv add streamlit numpy plotly pandas
-    uv run streamlit run charybdis_console.py
+    uv run streamlit run console/charybdis_console.py
 """
 from __future__ import annotations
 
 import os
+import sys
 import time
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-import charybdis_core as core
+from console import charybdis_core as core
 
 st.set_page_config(page_title="CHARYBDIS // TCM CONSOLE",
                    page_icon="\U0001F6F0", layout="wide")

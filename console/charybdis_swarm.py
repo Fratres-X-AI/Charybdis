@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
-import charybdis_core as core
+from console import charybdis_core as core
 
 
 @dataclass

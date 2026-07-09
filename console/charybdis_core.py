@@ -13,12 +13,19 @@ mechanism that re-couples the belief to reality.
 """
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
+from pathlib import Path
+
 import numpy as np
 
-import charybdis_sensors as sensors
-import charybdis_tracking as tracking
-import charybdis_autonomy as autonomy
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from console import charybdis_sensors as sensors
+from console import charybdis_tracking as tracking
+from console import charybdis_autonomy as autonomy
 
 # --------------------------------------------------------------------------- #
 #  MISSION CONSTANTS
@@ -499,7 +506,7 @@ def _run_tcm(s: SimState, params: SimParams | None = None) -> None:
                 s.active_features.add(name)
                 if use_nn:
                     try:
-                        import charybdis_nn as nn
+                        from console import charybdis_nn as nn
                         corrected, peak, _ = nn.tcm_nn_match(
                             s.true_pos, s.est_pos, bathymetry,
                             model_path=getattr(params, "nn_model_path", None),

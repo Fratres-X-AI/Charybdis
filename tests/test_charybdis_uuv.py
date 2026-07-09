@@ -3,7 +3,9 @@ import os
 import numpy as np
 import pytest
 
-import charybdis_core as core
+pytestmark = pytest.mark.console
+
+from console import charybdis_core as core
 
 
 def test_tcm_recovers_offset():
@@ -72,7 +74,7 @@ def test_ping_forces_immediate_fix():
 def test_streamlit_console_renders_without_exception():
     at = pytest.importorskip("streamlit.testing.v1")
     os.environ["CHARYBDIS_NO_LOOP"] = "1"
-    app = at.AppTest.from_file("charybdis_console.py", default_timeout=30)
+    app = at.AppTest.from_file("console/charybdis_console.py", default_timeout=30)
     app.run()
     assert not app.exception
     # advance the sim and re-render to exercise chart/log/ellipse paths

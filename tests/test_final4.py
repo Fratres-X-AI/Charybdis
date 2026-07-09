@@ -9,10 +9,12 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-import charybdis_bathy as bathy
-import charybdis_core as core
-import charybdis_slam as slam
-import charybdis_swarm as swarm
+pytestmark = pytest.mark.console
+
+from console import charybdis_bathy as bathy
+from console import charybdis_core as core
+from console import charybdis_slam as slam
+from console import charybdis_swarm as swarm
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -76,7 +78,7 @@ def test_ros2_nav_stub_runs_without_rclpy():
 
 def test_nn_tcm_beats_large_offset():
     torch = pytest.importorskip("torch")
-    import charybdis_nn as nn
+    from console import charybdis_nn as nn
     tmp = ROOT / "models" / "tcm_cnn.pt"
     if not tmp.is_file():
         nn.train(model_path=tmp, n_samples=8000, epochs=6, batch=256, device="cpu", num_workers=4)
@@ -90,7 +92,7 @@ def test_nn_tcm_beats_large_offset():
 
 def test_nn_integrated_via_core_flag():
     torch = pytest.importorskip("torch")
-    import charybdis_nn as nn
+    from console import charybdis_nn as nn
     tmp = ROOT / "models" / "_test_tcm2.pt"
     if not tmp.is_file():
         nn.train(model_path=tmp, n_samples=2000, epochs=2, batch=128)

@@ -39,8 +39,8 @@ python -m pytest -q --ignore=tests/test_final4.py -n 31
 log "TRAIN NN ON GPU (device=cuda)"
 python - <<'PY'
 import time, torch
-from charybdis_nn import train, load_model, tcm_nn_match
-import charybdis_core as core
+from console.charybdis_nn import train, load_model, tcm_nn_match
+from console import charybdis_core as core
 import numpy as np
 assert torch.cuda.is_available()
 t0 = time.time()
