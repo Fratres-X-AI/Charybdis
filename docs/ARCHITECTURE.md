@@ -5,10 +5,12 @@
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  charybdis/                 installable Python package   │
-│    config, terrain, imu, ins, ekf, pf, tercom, ...     │
-│    fusion, patrol, sensors, modes   ← hybrid UUV layer   │
-│    navigator, simulation/, evaluation/                   │
-│    experimental/            NN matcher, SLAM, swarm      │
+│    config, terrain, imu, ins, bathy                      │
+│    hybrid/          surface/submerged UUV (primary)      │
+│    legacy/          interceptor TERCOM/EKF/PF/PMF        │
+│    simulation/      sim harnesses                        │
+│    evaluation/      Monte-Carlo + stress gates           │
+│    experimental/    SLAM, swarm, NN matcher (opt-in)     │
 └──────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────┐
 │  console/                   UUV tactical spine (PAUSED)  │
@@ -24,12 +26,10 @@ loaders, hybrid `HybridNavState`) — not by merging codebases.
 
 ```
 charybdis/
-  __init__.py          public API (stable / beta)
-  fusion.py            hybrid 8D surface/submerged fusion
-  patrol.py            waypoint patrol executor
-  sensors.py           abstract sensor measurements
-  modes.py             surface / submerged mode manager
-  navigator.py         TERCOM + EKF + PF coordination
+  __init__.py          curated public API
+  config.py, terrain.py, trajectory.py, imu.py, ins.py, bathy.py
+  hybrid/              fusion, patrol, sensors, modes (primary UUV)
+  legacy/              navigator, ekf, pf, pmf, tercom (interceptor)
   simulation/          simulation harnesses
   evaluation/          Monte-Carlo and stress gates
   experimental/        opt-in research (SLAM, swarm, NN)
@@ -53,13 +53,15 @@ filter, health flags). Downstream layers should consume this — not filter inte
 ## Import policy
 
 ```python
-import charybdis                         # stable / beta only
+import charybdis                         # curated stable / beta API
+from charybdis.hybrid import HybridSensorFusion, PatrolExecutor
+from charybdis.legacy import Navigator, NavEstimate
 from charybdis.experimental import run_swarm, init_slam
 from charybdis.experimental.nn_matcher import train  # needs torch
 from charybdis.evaluation import run_stress_harness
+from charybdis.bathy import load_npz              # advanced submodule
 ```
 
 Default `import charybdis` must not load torch or experimental side effects.
-
-Legacy `charybdis.slam` / `charybdis.swarm` / `charybdis.nn_matcher` shims
-re-export from `experimental/` with `DeprecationWarning`.
+Root-level experimental shims (`charybdis.slam`, `charybdis.swarm`,
+`charybdis.nn_matcher`) have been removed — use `charybdis.experimental.*`.

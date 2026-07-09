@@ -15,7 +15,7 @@ import numpy as np
 from ..parallel import pool_workers
 from ..config import SimConfig
 from ..imu import IMU
-from ..navigator import Navigator
+from ..legacy.navigator import Navigator
 from ..terrain import Terrain
 from ..trajectory import generate_truth
 

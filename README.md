@@ -29,16 +29,15 @@ pytest -q -m "not console"
 
 ```
 Charybdis/
-├── charybdis/              # installable Python package (active development)
-│   ├── fusion.py           # hybrid 8D surface/submerged sensor fusion
-│   ├── patrol.py           # waypoint patrol executor
-│   ├── sensors.py          # abstract sensor measurements
-│   ├── modes.py            # surface / submerged mode management
-│   ├── navigator.py        # GDI fusion loop (TERCOM + EKF + PF)
-│   ├── ekf.py / pf.py / tercom.py / ins.py / ...
+├── charybdis/              # installable Python package
+│   ├── config.py, terrain.py, trajectory.py, imu.py, ins.py, bathy.py
+│   ├── hybrid/             # primary: surface/submerged UUV fusion + patrol
+│   │   ├── fusion.py, patrol.py, sensors.py, modes.py
+│   ├── legacy/             # isolated: interceptor TERCOM/EKF/PF/PMF stack
+│   │   ├── navigator.py, ekf.py, pf.py, pmf.py, tercom.py
 │   ├── simulation/         # end-to-end sim + hybrid harbor smoke sim
 │   ├── evaluation/         # Monte-Carlo CEP / NEES + stress gates
-│   └── experimental/       # opt-in research modules (SLAM, swarm, NN)
+│   └── experimental/       # opt-in research (SLAM, swarm, NN matcher)
 ├── console/                # UUV tactical console (PAUSED)
 ├── tests/                  # pytest suite
 ├── scripts/                # MC, stress, pod helpers
@@ -57,8 +56,8 @@ Charybdis/
 |------|-----------|
 | Config | `SimConfig` |
 | Terrain | `Terrain`, `generate_truth` |
-| GDI nav | `Navigator`, `NavEstimate`, `NavEKF`, `TerrainParticleFilter` |
-| Hybrid UUV | `HybridSensorFusion`, `PatrolExecutor`, `SensorPacket`, `NavMode` |
+| Hybrid UUV (primary) | `HybridSensorFusion`, `PatrolExecutor`, `SensorPacket`, `NavMode` |
+| Legacy interceptor | `Navigator`, `NavEstimate`, `NavEKF`, `TerrainParticleFilter` |
 | Simulation | `run_simulation`, `run_montecarlo` |
 
 ```python
@@ -67,9 +66,11 @@ from charybdis import (
 )
 ```
 
-Submodule imports remain valid for advanced use:
+Submodule imports for focused access:
 
 ```python
+from charybdis.hybrid import HybridSensorFusion, PatrolExecutor
+from charybdis.legacy import Navigator, NavEstimate
 from charybdis.evaluation import run_stress_harness
 from charybdis.bathy import load_npz
 ```
@@ -83,8 +84,7 @@ from charybdis.experimental import run_swarm, init_slam
 from charybdis.experimental.nn_matcher import match_position, train
 ```
 
-Legacy shims at `charybdis.slam`, `charybdis.swarm`, and `charybdis.nn_matcher`
-still work but emit `DeprecationWarning` — prefer `charybdis.experimental.*`.
+Use `charybdis.experimental.*` only — root-level shim files have been removed.
 
 ### Paused console (`console/`)
 
@@ -93,7 +93,7 @@ active development. See [`console/README.md`](console/README.md).
 
 ## Hybrid navigation layer
 
-For harbor-patrol UUV software (no hardware coupling):
+For harbor-patrol UUV software (no hardware coupling), see `charybdis/hybrid/`:
 
 - **`sensors.py`** — abstract GPS, IMU, depth, DVL, bathymetry inputs
 - **`modes.py`** — surface vs submerged with depth hysteresis
@@ -104,7 +104,9 @@ For harbor-patrol UUV software (no hardware coupling):
 
 GPS is accepted in surface mode; bathymetry primarily in submerged mode.
 
-## GDI navigation stack
+## Legacy interceptor stack
+
+The original terrain-aided interceptor navigation lives in `charybdis/legacy/`:
 
 ```
  IMU ─► INS predict ─► EKF ─┬─ TERCOM (batch correlation fix)

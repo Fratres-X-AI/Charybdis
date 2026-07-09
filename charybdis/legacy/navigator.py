@@ -25,15 +25,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import numpy as np
 
-from .config import SimConfig
-from .terrain import Terrain
-from .imu import ImuSample
-from .ins import StrapdownINS
+from ..config import SimConfig
+from ..terrain import Terrain
+from ..imu import ImuSample
+from ..ins import StrapdownINS
 from .tercom import Tercom, TercomFix
 from .ekf import NavEKF
 from .pf import TerrainParticleFilter
 from .pmf import TerrainPointMassFilter
-from . import estimation as est
+from .. import estimation as est
 
 
 @dataclass(frozen=True)
@@ -291,7 +291,7 @@ class Navigator:
         map_trust: float = 1.0,
     ):
         """Continuous action authority from current nav/evidence state."""
-        from .action_envelope import compute_action_envelope
+        from ..action_envelope import compute_action_envelope
 
         return compute_action_envelope(
             self, self.terrain, t=t, threat=threat, map_trust=map_trust,

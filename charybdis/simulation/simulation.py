@@ -8,7 +8,7 @@ from ..config import SimConfig
 from ..terrain import Terrain
 from ..trajectory import generate_truth, Trajectory
 from ..imu import IMU
-from ..navigator import Navigator
+from ..legacy.navigator import Navigator
 
 
 @dataclass

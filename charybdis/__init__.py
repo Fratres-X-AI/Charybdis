@@ -1,50 +1,67 @@
 """Charybdis — GPS-denied terrain-aided navigation.
 
-Stable / Beta APIs are exported from this package. Experimental modules
-(NN matcher, SLAM, swarm) live under :mod:`charybdis.experimental`.
+Public API tiers
+----------------
+* **Core** — ``SimConfig``, ``Terrain``, ``Trajectory``, ``IMU``, ``INS``
+* **Hybrid UUV** (primary) — ``HybridSensorFusion``, ``PatrolExecutor``, sensors
+* **Legacy interceptor** — ``Navigator``, ``NavEstimate``, TERCOM/EKF/PF/PMF
+* **Simulation / evaluation** — ``run_simulation``, ``run_montecarlo``, stress
 
-Import tiers
-------------
-* **Core** — ``SimConfig``, ``Terrain``, ``Navigator``, ``NavEstimate``
-* **Hybrid UUV** — ``HybridSensorFusion``, ``PatrolExecutor``, sensor types
-* **Evaluation** — ``run_simulation``, ``run_montecarlo``, stress harness
-* **Experimental** — ``import charybdis.experimental`` (opt-in, unstable)
+Advanced modules (``estimation``, ``pcrb``, ``bathy``, ``action_envelope``,
+``imu_model``) are available via explicit submodule imports.
+Experimental code lives under :mod:`charybdis.experimental`.
 """
 from __future__ import annotations
 
 __version__ = "0.1.0"
 
-# --- configuration & terrain -------------------------------------------------
+# --- core ----------------------------------------------------------------------
 from .config import SimConfig
 from .terrain import Terrain
 from .trajectory import Trajectory, generate_truth
+from .imu import IMU, ImuSample
+from .ins import StrapdownINS
 
-# --- hybrid UUV foundation ---------------------------------------------------
-from .modes import ModeManager, ModeManagerConfig, NavMode
-from .sensors import (
+# --- hybrid UUV (primary) ------------------------------------------------------
+from .hybrid import (
     BathymetryMeasurement,
     DepthMeasurement,
     GpsMeasurement,
+    HybridFusionConfig,
+    HybridNavState,
+    HybridSensorFusion,
     ImuMeasurement,
+    ModeManager,
+    ModeManagerConfig,
+    NavMode,
+    PatrolCommand,
+    PatrolExecutor,
+    PatrolRoute,
     SensorPacket,
     SensorQuality,
     VelocityMeasurement,
+    Waypoint,
 )
-from .fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
-from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
 
-# --- GDI navigation ----------------------------------------------------------
-from .imu import IMU, ImuSample
-from .ins import StrapdownINS
-from .tercom import Tercom, TercomFix
-from .ekf import NavEKF
-from .pf import TerrainParticleFilter
-from .pmf import TerrainPointMassFilter
-from .navigator import Navigator, NavEstimate
+# --- legacy interceptor navigation ---------------------------------------------
+from .legacy import (
+    NavEKF,
+    NavEstimate,
+    Navigator,
+    TerrainParticleFilter,
+    TerrainPointMassFilter,
+    Tercom,
+    TercomFix,
+)
 
-# --- simulation & evaluation -------------------------------------------------
-from .simulation import (HybridHarborConfig, HybridHarborResult, SimResult,
-                         run_hybrid_harbor_simulation, run_simulation)
+# --- simulation & evaluation ---------------------------------------------------
+from .simulation import (
+    HybridHarborConfig,
+    HybridHarborResult,
+    SimResult,
+    run_hybrid_harbor_simulation,
+    run_simulation,
+)
 from .evaluation import (
     MonteCarloResult,
     default_stress_cases,
@@ -55,39 +72,6 @@ from .evaluation import (
     stress_report,
 )
 
-# --- advanced / supporting (submodule import also fine) ----------------------
-from .estimation import (
-    InnovationMonitor,
-    cluster_modes,
-    covariance_intersection,
-    grid_multimodality,
-    nees,
-    stochastic_linearize,
-    terrain_meas_var,
-)
-from .action_envelope import ActionEnvelope, ACTIONS, compute_action_envelope
-from .pcrb import (
-    efficiency_report,
-    filter_efficiency,
-    navigability_map,
-    posterior_crb,
-    terrain_fisher_information,
-)
-from .imu_model import (
-    IMU_GRADES,
-    allan_deviation,
-    apply_imu_grade,
-    characterize_allan,
-    grade_allan_table,
-)
-from .bathy import (
-    load_bathymetry,
-    load_gebco_netcdf,
-    load_npz,
-    terrain_from_grid,
-    terrain_suitability,
-)
-
 __all__ = [
     "__version__",
     # core
@@ -95,13 +79,6 @@ __all__ = [
     "Terrain",
     "Trajectory",
     "generate_truth",
-    "Navigator",
-    "NavEstimate",
-    "NavEKF",
-    "TerrainParticleFilter",
-    "TerrainPointMassFilter",
-    "Tercom",
-    "TercomFix",
     "IMU",
     "ImuSample",
     "StrapdownINS",
@@ -126,6 +103,14 @@ __all__ = [
     "HybridHarborConfig",
     "HybridHarborResult",
     "run_hybrid_harbor_simulation",
+    # legacy
+    "Navigator",
+    "NavEstimate",
+    "NavEKF",
+    "TerrainParticleFilter",
+    "TerrainPointMassFilter",
+    "Tercom",
+    "TercomFix",
     # simulation & evaluation
     "run_simulation",
     "SimResult",
@@ -136,30 +121,4 @@ __all__ = [
     "run_stress_harness",
     "stress_report",
     "evaluate_gates",
-    # supporting
-    "InnovationMonitor",
-    "covariance_intersection",
-    "cluster_modes",
-    "grid_multimodality",
-    "nees",
-    "stochastic_linearize",
-    "terrain_meas_var",
-    "ActionEnvelope",
-    "ACTIONS",
-    "compute_action_envelope",
-    "terrain_fisher_information",
-    "navigability_map",
-    "posterior_crb",
-    "filter_efficiency",
-    "efficiency_report",
-    "IMU_GRADES",
-    "apply_imu_grade",
-    "allan_deviation",
-    "characterize_allan",
-    "grade_allan_table",
-    "load_bathymetry",
-    "load_gebco_netcdf",
-    "load_npz",
-    "terrain_from_grid",
-    "terrain_suitability",
 ]

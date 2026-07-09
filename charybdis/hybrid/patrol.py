@@ -68,7 +68,7 @@ class PatrolExecutor:
         delta = wp.pos - state.pos
         dist = float(np.linalg.norm(delta))
         desired_heading = self._bearing(delta, state.vel)
-        if dist <= wp.radius_m and self._heading_ok(state, wp, desired_heading):
+        if dist <= wp.radius_m and self._heading_ok(state, wp):
             self._advance()
             wp = self.route.waypoints[self.index]
             delta = self._carrot_target(state.pos, wp) - state.pos
@@ -128,9 +128,10 @@ class PatrolExecutor:
         self._last_t = None
 
     def _carrot_target(self, pos: np.ndarray, wp: Waypoint) -> np.ndarray:
-        if self.index == 0:
+        if self.index == 0 and not self.route.loop:
             return wp.pos
-        prev = self.route.waypoints[self.index - 1].pos
+        prev = (self.route.waypoints[-1].pos if self.index == 0
+                else self.route.waypoints[self.index - 1].pos)
         seg = wp.pos - prev
         seg_len = float(np.linalg.norm(seg))
         if seg_len < 1e-9:
@@ -143,7 +144,8 @@ class PatrolExecutor:
             nxt_seg = nxt - wp.pos
             nxt_len = float(np.linalg.norm(nxt_seg))
             if nxt_len > 1e-9:
-                alpha = 1.0 - (seg_len - along) / max(wp.lookahead_m, 1e-9)
+                alpha = float(np.clip(
+                    1.0 - (seg_len - along) / max(wp.lookahead_m, 1e-9), 0.0, 1.0))
                 next_carrot = wp.pos + nxt_seg / nxt_len * min(wp.lookahead_m, nxt_len)
                 carrot = (1.0 - alpha) * carrot + alpha * next_carrot
         return carrot
@@ -156,8 +158,7 @@ class PatrolExecutor:
             return float(np.arctan2(fallback_vel[1], fallback_vel[0]))
         return 0.0
 
-    def _heading_ok(self, state: HybridNavState, wp: Waypoint,
-                    desired_heading: float) -> bool:
+    def _heading_ok(self, state: HybridNavState, wp: Waypoint) -> bool:
         if wp.heading_rad is None:
             return True
         target = float(wp.heading_rad)

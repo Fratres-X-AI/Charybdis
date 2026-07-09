@@ -24,7 +24,7 @@ if str(ROOT) not in sys.path:
 from charybdis import SimConfig, Terrain, run_montecarlo
 from charybdis.bathy import load_npz, terrain_suitability
 from charybdis.imu import IMU
-from charybdis.navigator import Navigator
+from charybdis.legacy.navigator import Navigator
 from charybdis.trajectory import generate_truth
 
 

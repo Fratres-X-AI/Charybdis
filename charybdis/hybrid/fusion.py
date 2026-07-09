@@ -19,6 +19,7 @@ class HybridFusionConfig:
     accel_noise: float = 0.08
     depth_process_noise: float = 0.05
     depth_rate_noise: float = 0.03
+    depth_rate_tau_s: float = 10.0
     accel_bias_rw: float = 0.002
     gps_gate_chi2: float = 25.0
     depth_gate_chi2: float = 9.0
@@ -121,6 +122,8 @@ class HybridSensorFusion:
         a = accel - self.x[self.BIAS]
         self.x[self.POS] += self.x[self.VEL] * dt + 0.5 * a * dt * dt
         self.x[self.DEPTH] += self.x[self.DEPTH_RATE] * dt
+        tau = max(self.cfg.depth_rate_tau_s, 1e-6)
+        self.x[self.DEPTH_RATE] *= np.exp(-dt / tau)
         self.x[self.VEL] += a * dt
 
         F = np.eye(self.N)
@@ -133,15 +136,17 @@ class HybridSensorFusion:
         q_z_acc = self.cfg.depth_rate_noise ** 2
         q_z_rw = self.cfg.depth_process_noise ** 2
         q_b = self.cfg.accel_bias_rw ** 2
+        dt2 = dt * dt
+        dt3 = dt2 * dt
         Q = np.zeros((self.N, self.N))
-        for i in range(2):
-            Q[i, i] = q_a * dt ** 3 / 3.0
-            Q[i, i + 3] = Q[i + 3, i] = q_a * dt ** 2 / 2.0
-            Q[i + 3, i + 3] = q_a * dt
-            Q[i + 6, i + 6] = q_b * dt
-        Q[self.DEPTH, self.DEPTH] = q_z_acc * dt ** 3 / 3.0 + q_z_rw * dt
-        Q[self.DEPTH, self.DEPTH_RATE] = Q[self.DEPTH_RATE, self.DEPTH] = \
-            q_z_acc * dt ** 2 / 2.0
+        Q[0:2, 0:2] = np.eye(2) * (q_a * dt3 / 3.0)
+        Q[0:2, 3:5] = np.eye(2) * (q_a * dt2 / 2.0)
+        Q[3:5, 0:2] = np.eye(2) * (q_a * dt2 / 2.0)
+        Q[3:5, 3:5] = np.eye(2) * (q_a * dt)
+        Q[6:8, 6:8] = np.eye(2) * (q_b * dt)
+        Q[self.DEPTH, self.DEPTH] = q_z_acc * dt3 / 3.0 + q_z_rw * dt
+        Q[self.DEPTH, self.DEPTH_RATE] = q_z_acc * dt2 / 2.0
+        Q[self.DEPTH_RATE, self.DEPTH] = q_z_acc * dt2 / 2.0
         Q[self.DEPTH_RATE, self.DEPTH_RATE] = q_z_acc * dt
         self.P = self._stabilize_cov(F @ self.P @ F.T + Q)
 
@@ -226,13 +231,14 @@ class HybridSensorFusion:
         if vel is not None:
             self.x[self.VEL] = np.asarray(vel, dtype=float)
             self._reset_block([3, 4], np.diag([self.cfg.init_vel_std] * 2) ** 2)
+        else:
+            self._reset_block([3, 4], np.diag([self.cfg.init_vel_std] * 2) ** 2)
         if depth_m is not None:
             self.x[self.DEPTH] = float(depth_m)
             self.x[self.DEPTH_RATE] = 0.0
             self._reset_block(
                 [self.DEPTH, self.DEPTH_RATE],
-                np.diag([self.cfg.init_depth_std ** 2,
-                         self.cfg.init_depth_rate_std ** 2]),
+                np.diag([self.cfg.init_depth_std, self.cfg.init_depth_rate_std]) ** 2,
             )
         self.P = self._stabilize_cov(self.P)
         return self.state()
