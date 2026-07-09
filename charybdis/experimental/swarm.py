@@ -121,7 +121,7 @@ def run_swarm(cfg: SwarmConfig | None = None) -> SwarmResult:
 
 def _solo(args):
     seed, duration = args
-    from .simulation import run_simulation
+    from ..simulation import run_simulation
     return float(run_simulation(
         SimConfig(duration=duration, seed=seed, use_pf=False)).ekf_err[-1])
 

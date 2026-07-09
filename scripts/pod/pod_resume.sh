@@ -10,10 +10,8 @@ export MPLBACKEND=Agg
 ts(){ date -u +"%H:%M:%S"; }
 log(){ echo "[$(ts)] $*" | tee -a pod_today.log; }
 
-log "=== PHASE 2 RESUME: full pytest (RUN_SLOW=1, core only) ==="
-# Experimental SLAM/NN can exceed 300s on CPU; core stack is the finish line.
-RUN_SLOW=1 python -m pytest -q --timeout=600 --timeout-method=thread \
-  --ignore=tests/test_slam.py --ignore=tests/test_nn_matcher.py \
+log "=== PHASE 2 RESUME: CI-equivalent pytest (core) ==="
+GITHUB_ACTIONS=true RUN_SLOW=1 python -m pytest -q --timeout=120 --timeout-method=thread \
   | tee -a pod_today.log
 
 log "=== PHASE 3: stress harness (64 seeds) ==="
