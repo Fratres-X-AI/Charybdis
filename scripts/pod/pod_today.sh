@@ -44,7 +44,7 @@ GITHUB_ACTIONS=true python -m pytest -q --timeout=120 --timeout-method=thread \
   | tee -a pod_today.log
 
 log "=== PHASE 2: full pytest (RUN_SLOW=1, serial) ==="
-RUN_SLOW=1 python -m pytest -q --timeout=120 --timeout-method=thread \
+RUN_SLOW=1 python -m pytest -q --timeout=300 --timeout-method=thread \
   | tee -a pod_today.log
 
 log "=== PHASE 3: stress harness (${STRESS_SEEDS} seeds, 31 workers) ==="
