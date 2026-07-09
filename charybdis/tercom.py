@@ -73,6 +73,9 @@ class Tercom:
 
     def _peak_is_distinct(self, cost: np.ndarray, i0: int, j0: int) -> bool:
         """Reject flat or multi-peak correlation surfaces."""
+        best = float(cost[i0, j0])
+        if best <= self.cfg.tercom_min_cost_margin:
+            return True
         mask = np.ones(cost.shape, dtype=bool)
         i1, i2 = max(0, i0 - 1), min(cost.shape[0], i0 + 2)
         j1, j2 = max(0, j0 - 1), min(cost.shape[1], j0 + 2)
@@ -80,7 +83,6 @@ class Tercom:
         if not np.any(mask):
             return True
         second = float(np.min(cost[mask]))
-        best = float(cost[i0, j0])
         return (second - best) >= self.cfg.tercom_min_cost_margin
 
     @staticmethod
