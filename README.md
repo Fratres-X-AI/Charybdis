@@ -36,8 +36,8 @@ Charybdis/
 │   ├── modes.py            # surface / submerged mode management
 │   ├── navigator.py        # GDI fusion loop (TERCOM + EKF + PF)
 │   ├── ekf.py / pf.py / tercom.py / ins.py / ...
-│   ├── simulation.py       # end-to-end sim harness
-│   ├── evaluate.py         # Monte-Carlo CEP / NEES
+│   ├── simulation/         # end-to-end sim + hybrid harbor smoke sim
+│   ├── evaluation/         # Monte-Carlo CEP / NEES + stress gates
 │   └── experimental/       # opt-in research modules (SLAM, swarm, NN)
 ├── console/                # UUV tactical console (PAUSED)
 ├── tests/                  # pytest suite
@@ -70,7 +70,7 @@ from charybdis import (
 Submodule imports remain valid for advanced use:
 
 ```python
-from charybdis.stress import run_stress_harness
+from charybdis.evaluation import run_stress_harness
 from charybdis.bathy import load_npz
 ```
 
@@ -99,7 +99,7 @@ For harbor-patrol UUV software (no hardware coupling):
 - **`modes.py`** — surface vs submerged with depth hysteresis
 - **`fusion.py`** — conservative 8D EKF-style fusion with chi-square gating
 - **`patrol.py`** — waypoint routes with heading-aware LOS guidance
-- **`hybrid_simulation.py`** — small harbor mission smoke sim:
+- **`simulation/hybrid.py`** — small harbor mission smoke sim:
   surface GPS → dive → submerged patrol → resurface GPS
 
 GPS is accepted in surface mode; bathymetry primarily in submerged mode.

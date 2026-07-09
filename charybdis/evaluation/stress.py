@@ -12,12 +12,12 @@ from typing import Callable
 
 import numpy as np
 
-from .parallel import pool_workers
+from ..parallel import pool_workers
 
-from .config import SimConfig
+from ..config import SimConfig
 from .evaluate import FILTERS, MonteCarloResult, _nees_second_half
-from .simulation import run_simulation
-from .terrain import Terrain
+from ..simulation import run_simulation
+from ..terrain import Terrain
 
 
 def adversarial_terrain(cfg: SimConfig) -> Terrain:

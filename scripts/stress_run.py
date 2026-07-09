@@ -11,7 +11,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 
-from charybdis.stress import default_stress_cases, run_stress_harness, stress_report
+from charybdis.evaluation import default_stress_cases, run_stress_harness, stress_report
 
 
 def main():

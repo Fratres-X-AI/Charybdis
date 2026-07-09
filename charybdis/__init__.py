@@ -32,8 +32,6 @@ from .sensors import (
 )
 from .fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
 from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
-from .hybrid_simulation import (HybridHarborConfig, HybridHarborResult,
-                                run_hybrid_harbor_simulation)
 
 # --- GDI navigation ----------------------------------------------------------
 from .imu import IMU, ImuSample
@@ -45,11 +43,13 @@ from .pmf import TerrainPointMassFilter
 from .navigator import Navigator, NavEstimate
 
 # --- simulation & evaluation -------------------------------------------------
-from .simulation import run_simulation, SimResult
-from .evaluate import run_montecarlo, MonteCarloResult
-from .stress import (
+from .simulation import (HybridHarborConfig, HybridHarborResult, SimResult,
+                         run_hybrid_harbor_simulation, run_simulation)
+from .evaluation import (
+    MonteCarloResult,
     default_stress_cases,
     evaluate_gates,
+    run_montecarlo,
     run_stress_case,
     run_stress_harness,
     stress_report,

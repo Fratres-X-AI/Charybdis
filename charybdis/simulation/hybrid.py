@@ -9,11 +9,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import numpy as np
 
-from .fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
-from .modes import NavMode
-from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
-from .sensors import (BathymetryMeasurement, DepthMeasurement, GpsMeasurement,
-                      ImuMeasurement, SensorPacket, VelocityMeasurement)
+from ..fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
+from ..modes import NavMode
+from ..patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
+from ..sensors import (BathymetryMeasurement, DepthMeasurement, GpsMeasurement,
+                       ImuMeasurement, SensorPacket, VelocityMeasurement)
 
 
 @dataclass(frozen=True)

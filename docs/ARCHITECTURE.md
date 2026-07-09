@@ -7,7 +7,7 @@
 │  charybdis/                 installable Python package   │
 │    config, terrain, imu, ins, ekf, pf, tercom, ...     │
 │    fusion, patrol, sensors, modes   ← hybrid UUV layer   │
-│    navigator, simulation, evaluate, stress               │
+│    navigator, simulation/, evaluation/                   │
 │    experimental/            NN matcher, SLAM, swarm      │
 └──────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────┐
@@ -30,6 +30,8 @@ charybdis/
   sensors.py           abstract sensor measurements
   modes.py             surface / submerged mode manager
   navigator.py         TERCOM + EKF + PF coordination
+  simulation/          simulation harnesses
+  evaluation/          Monte-Carlo and stress gates
   experimental/        opt-in research (SLAM, swarm, NN)
 console/               paused UUV console (separate package)
 tests/                 pytest
@@ -54,6 +56,7 @@ filter, health flags). Downstream layers should consume this — not filter inte
 import charybdis                         # stable / beta only
 from charybdis.experimental import run_swarm, init_slam
 from charybdis.experimental.nn_matcher import train  # needs torch
+from charybdis.evaluation import run_stress_harness
 ```
 
 Default `import charybdis` must not load torch or experimental side effects.

@@ -53,6 +53,8 @@ class PatrolExecutor:
     def __init__(self, route: PatrolRoute,
                  max_turn_rate_radps: float = np.deg2rad(25.0),
                  low_speed_heading_mps: float = 0.15):
+        if max_turn_rate_radps < 0.0:
+            raise ValueError("max_turn_rate_radps must be non-negative")
         self.route = route
         self.index = 0
         self.complete = False
@@ -169,11 +171,12 @@ class PatrolExecutor:
             self._last_heading = float(desired_heading)
             self._last_t = float(t)
             return float(desired_heading)
-        dt = max(float(t) - self._last_t, 0.0)
+        dt = float(t) - self._last_t
+        if dt <= 0.0:
+            return float(self._last_heading)
         max_delta = self.max_turn_rate_radps * dt
         delta = _wrap_pi(float(desired_heading) - self._last_heading)
-        if max_delta > 0.0:
-            delta = float(np.clip(delta, -max_delta, max_delta))
+        delta = float(np.clip(delta, -max_delta, max_delta))
         limited = _wrap_pi(self._last_heading + delta)
         self._last_heading = limited
         self._last_t = float(t)

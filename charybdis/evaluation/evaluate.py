@@ -20,8 +20,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 import numpy as np
 
-from .config import SimConfig
-from .simulation import run_simulation
+from ..config import SimConfig
+from ..simulation import run_simulation
 
 FILTERS = ("ins", "ekf", "pf", "pmf")
 

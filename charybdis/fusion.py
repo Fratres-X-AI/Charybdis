@@ -115,7 +115,10 @@ class HybridSensorFusion:
         if not np.isfinite(dt) or dt <= 0.0:
             raise ValueError("IMU dt must be positive and finite")
         self.t += dt
-        a = np.asarray(imu.accel, dtype=float) - self.x[self.BIAS]
+        accel = np.asarray(imu.accel, dtype=float)
+        if accel.shape != (2,) or not np.all(np.isfinite(accel)):
+            raise ValueError("IMU accel must be a finite 2-vector")
+        a = accel - self.x[self.BIAS]
         self.x[self.POS] += self.x[self.VEL] * dt + 0.5 * a * dt * dt
         self.x[self.DEPTH] += self.x[self.DEPTH_RATE] * dt
         self.x[self.VEL] += a * dt
@@ -191,11 +194,11 @@ class HybridSensorFusion:
             H[row, col] = 1.0
         y = z - H @ self.x
         S = self._stabilize_cov(H @ self.P @ H.T + R)
-        nis = float(y @ np.linalg.inv(S) @ y)
+        nis = float(y @ np.linalg.solve(S, y))
         if nis > gate:
             self.rejections.append((self.t, source, nis))
             return False
-        K = self.P @ H.T @ np.linalg.inv(S)
+        K = np.linalg.solve(S, H @ self.P).T
         self.x = self.x + K @ y
         I = np.eye(self.N)
         A = I - K @ H
