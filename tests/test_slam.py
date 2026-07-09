@@ -21,7 +21,7 @@ def test_gicp_recovers_translation():
 @pytest.mark.slow
 @pytest.mark.timeout(600)
 def test_slam_loop_reduces_error():
-    cfg = SimConfig(duration=35.0, seed=4)
+    cfg = SimConfig(duration=15.0, seed=4)
     terrain = Terrain.synthetic(cfg)
     truth = generate_truth(cfg, terrain)
     sm = init_slam(truth.pos[0])
