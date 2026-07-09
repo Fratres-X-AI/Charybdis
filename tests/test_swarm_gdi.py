@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from charybdis.experimental.swarm import SwarmConfig, montecarlo_swarm, run_swarm
 
 

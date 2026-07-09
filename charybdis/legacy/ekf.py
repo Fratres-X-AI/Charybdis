@@ -24,11 +24,12 @@ Prime-level robustness features (all optional, see :class:`SimConfig`):
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 
+from .. import estimation as est
 from ..config import SimConfig
 from ..terrain import Terrain
-from .. import estimation as est
 
 
 @dataclass
@@ -173,8 +174,8 @@ class NavEKF:
         self.n_resets += 1
 
     def _joseph(self, H: np.ndarray, R: np.ndarray, K: np.ndarray) -> None:
-        I = np.eye(self.N)
-        A = I - K @ H
+        identity = np.eye(self.N)
+        A = identity - K @ H
         self.P = A @ self.P @ A.T + K @ R @ K.T
         self.P = 0.5 * (self.P + self.P.T)
 

@@ -39,6 +39,7 @@ from collections import deque
 
 import numpy as np
 
+
 # --------------------------------------------------------------------------- #
 #  Measurement / map-uncertainty budget
 # --------------------------------------------------------------------------- #
@@ -197,8 +198,10 @@ def covariance_intersection(xa, Pa, xb, Pb, omega: float | None = None):
     naive fusion would be over-confident. ``omega`` is chosen to minimise the
     fused covariance trace when not supplied.
     """
-    xa = np.asarray(xa, float); xb = np.asarray(xb, float)
-    Pai = safe_inv(Pa); Pbi = safe_inv(Pb)
+    xa = np.asarray(xa, float)
+    xb = np.asarray(xb, float)
+    Pai = safe_inv(Pa)
+    Pbi = safe_inv(Pb)
     if omega is None:
         best = None
         for w in np.linspace(0.05, 0.95, 19):
@@ -246,7 +249,7 @@ def cluster_modes(pos: np.ndarray, w: np.ndarray, radius: float,
             centers.append(p.copy())
             masses.append(float(w[i]))
             sums.append(w[i] * p.copy())
-    modes = sorted(zip(centers, masses), key=lambda m: m[1], reverse=True)
+    modes = sorted(zip(centers, masses, strict=True), key=lambda m: m[1], reverse=True)
     return modes
 
 

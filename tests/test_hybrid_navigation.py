@@ -1,6 +1,5 @@
 import numpy as np
-
-from charybdis import (
+from charybdis.hybrid import (
     BathymetryMeasurement,
     DepthMeasurement,
     GpsMeasurement,

@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from charybdis import SimConfig, Terrain
 from charybdis.bathy import load_npz, terrain_from_grid, terrain_suitability
 

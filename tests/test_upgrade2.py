@@ -6,13 +6,12 @@ management, reactive terrain avoidance, and spoof-resistant TCM gating.
 """
 import numpy as np
 import pytest
-
-pytestmark = pytest.mark.console
-
 from console import charybdis_bathy as bathy
 from console import charybdis_core as core
 from console import charybdis_sensors as sensors
 from console import charybdis_tracking as tracking
+
+pytestmark = pytest.mark.console
 
 
 def _run(params, seed=7, cap=600):

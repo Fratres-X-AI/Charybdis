@@ -1,9 +1,12 @@
-"""Simulation entry points for Charybdis."""
+"""Public simulation entry points for legacy and hybrid navigation."""
 from __future__ import annotations
 
+from .hybrid import (
+    HybridHarborConfig,
+    HybridHarborResult,
+    run_hybrid_harbor_simulation,
+)
 from .simulation import SimResult, run_simulation
-from .hybrid import (HybridHarborConfig, HybridHarborResult,
-                     run_hybrid_harbor_simulation)
 
 __all__ = [
     "SimResult",

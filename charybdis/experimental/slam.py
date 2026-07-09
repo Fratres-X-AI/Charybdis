@@ -1,5 +1,8 @@
 """Bathymetric SLAM for Charybdis: submap GICP + pose-graph optimization.
 
+WARNING: Experimental / unstable API. Do not use in production navigation
+paths. Import through :mod:`charybdis.experimental`.
+
 Maintains local elevation submaps, detects loop closures via GICP alignment
 (Generalized ICP on gradient-weighted point clouds), and refines poses with
 sparse nonlinear least squares.

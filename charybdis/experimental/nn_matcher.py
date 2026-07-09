@@ -1,5 +1,8 @@
 """Learned terrain matcher: SO(2)-equivariant Siamese net + suitability head.
 
+WARNING: Experimental / unstable API. Do not use in production navigation
+paths. Import through :mod:`charybdis.experimental.nn_matcher`.
+
 Rotation-equivariant encoding via channel-wise max over discrete rotations,
 plus a scalar suitability score for terrain-aided fix quality.
 """
@@ -12,7 +15,7 @@ import numpy as np
 PATCH = 17
 SPAN = 500.0
 N_ROT = 8
-DEFAULT_MODEL = Path(__file__).resolve().parents[1] / "models" / "tcm_so2.pt"
+DEFAULT_MODEL = Path(__file__).resolve().parents[2] / "models" / "tcm_so2.pt"
 
 _model = None
 _device = "cpu"

@@ -8,13 +8,12 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
-pytestmark = pytest.mark.console
-
 from console import charybdis_bathy as bathy
 from console import charybdis_core as core
 from console import charybdis_slam as slam
 from console import charybdis_swarm as swarm
+
+pytestmark = pytest.mark.console
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -77,7 +76,7 @@ def test_ros2_nav_stub_runs_without_rclpy():
 
 
 def test_nn_tcm_beats_large_offset():
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     from console import charybdis_nn as nn
     tmp = ROOT / "models" / "tcm_cnn.pt"
     if not tmp.is_file():
@@ -91,7 +90,7 @@ def test_nn_tcm_beats_large_offset():
 
 
 def test_nn_integrated_via_core_flag():
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     from console import charybdis_nn as nn
     tmp = ROOT / "models" / "_test_tcm2.pt"
     if not tmp.is_file():

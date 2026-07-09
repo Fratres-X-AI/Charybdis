@@ -1,9 +1,12 @@
 import numpy as np
-
 from charybdis import SimConfig, Terrain, run_simulation
-from charybdis.pcrb import (efficiency_report, filter_efficiency,
-                            navigability_map, posterior_crb,
-                            terrain_fisher_information)
+from charybdis.pcrb import (
+    efficiency_report,
+    filter_efficiency,
+    navigability_map,
+    posterior_crb,
+    terrain_fisher_information,
+)
 from charybdis.trajectory import generate_truth
 
 

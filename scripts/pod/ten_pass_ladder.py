@@ -14,8 +14,8 @@ sys.path.insert(0, str(ROOT))
 import numpy as np
 import torch
 from charybdis.config import SimConfig
-from charybdis.terrain import Terrain
 from charybdis.experimental.nn_matcher import build_model, eval_hard, train
+from charybdis.terrain import Terrain
 
 PASSES = [
     (12, 60_000, 2048, 12, 1.0e-4, 101),
@@ -44,7 +44,7 @@ def main() -> None:
     if src.is_file():
         shutil.copy(src, dst)
 
-    p(f"=== 10-PASS LADDER start ===")
+    p("=== 10-PASS LADDER start ===")
     p(f"gpu {torch.cuda.get_device_name(0)}")
 
     best_after = 1e9

@@ -6,6 +6,7 @@ Represents the stored terrain map the interceptor carries on-board and the
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 
 from .config import SimConfig
@@ -22,7 +23,7 @@ class Terrain:
         return (self.grid.shape[0] - 1) * self.res
 
     @classmethod
-    def synthetic(cls, cfg: SimConfig) -> "Terrain":
+    def synthetic(cls, cfg: SimConfig) -> Terrain:
         """Build fractal-like terrain: layered sinusoids plus gaussian hills."""
         rng = np.random.default_rng(cfg.seed)
         n = int(cfg.terrain_size / cfg.terrain_res) + 1

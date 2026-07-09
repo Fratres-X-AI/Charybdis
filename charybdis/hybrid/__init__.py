@@ -1,7 +1,13 @@
-"""Hybrid surface/submerged UUV navigation (primary focus)."""
+"""Public API for the primary surface/submerged UUV navigation stack.
+
+Import hardware-neutral measurements, fusion, mode management, and patrol
+types from this package. Implementation helpers remain in their modules.
+"""
 from __future__ import annotations
 
+from .fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
 from .modes import ModeManager, ModeManagerConfig, NavMode
+from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
 from .sensors import (
     BathymetryMeasurement,
     DepthMeasurement,
@@ -11,8 +17,6 @@ from .sensors import (
     SensorQuality,
     VelocityMeasurement,
 )
-from .fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
-from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
 
 __all__ = [
     "NavMode",

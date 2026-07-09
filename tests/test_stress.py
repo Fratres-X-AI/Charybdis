@@ -1,10 +1,13 @@
 from dataclasses import replace
 
 import pytest
-
-from charybdis.evaluation import (default_stress_cases, evaluate_gates,
-                                  run_stress_case, run_stress_harness,
-                                  stress_report)
+from charybdis.evaluation import (
+    default_stress_cases,
+    evaluate_gates,
+    run_stress_case,
+    run_stress_harness,
+    stress_report,
+)
 
 
 @pytest.mark.slow
@@ -33,8 +36,8 @@ def test_stress_harness_subset():
 
 
 def test_evaluate_gates_structure():
-    from charybdis.evaluation import MonteCarloResult, StressGates
     import numpy as np
+    from charybdis.evaluation import MonteCarloResult, StressGates
     mc = MonteCarloResult(
         n_runs=2, seeds=[1, 2],
         final_err={"ekf": np.array([10.0, 20.0]), "pmf": np.array([15.0, 25.0])},

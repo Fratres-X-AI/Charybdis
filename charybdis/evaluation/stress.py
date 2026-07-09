@@ -6,18 +6,17 @@ gates on CEP, divergence rate, and filter consistency (NEES).
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from multiprocessing import Pool
-from typing import Callable
 
 import numpy as np
 
-from ..parallel import pool_workers
-
 from ..config import SimConfig
-from .evaluate import FILTERS, MonteCarloResult, _nees_second_half
+from ..parallel import pool_workers
 from ..simulation import run_simulation
 from ..terrain import Terrain
+from .evaluate import FILTERS, MonteCarloResult, _nees_second_half
 
 
 def adversarial_terrain(cfg: SimConfig) -> Terrain:

@@ -7,6 +7,7 @@ observation used by TERCOM / TRN:  ground_elev = alt_msl - agl.
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 
 from .config import SimConfig

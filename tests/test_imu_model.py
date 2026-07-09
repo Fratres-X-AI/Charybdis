@@ -1,9 +1,11 @@
 import numpy as np
-
 from charybdis import SimConfig
-from charybdis.imu_model import (IMU_GRADES, allan_deviation, apply_imu_grade,
-                                 characterize_allan, grade_allan_table,
-                                 simulate_accel_error)
+from charybdis.imu_model import (
+    allan_deviation,
+    apply_imu_grade,
+    grade_allan_table,
+    simulate_accel_error,
+)
 
 
 def test_imu_grade_ordering():

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import sys
+
 import numpy as np
 
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -16,9 +17,9 @@ os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 from dataclasses import replace
 from multiprocessing import Pool
-from charybdis.parallel import pool_workers
 
 from charybdis import SimConfig, run_simulation
+from charybdis.parallel import pool_workers
 
 
 def _nees_pos(pos, pcov, truth):

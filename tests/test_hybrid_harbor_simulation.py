@@ -1,5 +1,5 @@
-from charybdis import (HybridHarborConfig, NavMode,
-                       run_hybrid_harbor_simulation)
+from charybdis.hybrid import NavMode
+from charybdis.simulation import HybridHarborConfig, run_hybrid_harbor_simulation
 
 
 def test_hybrid_harbor_simulation_runs_surface_submerged_surface():

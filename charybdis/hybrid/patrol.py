@@ -2,15 +2,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from .fusion import HybridNavState
 from .modes import NavMode
 
+FloatArray = NDArray[np.float64]
+
 
 @dataclass(frozen=True)
 class Waypoint:
-    pos: np.ndarray
+    """One horizontal route target with optional mode, depth, and heading."""
+
+    pos: ArrayLike
     mode: NavMode = NavMode.SURFACE
     depth_m: float = 0.0
     speed_mps: float = 1.5
@@ -19,7 +25,7 @@ class Waypoint:
     heading_tolerance_rad: float = np.deg2rad(20.0)
     lookahead_m: float = 12.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         p = np.asarray(self.pos, dtype=float)
         if p.shape != (2,):
             raise ValueError("waypoint pos must be a 2-vector")
@@ -28,18 +34,22 @@ class Waypoint:
 
 @dataclass(frozen=True)
 class PatrolRoute:
+    """Ordered waypoint route that may optionally repeat."""
+
     waypoints: tuple[Waypoint, ...]
     loop: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.waypoints:
             raise ValueError("patrol route needs at least one waypoint")
 
 
 @dataclass(frozen=True)
 class PatrolCommand:
-    target_pos: np.ndarray
-    desired_vel: np.ndarray
+    """Guidance command generated for the current patrol target."""
+
+    target_pos: FloatArray
+    desired_vel: FloatArray
     desired_heading_rad: float
     target_depth_m: float
     target_mode: NavMode
@@ -48,11 +58,20 @@ class PatrolCommand:
 
 
 class PatrolExecutor:
-    """Small route follower with explicit resume support."""
+    """Heading-aware LOS route follower with explicit resume support.
 
-    def __init__(self, route: PatrolRoute,
-                 max_turn_rate_radps: float = np.deg2rad(25.0),
-                 low_speed_heading_mps: float = 0.15):
+    A carrot target smooths segment tracking and blends toward the next segment
+    near a waypoint. Desired heading changes are bounded by
+    ``max_turn_rate_radps``.
+    """
+
+    def __init__(
+        self,
+        route: PatrolRoute,
+        max_turn_rate_radps: float = np.deg2rad(25.0),
+        low_speed_heading_mps: float = 0.15,
+    ) -> None:
+        """Initialize guidance for a route and its turn-rate constraint."""
         if max_turn_rate_radps < 0.0:
             raise ValueError("max_turn_rate_radps must be non-negative")
         self.route = route
@@ -64,6 +83,7 @@ class PatrolExecutor:
         self._last_t: float | None = None
 
     def update(self, state: HybridNavState) -> PatrolCommand:
+        """Advance waypoint state as needed and produce the next command."""
         wp = self.route.waypoints[self.index]
         delta = wp.pos - state.pos
         dist = float(np.linalg.norm(delta))
@@ -81,8 +101,10 @@ class PatrolExecutor:
 
         desired_heading = self._limit_heading(desired_heading, state.t)
         if dist > 1e-9 and not self.complete:
-            desired = np.array([np.cos(desired_heading), np.sin(desired_heading)]) \
+            desired = (
+                np.array([np.cos(desired_heading), np.sin(desired_heading)])
                 * wp.speed_mps
+            )
         else:
             desired = np.zeros(2)
 
@@ -96,7 +118,7 @@ class PatrolExecutor:
             route_complete=self.complete,
         )
 
-    def resume(self, pos: np.ndarray) -> int:
+    def resume(self, pos: ArrayLike) -> int:
         """Resume at the nearest waypoint after surfacing/diving or restart."""
         p = np.asarray(pos, dtype=float)
         d = [float(np.linalg.norm(wp.pos - p)) for wp in self.route.waypoints]
@@ -107,6 +129,7 @@ class PatrolExecutor:
         return self.index
 
     def set_index(self, index: int) -> None:
+        """Resume explicitly at a route index."""
         if not 0 <= index < len(self.route.waypoints):
             raise IndexError(index)
         self.index = int(index)
@@ -127,11 +150,14 @@ class PatrolExecutor:
         self._last_heading = None
         self._last_t = None
 
-    def _carrot_target(self, pos: np.ndarray, wp: Waypoint) -> np.ndarray:
+    def _carrot_target(self, pos: FloatArray, wp: Waypoint) -> FloatArray:
         if self.index == 0 and not self.route.loop:
             return wp.pos
-        prev = (self.route.waypoints[-1].pos if self.index == 0
-                else self.route.waypoints[self.index - 1].pos)
+        prev = (
+            self.route.waypoints[-1].pos
+            if self.index == 0
+            else self.route.waypoints[self.index - 1].pos
+        )
         seg = wp.pos - prev
         seg_len = float(np.linalg.norm(seg))
         if seg_len < 1e-9:
@@ -139,19 +165,27 @@ class PatrolExecutor:
         u = seg / seg_len
         along = float(np.clip((pos - prev) @ u, 0.0, seg_len))
         carrot = prev + u * min(seg_len, along + max(wp.lookahead_m, wp.radius_m))
-        if seg_len - along <= wp.lookahead_m and self.index + 1 < len(self.route.waypoints):
+        if (
+            seg_len - along <= wp.lookahead_m
+            and self.index + 1 < len(self.route.waypoints)
+        ):
             nxt = self.route.waypoints[self.index + 1].pos
             nxt_seg = nxt - wp.pos
             nxt_len = float(np.linalg.norm(nxt_seg))
             if nxt_len > 1e-9:
-                alpha = float(np.clip(
-                    1.0 - (seg_len - along) / max(wp.lookahead_m, 1e-9), 0.0, 1.0))
+                alpha = float(
+                    np.clip(
+                        1.0 - (seg_len - along) / max(wp.lookahead_m, 1e-9),
+                        0.0,
+                        1.0,
+                    )
+                )
                 next_carrot = wp.pos + nxt_seg / nxt_len * min(wp.lookahead_m, nxt_len)
                 carrot = (1.0 - alpha) * carrot + alpha * next_carrot
         return carrot
 
     @staticmethod
-    def _bearing(delta: np.ndarray, fallback_vel: np.ndarray) -> float:
+    def _bearing(delta: FloatArray, fallback_vel: FloatArray) -> float:
         if np.linalg.norm(delta) > 1e-9:
             return float(np.arctan2(delta[1], delta[0]))
         if np.linalg.norm(fallback_vel) > 1e-9:

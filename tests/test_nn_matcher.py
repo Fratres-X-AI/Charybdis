@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from charybdis import SimConfig, Terrain
 
 

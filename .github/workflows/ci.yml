@@ -12,6 +12,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Ruff
+        run: pip install "ruff>=0.15.20"
+
+      - name: Run Ruff
+        run: ruff check charybdis tests scripts examples run_sim.py
+
   test:
     name: test (py${{ matrix.python-version }})
     runs-on: ubuntu-latest

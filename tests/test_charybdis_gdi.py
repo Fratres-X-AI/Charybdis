@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-
-from charybdis import SimConfig, Terrain, Tercom, run_simulation
+from charybdis import SimConfig, Terrain, run_simulation
+from charybdis.legacy import Tercom
 from charybdis.trajectory import generate_truth
 
 

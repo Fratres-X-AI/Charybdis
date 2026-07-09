@@ -20,6 +20,7 @@ Or use `requirements.txt` for the full dev environment.
 ## Quick start
 
 ```bash
+python examples/run_hybrid_patrol.py
 python run_sim.py
 python run_sim.py --montecarlo 15
 pytest -q -m "not console"

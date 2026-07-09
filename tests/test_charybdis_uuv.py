@@ -2,10 +2,9 @@ import os
 
 import numpy as np
 import pytest
+from console import charybdis_core as core
 
 pytestmark = pytest.mark.console
-
-from console import charybdis_core as core
 
 
 def test_tcm_recovers_offset():

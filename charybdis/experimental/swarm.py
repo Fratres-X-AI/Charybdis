@@ -1,5 +1,8 @@
 """Cooperative multi-agent navigation with OWTT acoustic ranging.
 
+WARNING: Experimental / unstable API. Do not use in production navigation
+paths. Import through :mod:`charybdis.experimental`.
+
 Runs multiple ``Navigator`` instances over a shared terrain map. Agents within
 comm range exchange one-way-travel-time (OWTT) range measurements and shared
 TRN fixes to bound team drift.
@@ -12,10 +15,10 @@ from multiprocessing import Pool
 
 import numpy as np
 
-from ..parallel import pool_workers
 from ..config import SimConfig
 from ..imu import IMU
 from ..legacy.navigator import Navigator
+from ..parallel import pool_workers
 from ..terrain import Terrain
 from ..trajectory import generate_truth
 

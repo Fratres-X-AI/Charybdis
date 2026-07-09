@@ -9,12 +9,13 @@ from __future__ import annotations
 import argparse
 import os
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
-from charybdis import SimConfig, run_simulation, run_montecarlo
+from charybdis import SimConfig, run_simulation
+from charybdis.evaluation import run_montecarlo
 
 OUT = os.path.join(os.path.dirname(__file__), "outputs")
 
@@ -38,11 +39,14 @@ def plot_map(res, path: str) -> None:
         ax.scatter(fx[:, 0], fx[:, 1], s=28, c="yellow", edgecolors="k",
                    zorder=5, label="TERCOM fix")
     ax.plot(*res.truth.pos[0], "go", ms=9, label="Launch")
-    ax.set_xlabel("East [m]"); ax.set_ylabel("North [m]")
+    ax.set_xlabel("East [m]")
+    ax.set_ylabel("North [m]")
     ax.set_title("Charybdis GDI - Terrain-Aided Navigation")
     ax.legend(loc="upper left", fontsize=8)
     ax.set_aspect("equal")
-    fig.tight_layout(); fig.savefig(path, dpi=130); plt.close(fig)
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
 
 
 def plot_error(res, path: str) -> None:
@@ -54,7 +58,9 @@ def plot_error(res, path: str) -> None:
     sig = np.linalg.norm(res.ekf_std, axis=1)
     ax[0].plot(res.t, 3 * sig, "b:", lw=1, label="EKF 3-sigma")
     ax[0].set_ylabel("Horizontal error [m]")
-    ax[0].set_yscale("log"); ax[0].legend(fontsize=8); ax[0].grid(alpha=0.3)
+    ax[0].set_yscale("log")
+    ax[0].legend(fontsize=8)
+    ax[0].grid(alpha=0.3)
     ax[0].set_title("Position error")
 
     ax[1].plot(res.t, res.ekf_err, "c-", label="Charybdis EKF")
@@ -62,9 +68,13 @@ def plot_error(res, path: str) -> None:
         ax[1].plot(res.t, res.pf_err, color="magenta", lw=1, label="Particle filter")
     for f in res.tercom_fix:
         ax[1].axvline(f[0], color="orange", alpha=0.25)
-    ax[1].set_ylabel("Aided error [m]"); ax[1].set_xlabel("Time [s]")
-    ax[1].grid(alpha=0.3); ax[1].legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(path, dpi=130); plt.close(fig)
+    ax[1].set_ylabel("Aided error [m]")
+    ax[1].set_xlabel("Time [s]")
+    ax[1].grid(alpha=0.3)
+    ax[1].legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
 
 
 def main() -> None:

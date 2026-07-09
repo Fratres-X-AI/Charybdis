@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class NavMode(str, Enum):
+class NavMode(StrEnum):
     SURFACE = "surface"
     SUBMERGED = "submerged"
 

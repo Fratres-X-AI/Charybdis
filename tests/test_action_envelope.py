@@ -1,5 +1,4 @@
 """Tests for continuous action authority (ActionEnvelope)."""
-import numpy as np
 
 from charybdis import Navigator, SimConfig, Terrain
 from charybdis.action_envelope import ACTIONS, ActionEnvelope, compute_action_envelope

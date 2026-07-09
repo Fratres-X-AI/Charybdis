@@ -1,9 +1,12 @@
 import numpy as np
 import pytest
-
 from charybdis import SimConfig, Terrain, generate_truth
-from charybdis.experimental.slam import (SlamState, gicp_align, init_slam,
-                                         optimize, position_error, slam_step)
+from charybdis.experimental.slam import (
+    gicp_align,
+    init_slam,
+    position_error,
+    slam_step,
+)
 
 
 def test_gicp_recovers_translation():
@@ -25,7 +28,6 @@ def test_slam_loop_reduces_error():
     terrain = Terrain.synthetic(cfg)
     truth = generate_truth(cfg, terrain)
     sm = init_slam(truth.pos[0])
-    err_before = 0.0
     err_after = 0.0
     loops = 0
     for k in range(1, len(truth)):

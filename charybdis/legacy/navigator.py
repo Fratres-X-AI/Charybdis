@@ -23,17 +23,18 @@ The particle filter watches the EKF and intervenes when it goes wrong:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+
 import numpy as np
 
+from .. import estimation as est
 from ..config import SimConfig
-from ..terrain import Terrain
 from ..imu import ImuSample
 from ..ins import StrapdownINS
-from .tercom import Tercom, TercomFix
+from ..terrain import Terrain
 from .ekf import NavEKF
 from .pf import TerrainParticleFilter
 from .pmf import TerrainPointMassFilter
-from .. import estimation as est
+from .tercom import Tercom, TercomFix
 
 
 @dataclass(frozen=True)

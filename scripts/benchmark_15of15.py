@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from console import charybdis_core as core
 from console import charybdis_slam as slam
 from console import charybdis_swarm as swarm
@@ -29,9 +28,10 @@ def bench_swarm() -> dict:
 
 def bench_nn() -> dict:
     pytest = __import__("pytest")
-    torch = pytest.importorskip("torch")
-    from console import charybdis_nn as nn
+    pytest.importorskip("torch")
     from pathlib import Path
+
+    from console import charybdis_nn as nn
     tmp = Path("models/tcm_cnn.pt")
     if not tmp.is_file():
         nn.train(model_path=tmp, n_samples=4000, epochs=3, batch=256)

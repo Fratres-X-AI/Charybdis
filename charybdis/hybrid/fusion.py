@@ -2,15 +2,27 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from .modes import ModeManager, ModeManagerConfig, NavMode
-from .sensors import (BathymetryMeasurement, DepthMeasurement, GpsMeasurement,
-                      ImuMeasurement, SensorPacket, VelocityMeasurement)
+from .sensors import (
+    BathymetryMeasurement,
+    DepthMeasurement,
+    GpsMeasurement,
+    ImuMeasurement,
+    SensorPacket,
+    VelocityMeasurement,
+)
+
+FloatArray = NDArray[np.float64]
 
 
 @dataclass(frozen=True)
 class HybridFusionConfig:
+    """Noise, gating, and initialization settings for hybrid fusion."""
+
     init_pos_std: float = 25.0
     init_depth_std: float = 1.0
     init_vel_std: float = 0.5
@@ -31,9 +43,11 @@ class HybridFusionConfig:
 
 @dataclass(frozen=True)
 class HybridNavState:
-    pos: np.ndarray
-    vel: np.ndarray
-    cov: np.ndarray
+    """Immutable navigation estimate returned after each fusion step."""
+
+    pos: FloatArray
+    vel: FloatArray
+    cov: FloatArray
     mode: NavMode
     t: float
     depth_m: float = 0.0
@@ -42,20 +56,28 @@ class HybridNavState:
     last_bathy_t: float | None = None
 
     @property
-    def pos_cov(self) -> np.ndarray:
+    def pos_cov(self) -> FloatArray:
+        """Return the 2×2 horizontal position covariance."""
         return self.cov[0:2, 0:2]
 
     @property
-    def pos_std(self) -> np.ndarray:
+    def pos_std(self) -> FloatArray:
+        """Return horizontal one-sigma position uncertainty."""
         return np.sqrt(np.clip(np.diag(self.pos_cov), 0.0, None))
 
     @property
     def depth_std(self) -> float:
+        """Return one-sigma depth uncertainty in metres."""
         return float(np.sqrt(max(self.cov[2, 2], 0.0)))
 
 
 class HybridSensorFusion:
-    """Modular fusion core for abstract UUV sensor inputs."""
+    """Conservative 8D fusion for surface/submerged UUV navigation.
+
+    The state is ``[px, py, depth, vx, vy, depth_rate, bax, bay]``. IMU
+    measurements drive prediction, while GPS, depth, velocity, and bathymetry
+    updates are quality-scaled and chi-square gated.
+    """
 
     N = 8  # px, py, depth, vx, vy, depth_rate, bax, bay
     POS = slice(0, 2)
@@ -64,9 +86,15 @@ class HybridSensorFusion:
     DEPTH_RATE = 5
     BIAS = slice(6, 8)
 
-    def __init__(self, pos0, vel0=(0.0, 0.0), depth0: float = 0.0,
-                 cfg: HybridFusionConfig | None = None,
-                 initial_mode: NavMode = NavMode.SURFACE):
+    def __init__(
+        self,
+        pos0: ArrayLike,
+        vel0: ArrayLike = (0.0, 0.0),
+        depth0: float | HybridFusionConfig = 0.0,
+        cfg: HybridFusionConfig | None = None,
+        initial_mode: NavMode = NavMode.SURFACE,
+    ) -> None:
+        """Initialize the filter from horizontal position, velocity, and depth."""
         if isinstance(depth0, HybridFusionConfig) and cfg is None:
             cfg = depth0
             depth0 = 0.0
@@ -89,6 +117,7 @@ class HybridSensorFusion:
         self.rejections: list[tuple[float, str, float]] = []
 
     def step(self, packet: SensorPacket) -> HybridNavState:
+        """Process one sensor packet and return the resulting estimate."""
         if packet.imu is not None and packet.imu.quality.available:
             self.predict(packet.imu)
 
@@ -112,6 +141,7 @@ class HybridSensorFusion:
         return self.state()
 
     def predict(self, imu: ImuMeasurement) -> None:
+        """Propagate the state and covariance with one horizontal IMU sample."""
         dt = float(imu.dt)
         if not np.isfinite(dt) or dt <= 0.0:
             raise ValueError("IMU dt must be positive and finite")
@@ -123,7 +153,8 @@ class HybridSensorFusion:
         self.x[self.POS] += self.x[self.VEL] * dt + 0.5 * a * dt * dt
         self.x[self.DEPTH] += self.x[self.DEPTH_RATE] * dt
         tau = max(self.cfg.depth_rate_tau_s, 1e-6)
-        self.x[self.DEPTH_RATE] *= np.exp(-dt / tau)
+        depth_rate_decay = float(np.exp(-dt / tau))
+        self.x[self.DEPTH_RATE] *= depth_rate_decay
         self.x[self.VEL] += a * dt
 
         F = np.eye(self.N)
@@ -151,6 +182,7 @@ class HybridSensorFusion:
         self.P = self._stabilize_cov(F @ self.P @ F.T + Q)
 
     def update_depth(self, meas: DepthMeasurement) -> bool:
+        """Fuse a pressure/depth measurement; return whether it was accepted."""
         if not meas.quality.available or not np.isfinite(meas.depth_m):
             return False
         return self._update_linear(
@@ -162,6 +194,7 @@ class HybridSensorFusion:
         )
 
     def update_gps(self, gps: GpsMeasurement) -> bool:
+        """Fuse GPS position and optional velocity; return acceptance status."""
         if not gps.quality.available:
             return False
         ok_pos = self._update_linear(gps.pos, gps.quality.apply(gps.pos_cov),
@@ -175,20 +208,28 @@ class HybridSensorFusion:
         return ok_pos or ok_vel
 
     def update_velocity(self, vel: VelocityMeasurement) -> bool:
+        """Fuse a DVL-style horizontal velocity measurement."""
         if not vel.quality.available:
             return False
         return self._update_linear(vel.vel, vel.quality.apply(vel.cov), [3, 4],
                                    self.cfg.velocity_gate_chi2, "velocity")
 
     def update_bathymetry(self, meas: BathymetryMeasurement) -> bool:
+        """Fuse a bathymetry-derived horizontal position observation."""
         if not meas.quality.available:
             return False
         pos, cov = meas.as_position_fix()
         return self._update_linear(pos, cov, [0, 1], self.cfg.bathy_gate_chi2,
                                    "bathymetry")
 
-    def _update_linear(self, z: np.ndarray, R: np.ndarray, idx: list[int],
-                       gate: float, source: str) -> bool:
+    def _update_linear(
+        self,
+        z: ArrayLike,
+        R: ArrayLike,
+        idx: list[int],
+        gate: float,
+        source: str,
+    ) -> bool:
         z = np.asarray(z, dtype=float)
         R = np.asarray(R, dtype=float)
         if not np.all(np.isfinite(z)) or not np.all(np.isfinite(R)):
@@ -205,12 +246,13 @@ class HybridSensorFusion:
             return False
         K = np.linalg.solve(S, H @ self.P).T
         self.x = self.x + K @ y
-        I = np.eye(self.N)
-        A = I - K @ H
+        identity = np.eye(self.N)
+        A = identity - K @ H
         self.P = self._stabilize_cov(A @ self.P @ A.T + K @ R @ K.T)
         return True
 
     def state(self) -> HybridNavState:
+        """Return a copy of the current state and covariance."""
         return HybridNavState(
             pos=self.x[self.POS].copy(),
             vel=self.x[self.VEL].copy(),
@@ -223,16 +265,25 @@ class HybridSensorFusion:
             last_bathy_t=self.last_bathy_t,
         )
 
-    def reset(self, pos, vel=None, pos_cov=None,
-              depth_m: float | None = None) -> HybridNavState:
+    def reset(
+        self,
+        pos: ArrayLike,
+        vel: ArrayLike | None = None,
+        pos_cov: ArrayLike | None = None,
+        depth_m: float | None = None,
+    ) -> HybridNavState:
+        """Re-anchor state blocks and clear their stale cross-covariances.
+
+        Horizontal velocity covariance is reinitialized even when ``vel`` is
+        omitted. Supplying ``depth_m`` also zeros depth rate and resets the
+        coupled depth/depth-rate covariance block.
+        """
         self.x[self.POS] = np.asarray(pos, dtype=float)
         self._reset_block([0, 1], pos_cov if pos_cov is not None
                           else np.diag([self.cfg.init_pos_std] * 2) ** 2)
         if vel is not None:
             self.x[self.VEL] = np.asarray(vel, dtype=float)
-            self._reset_block([3, 4], np.diag([self.cfg.init_vel_std] * 2) ** 2)
-        else:
-            self._reset_block([3, 4], np.diag([self.cfg.init_vel_std] * 2) ** 2)
+        self._reset_block([3, 4], np.diag([self.cfg.init_vel_std] * 2) ** 2)
         if depth_m is not None:
             self.x[self.DEPTH] = float(depth_m)
             self.x[self.DEPTH_RATE] = 0.0
@@ -243,17 +294,17 @@ class HybridSensorFusion:
         self.P = self._stabilize_cov(self.P)
         return self.state()
 
-    def _reset_block(self, idx: list[int], cov: np.ndarray) -> None:
+    def _reset_block(self, idx: list[int], cov: ArrayLike) -> None:
         self.P[idx, :] = 0.0
         self.P[:, idx] = 0.0
         self.P[np.ix_(idx, idx)] = self._stabilize_cov(cov)
 
-    def _stabilize_cov(self, M: np.ndarray) -> np.ndarray:
+    def _stabilize_cov(self, M: ArrayLike) -> FloatArray:
         M = self._sym(np.asarray(M, dtype=float))
         w, V = np.linalg.eigh(M)
         w = np.maximum(w, self.cfg.min_cov)
         return self._sym((V * w) @ V.T)
 
     @staticmethod
-    def _sym(M: np.ndarray) -> np.ndarray:
+    def _sym(M: FloatArray) -> FloatArray:
         return 0.5 * (M + M.T)

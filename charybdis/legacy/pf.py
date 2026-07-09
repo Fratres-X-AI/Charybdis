@@ -29,9 +29,9 @@ from __future__ import annotations
 
 import numpy as np
 
+from .. import estimation as est
 from ..config import SimConfig
 from ..terrain import Terrain
-from .. import estimation as est
 
 D = 6  # particle state dimension
 

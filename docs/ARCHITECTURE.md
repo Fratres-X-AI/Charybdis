@@ -1,5 +1,14 @@
 # Architecture
 
+## Current status
+
+- **Primary development:** `charybdis.hybrid` for harbor UUV surface/submerged
+  navigation and patrol execution.
+- **Maintained legacy:** `charybdis.legacy` for interceptor TERCOM/EKF/PF/PMF
+  simulations and compatibility.
+- **Experimental:** `charybdis.experimental` for opt-in, unstable research.
+- **Paused:** `console/` is isolated from the navigation package.
+
 ## Repository stacks
 
 ```
@@ -40,6 +49,45 @@ docs/                  MISSION, MATURITY, ARCHITECTURE
 run_sim.py             primary simulation entry point
 ```
 
+## Hybrid vs Legacy Navigation
+
+| Question | `charybdis.hybrid` | `charybdis.legacy` |
+|---|---|---|
+| Primary use case | Harbor UUV patrol above and below the surface | Original interceptor terrain-aided navigation |
+| State model | 8D horizontal, vertical, and bias state | 6D horizontal position, velocity, and bias state |
+| Sensor inputs | GPS, IMU, depth, DVL-style velocity, bathymetry | IMU, radar/barometer terrain observations, TERCOM |
+| Estimators | Conservative EKF-style hybrid fusion | EKF, particle filter, point-mass filter, TERCOM |
+| Maintenance status | Active and recommended for new work | Maintained for reference and compatibility |
+| Import path | `from charybdis.hybrid import ...` | `from charybdis.legacy import ...` |
+
+Use `charybdis.hybrid` for all new harbor UUV navigation, mode-transition, and
+patrol work. Use `charybdis.legacy` only when reproducing interceptor
+simulations, evaluating TERCOM/TRN filters, or maintaining existing consumers.
+The two stacks share terrain, configuration, IMU, simulation, and evaluation
+infrastructure but do not share estimator state.
+
+### Hybrid 8D state
+
+`HybridSensorFusion` estimates:
+
+| Indices | State | Meaning |
+|---|---|---|
+| 0–1 | `px`, `py` | Horizontal position in the local navigation frame |
+| 2 | `depth` | Positive-down depth |
+| 3–4 | `vx`, `vy` | Horizontal velocity |
+| 5 | `depth_rate` | Positive-down vertical speed |
+| 6–7 | `bax`, `bay` | Horizontal accelerometer bias |
+
+The complete state is:
+
+```text
+[px, py, depth, vx, vy, depth_rate, bax, bay]
+```
+
+Prediction integrates horizontal acceleration and a damped constant-rate depth
+model. Measurement updates use quality-scaled covariance and chi-square gates.
+GPS is accepted while surfaced; bathymetry fixes are accepted while submerged.
+
 ## Navigator contract
 
 `Navigator.estimate()` returns `NavEstimate` (position, 2×2 covariance, source
@@ -49,6 +97,10 @@ filter, health flags). Downstream layers should consume this — not filter inte
 
 `HybridSensorFusion.step(SensorPacket)` returns `HybridNavState`. Patrol consumes
 `HybridNavState` and emits `PatrolCommand` (desired velocity, heading, depth, mode).
+
+The fusion layer owns state estimation and sensor acceptance. The patrol layer
+only consumes navigation state and emits guidance commands; it does not inspect
+filter internals.
 
 ## Import policy
 

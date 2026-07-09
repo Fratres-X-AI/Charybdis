@@ -2,9 +2,9 @@ from dataclasses import replace
 
 import numpy as np
 import pytest
-
-from charybdis import (SimConfig, Terrain, TerrainParticleFilter, run_simulation,
-                       run_montecarlo)
+from charybdis import SimConfig, Terrain, run_simulation
+from charybdis.evaluation import run_montecarlo
+from charybdis.legacy import TerrainParticleFilter
 
 
 def test_pf_unit_predict_update():

@@ -1,6 +1,9 @@
 """Process limits: 31 for standalone MC scripts only; 1 inside pytest."""
 from __future__ import annotations
-import os, sys
+
+import os
+import sys
+
 MAX_WORKERS = 31
 
 def pool_workers(requested: int | None = None) -> int:

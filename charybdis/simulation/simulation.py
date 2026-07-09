@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 
 from ..config import SimConfig
-from ..terrain import Terrain
-from ..trajectory import generate_truth, Trajectory
 from ..imu import IMU
 from ..legacy.navigator import Navigator
+from ..terrain import Terrain
+from ..trajectory import Trajectory, generate_truth
 
 
 @dataclass

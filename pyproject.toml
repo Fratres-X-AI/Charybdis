@@ -1,6 +1,6 @@
 [project]
 name = "charybdis"
-version = "0.1.0"
+version = "0.2.0"
 description = "GPS-denied terrain-aided navigation with hybrid UUV fusion and patrol."
 readme = "README.md"
 license = { text = "Proprietary" }
@@ -12,13 +12,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-timeout>=2.3"]
+dev = ["pytest>=8.0", "pytest-timeout>=2.3", "ruff>=0.15.20"]
 console = ["streamlit>=1.36", "plotly>=5.22", "pandas>=2.2"]
 nn = ["torch>=2.0"]
 gebco = ["netCDF4>=1.6", "rasterio>=1.3"]
 all = [
     "pytest>=8.0",
     "pytest-timeout>=2.3",
+    "ruff>=0.15.20",
     "streamlit>=1.36",
     "plotly>=5.22",
     "pandas>=2.2",
@@ -42,3 +43,17 @@ markers = [
     "slow: long-running sim/MC; skipped on CI unless RUN_SLOW=1",
     "console: UUV tactical console layer (paused; skipped on CI unless RUN_CONSOLE=1)",
 ]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+src = ["charybdis", "tests", "scripts", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"run_sim.py" = ["E402"]
+"scripts/mc_real_region.py" = ["E402"]
+"scripts/pod/ten_pass_ladder.py" = ["E402"]

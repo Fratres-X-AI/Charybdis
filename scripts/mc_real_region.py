@@ -21,8 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from charybdis import SimConfig, Terrain, run_montecarlo
+from charybdis import SimConfig, Terrain
 from charybdis.bathy import load_npz, terrain_suitability
+from charybdis.evaluation import run_montecarlo
 from charybdis.imu import IMU
 from charybdis.legacy.navigator import Navigator
 from charybdis.trajectory import generate_truth
@@ -100,7 +101,7 @@ def main() -> int:
         a = np.asarray(vals)
         print(f"  {key:4s}  mean={a.mean():.1f}m  p50={np.percentile(a, 50):.1f}m  n={len(a)}")
     # Last-run action authority snapshot (autonomy contract).
-    c = replace(cfg, seed=cfg.seed + n_runs - 1)
+    c = replace(cfg, seed=cfg.seed + args.n_runs - 1)
     truth = generate_truth(c, terrain)
     nav = Navigator(c, terrain, truth.pos[0], truth.vel[0])
     imu = IMU(c, terrain)

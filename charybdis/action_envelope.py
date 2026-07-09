@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from .config import SimConfig
-from .legacy.navigator import NavEstimate, Navigator
+from .legacy.navigator import Navigator
 from .pcrb import terrain_fisher_information
 from .terrain import Terrain
 
