@@ -160,6 +160,20 @@ class Navigator:
             )
         raise ValueError(f"unknown estimate source: {source!r}")
 
+    def action_envelope(
+        self,
+        *,
+        t: float | None = None,
+        threat: float = 0.0,
+        map_trust: float = 1.0,
+    ):
+        """Continuous action authority from current nav/evidence state."""
+        from .action_envelope import compute_action_envelope
+
+        return compute_action_envelope(
+            self, self.terrain, t=t, threat=threat, map_trust=map_trust,
+        )
+
     def arrays(self) -> dict:
         out = {
             "ekf_pos": np.array(self.rec.ekf_pos),

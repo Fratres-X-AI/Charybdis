@@ -20,7 +20,8 @@ See [`MISSION.md`](MISSION.md) for promotion rules.
 | `ekf` | Stable | Joseph-form EKF, TRN + position updates |
 | `pf` | Stable | Bootstrap SIR; exposes `pos_cov` / `pos_std` |
 | `pmf` | Beta | Marginalized point-mass filter; strong on large init |
-| `navigator` | Stable | Fusion loop; exposes `NavEstimate` |
+| `navigator` | Stable | Fusion loop; exposes `NavEstimate`, `action_envelope()` |
+| `action_envelope` | Beta | Continuous action authority from nav/evidence |
 | `simulation`, `evaluate` | Stable | End-to-end + MC CEP/NEES |
 | `pcrb`, `stress`, `parallel` | Beta | Bounds, stress gates, worker caps |
 | `imu_model` | Beta | Allan / grade presets |

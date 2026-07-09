@@ -99,6 +99,16 @@ def main() -> int:
             continue
         a = np.asarray(vals)
         print(f"  {key:4s}  mean={a.mean():.1f}m  p50={np.percentile(a, 50):.1f}m  n={len(a)}")
+    # Last-run action authority snapshot (autonomy contract).
+    c = replace(cfg, seed=cfg.seed + n_runs - 1)
+    truth = generate_truth(c, terrain)
+    nav = Navigator(c, terrain, truth.pos[0], truth.vel[0])
+    imu = IMU(c, terrain)
+    for k in range(1, len(truth)):
+        nav.step(imu.sample(truth, k), k * c.dt)
+    env = nav.action_envelope(t=c.duration)
+    print(f"\naction envelope: confidence={env.confidence:.2f} binding={env.binding} "
+          f"transit={env.permitted['transit']:.2f} rtb={env.permitted['rtb']:.2f}")
     return 0
 
 

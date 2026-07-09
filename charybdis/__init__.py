@@ -16,6 +16,7 @@ from .ekf import NavEKF
 from .pf import TerrainParticleFilter
 from .pmf import TerrainPointMassFilter
 from .navigator import Navigator, NavEstimate
+from .action_envelope import ActionEnvelope, ACTIONS, compute_action_envelope
 from .simulation import run_simulation, SimResult
 from .evaluate import run_montecarlo, MonteCarloResult
 from .pcrb import (efficiency_report, filter_efficiency, navigability_map,
@@ -42,6 +43,9 @@ __all__ = [
     "TerrainPointMassFilter",
     "Navigator",
     "NavEstimate",
+    "ActionEnvelope",
+    "ACTIONS",
+    "compute_action_envelope",
     "run_simulation",
     "SimResult",
     "run_montecarlo",
