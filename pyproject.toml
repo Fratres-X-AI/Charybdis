@@ -1,22 +1,31 @@
 [project]
 name = "charybdis"
 version = "0.1.0"
-description = "Charybdis — GPS-denied terrain-aided navigation (INS + TERCOM + TRN + EKF/PF)."
+description = "GPS-denied terrain-aided navigation with hybrid UUV fusion and patrol."
 readme = "README.md"
+license = { text = "Proprietary" }
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
     "scipy>=1.11",
     "matplotlib>=3.8",
-    "streamlit>=1.36",
-    "plotly>=5.22",
-    "pandas>=2.2",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-timeout>=2.3"]
+console = ["streamlit>=1.36", "plotly>=5.22", "pandas>=2.2"]
 nn = ["torch>=2.0"]
 gebco = ["netCDF4>=1.6", "rasterio>=1.3"]
+all = [
+    "pytest>=8.0",
+    "pytest-timeout>=2.3",
+    "streamlit>=1.36",
+    "plotly>=5.22",
+    "pandas>=2.2",
+    "torch>=2.0",
+    "netCDF4>=1.6",
+    "rasterio>=1.3",
+]
 
 [build-system]
 requires = ["hatchling"]

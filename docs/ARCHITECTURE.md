@@ -1,48 +1,62 @@
 # Architecture
 
-## Two stacks, one repo
+## Repository stacks
 
 ```
-┌─────────────────────────────────────────────┐
-│  charybdis/          GDI nav library        │
-│  (INS, TERCOM, EKF, PF, PMF, MC, bathy)     │
-│         │                                   │
-│         └── experimental/  (NN, SLAM, swarm)│
-└─────────────────────────────────────────────┘
-┌─────────────────────────────────────────────┐
-│  charybdis_*.py      UUV tactical spine     │
-│  core ← sensors, autonomy, tracking         │
-│  console (Streamlit)                        │
-│  experimental: _nn, _slam, _swarm           │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  charybdis/                 installable Python package   │
+│    config, terrain, imu, ins, ekf, pf, tercom, ...     │
+│    fusion, patrol, sensors, modes   ← hybrid UUV layer   │
+│    navigator, simulation, evaluate, stress               │
+│    experimental/            NN matcher, SLAM, swarm      │
+└──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  console/                   UUV tactical spine (PAUSED)  │
+│    charybdis_core, console, sensors, autonomy, ...       │
+└──────────────────────────────────────────────────────────┘
 ```
 
-They share the GPS-denied terrain-aiding problem. They do **not** yet share a single runtime. Bridge intentionally via small APIs (`NavEstimate`, bathymetry loaders), not by merging files blindly.
+The GDI library and UUV console share the GPS-denied terrain-aiding problem but
+**do not share a single runtime**. Bridge via small APIs (`NavEstimate`, bathymetry
+loaders, hybrid `HybridNavState`) — not by merging codebases.
 
-## Target layout (Phase 1 progress)
+## Package layout
 
 ```
-charybdis/                 # installable GDI library
-  __init__.py              # Stable/Beta exports only
-  experimental/            # opt-in research modules
-  *.py                     # nav + data + eval
-apps via root: run_sim.py; UUV console (paused): console/charybdis_console.py
-scripts/                   # product MC / train / stress
-scripts/pod/               # RunPod one-offs
-docs/                      # MISSION, MATURITY, ARCHITECTURE
-tests/                     # pytest (slow skipped on CI)
-ros2_ws/                   # optional
-models/                    # trained weights
+charybdis/
+  __init__.py          public API (stable / beta)
+  fusion.py            hybrid 8D surface/submerged fusion
+  patrol.py            waypoint patrol executor
+  sensors.py           abstract sensor measurements
+  modes.py             surface / submerged mode manager
+  navigator.py         TERCOM + EKF + PF coordination
+  experimental/        opt-in research (SLAM, swarm, NN)
+console/               paused UUV console (separate package)
+tests/                 pytest
+scripts/               MC, stress, pod helpers
+docs/                  MISSION, MATURITY, ARCHITECTURE
+run_sim.py             primary simulation entry point
 ```
 
 ## Navigator contract
 
-`Navigator.estimate()` returns a `NavEstimate` (position, 2×2 covariance, source filter, optional Neff). Autonomy and UI layers should consume this instead of reaching into filter internals.
+`Navigator.estimate()` returns `NavEstimate` (position, 2×2 covariance, source
+filter, health flags). Downstream layers should consume this — not filter internals.
 
-## Experimental import
+## Hybrid UUV contract
+
+`HybridSensorFusion.step(SensorPacket)` returns `HybridNavState`. Patrol consumes
+`HybridNavState` and emits `PatrolCommand` (desired velocity, heading, depth, mode).
+
+## Import policy
 
 ```python
-from charybdis.experimental import build_model, run_swarm, init_slam
+import charybdis                         # stable / beta only
+from charybdis.experimental import run_swarm, init_slam
+from charybdis.experimental.nn_matcher import train  # needs torch
 ```
 
 Default `import charybdis` must not load torch or experimental side effects.
+
+Legacy `charybdis.slam` / `charybdis.swarm` / `charybdis.nn_matcher` shims
+re-export from `experimental/` with `DeprecationWarning`.

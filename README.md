@@ -1,104 +1,126 @@
-# Charybdis — GPS-Denied Terrain-Aided Navigation
+# Charybdis
 
-**Current focus:** the core GPS-denied navigation stack in the `charybdis/` package
-(INS + TERCOM/TRN + EKF + particle filter), with honest Monte-Carlo evaluation.
+GPS-denied terrain-aided navigation for research and harbor-patrol UUV concepts.
+Charybdis fuses inertial navigation with terrain contour matching (TERCOM/TRN),
+extended Kalman and particle filters, and — for UUV work — a hybrid
+surface/submerged sensor fusion layer with waypoint patrol execution.
 
-**Paused:** the UUV tactical Streamlit console and autonomy layer live under
-[`console/`](console/) and are not part of active development until core navigation
-is in good shape. See [`console/README.md`](console/README.md).
-
-See also [`docs/MISSION.md`](docs/MISSION.md), [`docs/MATURITY.md`](docs/MATURITY.md),
-and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
-## GDI stack
-
-Terrain-aided inertial navigation for a GNSS-denied interceptor. Charybdis fuses a
-strapdown **INS (dead-reckoning)** with **TERCOM** terrain-contour matching and a
-recursive **terrain-referenced (TRN)** update inside an **Extended Kalman Filter**,
-so the vehicle keeps an accurate fix with no GPS. A **terrain-aided particle
-filter** (and optional **PMF**) runs in parallel as a non-Gaussian estimator, and a
-Monte-Carlo harness reports CEP and filter-consistency (NEES) metrics.
-
-## How it works
-
-```
- IMU (accel, gyro) ─► Strapdown INS ─► EKF predict ─┐
-                                                     ├─► fused state (pos, vel, bias)
- Radar alt + Baro  ─► ground elevation ─► TERCOM ────┤        │
-                                        └► TRN slope ─┘        ▼
-   stored DEM ◄──────────── correlate / gradient ──────► position fix
-```
-
-- **INS / dead-reckoning** (`ins.py`): integrates specific force; drifts unbounded when unaided — the baseline Charybdis beats.
-- **Terrain / DEM** (`terrain.py`): synthetic fractal elevation map with bilinear query and slope.
-- **TERCOM** (`tercom.py`): buffers a strip of measured ground elevations, slides it over the DEM, and picks the horizontal offset with minimum mean-absolute-difference → absolute position fix (sub-cell refined, with covariance from the correlation surface).
-- **TRN update** (`ekf.py`): recursive single-point update using measured terrain elevation vs. DEM, Jacobian = local terrain slope.
-- **EKF** (`ekf.py`): state `[px, py, vx, vy, bax, bay]`, IMU-driven prediction, Joseph-form covariance, χ² innovation gating.
-- **Particle filter** (`pf.py`): bootstrap SIR over the same 6-state model. Weights come from the *exact* (non-linearised) terrain-elevation likelihood, so it represents the multi-modal position posterior instead of a single Gaussian. Systematic resampling with floored roughening prevents impoverishment; TERCOM fixes are χ²-gated and used to relocalise the cloud (with velocity recovered by differencing consecutive fixes). This is what lets it recover from large initial errors the EKF cannot.
-- **Navigator** (`navigator.py`): fusion loop; exposes **`NavEstimate`** (pos + 2×2 cov) for downstream consumers.
-- **Evaluation** (`evaluate.py`): Monte-Carlo over seeds → CEP50/CEP95, mean RMSE, and EKF **NEES** (a 2-DOF-consistent filter averages ≈ 2.0).
-
-## Run
+## Install
 
 ```bash
-pip install -r requirements.txt
-python run_sim.py                 # writes outputs/map.png, outputs/error.png
-python run_sim.py --duration 300 --seed 12
-python run_sim.py --montecarlo 15 # CEP / NEES evaluation table
-python scripts/mc_real_region.py  # synthetic MC; pass --npz for a real tile
-python scripts/stress_run.py      # stress harness
-pytest -q                         # core navigation tests (console tests excluded)
+git clone https://github.com/Fratres-X-AI/Charybdis.git
+cd Charybdis
+pip install -e .              # core package
+pip install -e ".[dev]"       # + pytest
+pip install -e ".[nn]"        # + torch (experimental NN matcher)
 ```
 
-Console tests (paused layer): `RUN_CONSOLE=1 pytest -m console -q`
+Or use `requirements.txt` for the full dev environment.
 
-## Representative results (180 s, 50 Hz)
+## Quick start
 
-| metric | INS only | Charybdis EKF | Particle filter |
-|---|---|---|---|
-| RMSE | ~920 m | ~20 m | ~22 m |
-| final error | ~1980 m | ~7 m | ~7 m |
-
-Monte-Carlo (8 seeds): EKF CEP50 **24 m** / CEP95 **59 m**, PF CEP50 **27 m**; EKF **NEES ≈ 1.9** (consistent, ~2.0 ideal). With a 450 m injected initial error and TERCOM disabled (TRN only), the PF converges to **<20 m** while the EKF can settle **80–95 m** off in a wrong terrain minimum — the particle filter's key advantage.
-
-![map](outputs/map.png)
-![error](outputs/error.png)
-
-## Layout
-
-```
-charybdis/                 # Core GDI library (active development)
-  navigator.py             # NavEstimate + fusion loop
-  ekf.py / pf.py / pmf.py / tercom.py / ins.py
-  bathy.py                 # GEBCO / grid loaders
-  experimental/            # NN matcher, SLAM, swarm (opt-in)
-console/                   # UUV tactical console + autonomy (PAUSED)
-docs/                      # MISSION, MATURITY, ARCHITECTURE
-scripts/                   # MC / stress / train / pod helpers
-tests/                     # Core nav tests; console tests marked @console
-run_sim.py
+```bash
+python run_sim.py
+python run_sim.py --montecarlo 15
+pytest -q -m "not console"
 ```
 
-Experimental imports (core package):
+## Repository layout
+
+```
+Charybdis/
+├── charybdis/              # installable Python package (active development)
+│   ├── fusion.py           # hybrid 8D surface/submerged sensor fusion
+│   ├── patrol.py           # waypoint patrol executor
+│   ├── sensors.py          # abstract sensor measurements
+│   ├── modes.py            # surface / submerged mode management
+│   ├── navigator.py        # GDI fusion loop (TERCOM + EKF + PF)
+│   ├── ekf.py / pf.py / tercom.py / ins.py / ...
+│   ├── simulation.py       # end-to-end sim harness
+│   ├── evaluate.py         # Monte-Carlo CEP / NEES
+│   └── experimental/       # opt-in research modules (SLAM, swarm, NN)
+├── console/                # UUV tactical console (PAUSED)
+├── tests/                  # pytest suite
+├── scripts/                # MC, stress, pod helpers
+├── docs/                   # MISSION, MATURITY, ARCHITECTURE
+├── run_sim.py              # primary simulation entry point
+├── pyproject.toml
+├── README.md
+└── LICENSE
+```
+
+## Package API
+
+### Stable / Beta (`import charybdis`)
+
+| Area | Key types |
+|------|-----------|
+| Config | `SimConfig` |
+| Terrain | `Terrain`, `generate_truth` |
+| GDI nav | `Navigator`, `NavEstimate`, `NavEKF`, `TerrainParticleFilter` |
+| Hybrid UUV | `HybridSensorFusion`, `PatrolExecutor`, `SensorPacket`, `NavMode` |
+| Simulation | `run_simulation`, `run_montecarlo` |
+
+```python
+from charybdis import (
+    SimConfig, Navigator, HybridSensorFusion, PatrolExecutor, run_simulation,
+)
+```
+
+Submodule imports remain valid for advanced use:
+
+```python
+from charybdis.stress import run_stress_harness
+from charybdis.bathy import load_npz
+```
+
+### Experimental (`import charybdis.experimental`)
+
+Unstable, opt-in modules. Not loaded by default `import charybdis`.
 
 ```python
 from charybdis.experimental import run_swarm, init_slam
 from charybdis.experimental.nn_matcher import match_position, train
 ```
 
-## UUV console (paused)
+Legacy shims at `charybdis.slam`, `charybdis.swarm`, and `charybdis.nn_matcher`
+still work but emit `DeprecationWarning` — prefer `charybdis.experimental.*`.
 
-The Streamlit tactical console, autonomy FSM, multi-contact tracking, learned TCM
-CNN, SLAM, and swarm modules were moved from the repo root into `console/`. They
-remain in the repository but are isolated until the core navigation stack is
-production-ready.
+### Paused console (`console/`)
 
-To run when resuming work on that layer:
+The Streamlit UUV tactical console is isolated under `console/` and not part of
+active development. See [`console/README.md`](console/README.md).
 
-```bash
-streamlit run console/charybdis_console.py
-python console/charybdis_core.py
-pytest -m console -q
+## Hybrid navigation layer
+
+For harbor-patrol UUV software (no hardware coupling):
+
+- **`sensors.py`** — abstract GPS, IMU, depth, DVL, bathymetry inputs
+- **`modes.py`** — surface vs submerged with depth hysteresis
+- **`fusion.py`** — conservative 8D EKF-style fusion with chi-square gating
+- **`patrol.py`** — waypoint routes with heading-aware LOS guidance
+
+GPS is accepted in surface mode; bathymetry primarily in submerged mode.
+
+## GDI navigation stack
+
+```
+ IMU ─► INS predict ─► EKF ─┬─ TERCOM (batch correlation fix)
+ Radar/baro ─► TRN update ──┘         │
+                                      ▼
+                            Particle filter (parallel)
 ```
 
-> Research/simulation only. Feature maturity: [`docs/MATURITY.md`](docs/MATURITY.md).
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/MISSION.md`](docs/MISSION.md).
+
+## Tests
+
+```bash
+pytest -q -m "not console"     # core + hybrid (CI default)
+pytest -m console -q           # paused UUV console layer
+RUN_SLOW=1 pytest -m slow -q   # stress / MC gates
+```
+
+## License
+
+Proprietary — see [`LICENSE`](LICENSE). Research/simulation use only.
