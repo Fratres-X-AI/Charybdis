@@ -1,14 +1,12 @@
 import numpy as np
 import pytest
 from charybdis.hybrid import (
-    FusionDiagnostics,
     GpsMeasurement,
     HybridFusionConfig,
     HybridNavigator,
     HybridNavState,
     HybridSensorFusion,
     ImuMeasurement,
-    ModeManager,
     NavMode,
     PatrolExecutor,
     PatrolRoute,
@@ -17,6 +15,8 @@ from charybdis.hybrid import (
     VelocityMeasurement,
     Waypoint,
 )
+from charybdis.hybrid.fusion import FusionDiagnostics
+from charybdis.hybrid.modes import ModeManager
 
 
 def test_sensor_contract_rejects_invalid_covariance_and_quality():
@@ -53,6 +53,18 @@ def test_packet_timestamps_must_be_monotonic():
                 timestamp_s=1.0,
             )
         )
+
+
+def test_packet_rejects_wrong_component_types_and_timestamped_measurements() -> None:
+    with pytest.raises(TypeError, match="imu"):
+        SensorPacket(imu=object())  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match="packet timestamp"):
+        SensorPacket(imu=ImuMeasurement([0.0, 0.0], 1.0, timestamp_s=1.0))
+
+    packet = SensorPacket(mode_hint="submerged")  # type: ignore[arg-type]
+
+    assert packet.mode_hint == NavMode.SUBMERGED
 
 
 def test_mode_hint_cannot_override_depth_by_default():
@@ -113,6 +125,16 @@ def test_navigator_fuses_before_generating_guidance():
     assert result.command.desired_vel[0] > 0.0
 
 
+def test_navigator_step_requires_sensor_packet() -> None:
+    navigator = HybridNavigator(
+        HybridSensorFusion([0.0, 0.0]),
+        PatrolExecutor(PatrolRoute((Waypoint([10.0, 0.0]),))),
+    )
+
+    with pytest.raises(TypeError, match="SensorPacket"):
+        navigator.step(object())  # type: ignore[arg-type]
+
+
 def test_patrol_holds_when_navigation_is_unhealthy():
     state = HybridNavState(
         pos=np.zeros(2),
@@ -140,3 +162,25 @@ def test_covariance_remains_psd_under_tight_measurements():
     covariance = fusion.covariance
     assert np.allclose(covariance, covariance.T)
     assert np.linalg.eigvalsh(covariance).min() > 0.0
+
+
+def test_fusion_rejects_invalid_internal_measurement_covariance() -> None:
+    fusion = HybridSensorFusion([0.0, 0.0])
+
+    with pytest.raises(ValueError, match="symmetric"):
+        fusion._update_linear(  # noqa: SLF001
+            np.array([0.0, 0.0]),
+            np.array([[1.0, 0.5], [0.0, 1.0]]),
+            [0, 1],
+            25.0,
+            "test",
+        )
+
+    with pytest.raises(ValueError, match="positive semidefinite"):
+        fusion._update_linear(  # noqa: SLF001
+            np.array([0.0, 0.0]),
+            np.diag([1.0, -1.0]),
+            [0, 1],
+            25.0,
+            "test",
+        )

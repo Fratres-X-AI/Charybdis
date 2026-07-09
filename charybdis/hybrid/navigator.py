@@ -57,6 +57,8 @@ class HybridNavigator:
 
     def step(self, packet: SensorPacket) -> HybridStepResult:
         """Fuse one packet and generate guidance from the updated state."""
+        if not isinstance(packet, SensorPacket):
+            raise TypeError("packet must be SensorPacket")
         state = self._fusion.step(packet)
         command = self._patrol.update(state)
         result = HybridStepResult(state=state, command=command)

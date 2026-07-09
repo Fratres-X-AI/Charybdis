@@ -249,17 +249,37 @@ class SensorPacket:
     timestamp_s: float | None = None
 
     def __post_init__(self) -> None:
+        for name, measurement, expected_type in (
+            ("imu", self.imu, ImuMeasurement),
+            ("gps", self.gps, GpsMeasurement),
+            ("depth", self.depth, DepthMeasurement),
+            ("velocity", self.velocity, VelocityMeasurement),
+            ("bathymetry", self.bathymetry, BathymetryMeasurement),
+        ):
+            if measurement is not None and not isinstance(measurement, expected_type):
+                raise TypeError(f"{name} must be {expected_type.__name__}")
+        if self.mode_hint is not None:
+            object.__setattr__(self, "mode_hint", NavMode(self.mode_hint))
+
         packet_time = _timestamp(self.timestamp_s)
         object.__setattr__(self, "timestamp_s", packet_time)
-        if packet_time is None:
-            return
-        for measurement in (
+        measurements = (
             self.imu,
             self.gps,
             self.depth,
             self.velocity,
             self.bathymetry,
-        ):
+        )
+        if packet_time is None:
+            if any(
+                measurement is not None and measurement.timestamp_s is not None
+                for measurement in measurements
+            ):
+                raise ValueError(
+                    "packet timestamp is required when measurements are timestamped"
+                )
+            return
+        for measurement in measurements:
             measurement_time = None if measurement is None else measurement.timestamp_s
             if measurement_time is not None and measurement_time > packet_time + 1e-9:
                 raise ValueError("measurement timestamp cannot exceed packet timestamp")

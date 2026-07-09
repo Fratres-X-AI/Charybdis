@@ -35,6 +35,7 @@ Each example is deterministic and runs after the editable install:
 
 ```bash
 python examples/run_hybrid_patrol.py
+python examples/adapter_pattern.py
 python examples/terrain_profile_matching.py
 python examples/degraded_sensors.py
 python examples/legacy_interceptor.py
@@ -42,6 +43,10 @@ python examples/legacy_interceptor.py
 
 See [`examples/README.md`](examples/README.md) for the purpose and operational
 boundary of each example.
+
+Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) for the stable
+API walkthrough and [`docs/PRODUCTION_INTEGRATION.md`](docs/PRODUCTION_INTEGRATION.md)
+before connecting logs or hardware.
 
 ## Hybrid-first public API
 

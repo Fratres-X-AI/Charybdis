@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 from charybdis.hybrid import (
     BathymetryMap,
-    BathymetryMatch,
     BathymetryMeasurement,
     BathymetryProfile,
     HybridFusionConfig,
@@ -14,8 +13,6 @@ from charybdis.hybrid import (
     HybridNavState,
     HybridSensorFusion,
     MatchStatus,
-    ModeManager,
-    ModeManagerConfig,
     NavMode,
     PatrolExecutor,
     PatrolRoute,
@@ -23,6 +20,8 @@ from charybdis.hybrid import (
     TerrainProfileMatcher,
     Waypoint,
 )
+from charybdis.hybrid.bathymetry import BathymetryMatch
+from charybdis.hybrid.modes import ModeManager, ModeManagerConfig
 
 
 @pytest.mark.parametrize(

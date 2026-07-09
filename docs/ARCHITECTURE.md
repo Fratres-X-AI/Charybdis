@@ -33,9 +33,11 @@ HybridStepResult
 PatrolExecutor
 ```
 
-Types needed to configure or populate those objects are available from
-`charybdis.hybrid`. Simulation, evaluation, shared data loaders, legacy
-estimators, and experimental modules require explicit submodule imports.
+Common construction and packet types are available from `charybdis.hybrid`.
+Lower-level diagnostics and implementation helpers require explicit module
+imports such as `charybdis.hybrid.fusion` or `charybdis.hybrid.modes`.
+Simulation, evaluation, shared data loaders, legacy estimators, and
+experimental modules require explicit submodule imports.
 
 The architecture tests enforce that importing `charybdis` does not import
 `charybdis.legacy`, `charybdis.experimental`, `console`, or PyTorch.

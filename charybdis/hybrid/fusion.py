@@ -405,6 +405,10 @@ class HybridSensorFusion:
             raise ValueError("measurement and covariance dimensions do not match")
         if not np.all(np.isfinite(z)) or not np.all(np.isfinite(R)):
             raise ValueError("measurement and covariance must be finite")
+        if not np.allclose(R, R.T, atol=1e-10):
+            raise ValueError("measurement covariance must be symmetric")
+        if np.any(np.diag(R) <= 0.0) or np.linalg.eigvalsh(R).min() < -1e-10:
+            raise ValueError("measurement covariance must be positive semidefinite")
         R = self._stabilize_cov(R)
         H = np.zeros((len(idx), self.N))
         for row, col in enumerate(idx):

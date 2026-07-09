@@ -25,6 +25,16 @@ supervised vehicle controller.
 The example demonstrates integration boundaries; it is not deployable vehicle
 control software.
 
+## Adapter pattern
+
+```bash
+python examples/adapter_pattern.py
+```
+
+`adapter_pattern.py` separates four responsibilities that should stay separate
+in production code: sensor packet assembly, `HybridNavigator.step()`, health
+policy, and command handoff to a supervised controller boundary.
+
 ## Terrain profile matching
 
 ```bash

@@ -1,27 +1,26 @@
-"""Public API for the primary surface/submerged UUV navigation stack.
+"""Convenience API for the primary surface/submerged UUV navigation stack.
 
-Import hardware-neutral measurements, fusion, mode management, and patrol
-types from this package. Implementation helpers remain in their modules.
+The package root exposes only the smallest integration surface. This subpackage
+adds the common construction and inspection types needed by examples and SDK
+users. Lower-level diagnostics and implementation helpers remain available from
+their defining modules.
 """
 
 from __future__ import annotations
 
 from .bathymetry import (
     BathymetryMap,
-    BathymetryMatch,
     BathymetryProfile,
     MatchStatus,
     TerrainMatcherConfig,
     TerrainProfileMatcher,
 )
 from .fusion import (
-    FusionDiagnostics,
-    FusionRejection,
     HybridFusionConfig,
     HybridNavState,
     HybridSensorFusion,
 )
-from .modes import ModeManager, ModeManagerConfig, NavMode
+from .modes import NavMode
 from .navigator import HybridNavigator, HybridStepResult
 from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
 from .sensors import (
@@ -38,12 +37,9 @@ __all__ = [
     "NavMode",
     "BathymetryMap",
     "BathymetryProfile",
-    "BathymetryMatch",
     "MatchStatus",
     "TerrainMatcherConfig",
     "TerrainProfileMatcher",
-    "ModeManager",
-    "ModeManagerConfig",
     "SensorQuality",
     "ImuMeasurement",
     "GpsMeasurement",
@@ -52,8 +48,6 @@ __all__ = [
     "BathymetryMeasurement",
     "SensorPacket",
     "HybridFusionConfig",
-    "FusionRejection",
-    "FusionDiagnostics",
     "HybridNavState",
     "HybridSensorFusion",
     "HybridNavigator",

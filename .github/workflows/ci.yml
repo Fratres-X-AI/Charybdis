@@ -116,7 +116,10 @@ jobs:
           with ZipFile(wheel[0]) as archive:
               names = set(archive.namelist())
           assert "charybdis/py.typed" in names
-          assert not any(name.startswith("console/") for name in names)
+          excluded_prefixes = ("console/", "ros2_ws/", "tests/", "examples/", "scripts/")
+          assert not any(
+              name.startswith(excluded_prefixes) for name in names
+          ), sorted(name for name in names if name.startswith(excluded_prefixes))
           PY
 
       - name: Install and smoke-test wheel

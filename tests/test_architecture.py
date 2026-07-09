@@ -50,8 +50,9 @@ def test_root_import_is_pure_and_hybrid_focused():
     script = (
         "import json,sys,charybdis;"
         "print(json.dumps(sorted(name for name in sys.modules "
-        "if name.startswith(('torch','console','charybdis.legacy',"
-        "'charybdis.experimental')))))"
+        "if name.startswith(('torch','matplotlib','scipy','netCDF4','rasterio',"
+        "'console','charybdis.legacy','charybdis.experimental',"
+        "'charybdis.simulation','charybdis.evaluation')))))"
     )
     completed = subprocess.run(
         [sys.executable, "-c", script],
@@ -64,3 +65,37 @@ def test_root_import_is_pure_and_hybrid_focused():
     assert "HybridNavigator" in charybdis.__all__
     assert "Navigator" not in charybdis.__all__
     assert "SimConfig" not in charybdis.__all__
+
+
+def test_examples_use_only_approved_charybdis_import_surfaces():
+    allowed = {
+        "charybdis",
+        "charybdis.hybrid",
+        "charybdis.legacy",
+    }
+    legacy_example_allowed = allowed | {
+        "charybdis.config",
+        "charybdis.imu",
+        "charybdis.terrain",
+    }
+    violations: list[str] = []
+    for path in (ROOT / "examples").glob("*.py"):
+        allowed_for_file = (
+            legacy_example_allowed if path.name == "legacy_interceptor.py" else allowed
+        )
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                module = node.module
+                if module.startswith("charybdis") and module not in allowed_for_file:
+                    violations.append(f"{path.name}:{module}")
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    module = alias.name
+                    if (
+                        module.startswith("charybdis")
+                        and module not in allowed_for_file
+                    ):
+                        violations.append(f"{path.name}:{module}")
+
+    assert violations == []
