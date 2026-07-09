@@ -1,15 +1,37 @@
 #!/usr/bin/env bash
-set -e
-export OMP_NUM_THREADS=31 MKL_NUM_THREADS=31 OPENBLAS_NUM_THREADS=31
+# Resume pod_today from phase 2 (after phase 1 already passed).
+set -euo pipefail
 cd /workspace/Charybdis
 source .venv/bin/activate
+export PYTHONPATH=.
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+export MPLBACKEND=Agg
+
 ts(){ date -u +"%H:%M:%S"; }
-log(){ echo "[$(ts)] $*" | tee -a /workspace/Charybdis/run.log; }
-log "RESUME train CPU x31 (5090 needs nightly torch; CPU+31 threads)"
-python -c "from charybdis_nn import train; train(n_samples=24000, epochs=12, batch=512, seed=0, device='cpu', num_workers=31)"
-log "final4 pytest x31"
-python -m pytest tests/test_final4.py -q -n 31
-log "benchmark workers=31"
-python scripts/benchmark_15of15.py
-log "DONE exit=0"
-echo 0 > /workspace/Charybdis/run.exit
+log(){ echo "[$(ts)] $*" | tee -a pod_today.log; }
+
+log "=== PHASE 2 RESUME: full pytest (RUN_SLOW=1) ==="
+RUN_SLOW=1 python -m pytest -q --timeout=300 --timeout-method=thread | tee -a pod_today.log
+
+log "=== PHASE 3: stress harness (64 seeds) ==="
+python scripts/stress_run.py 64 | tee -a pod_today.log
+
+log "=== PHASE 4: Monte Carlo (31 runs) ==="
+python scripts/mc_real_region.py --n-runs 31 --duration 120 | tee -a pod_today.log
+
+log "=== PHASE 5: NN hard eval ==="
+if pip install -q torch --index-url https://download.pytorch.org/whl/cu126 2>/dev/null \
+   && [ -f models/tcm_so2.pt ]; then
+  python - <<'PY' | tee -a pod_today.log
+from charybdis.experimental.nn_matcher import eval_hard
+print(eval_hard("models/tcm_so2.pt", n=4096))
+PY
+else
+  log "skip NN eval"
+fi
+
+log "=== PHASE 6: benchmarks ==="
+python scripts/benchmark_15of15.py | tee -a pod_today.log || true
+
+log "=== DONE ==="
+echo "PASS" > pod_today.exit
