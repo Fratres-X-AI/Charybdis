@@ -21,6 +21,7 @@ Prime-level robustness features (all optional, see :class:`SimConfig`):
   * **PF-driven recovery** - :meth:`reset_from` lets the coordinator rescue a
     diverged EKF from the particle-filter posterior.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,7 +37,7 @@ from ..terrain import Terrain
 class UpdateInfo:
     accepted: bool
     innovation: float
-    nis: float               # normalised innovation squared
+    nis: float  # normalised innovation squared
 
 
 class NavEKF:
@@ -49,9 +50,9 @@ class NavEKF:
         self.x[0:2] = pos0
         self.x[2:4] = vel0
         p = np.zeros(self.N)
-        p[0:2] = cfg.init_pos_std ** 2
-        p[2:4] = cfg.init_vel_std ** 2
-        p[4:6] = cfg.accel_bias0 ** 2
+        p[0:2] = cfg.init_pos_std**2
+        p[2:4] = cfg.init_vel_std**2
+        p[4:6] = cfg.accel_bias0**2
         self.P = np.diag(p)
         self.monitor = est.InnovationMonitor(cfg.adapt_q_window, dof=1)
         self.n_resets = 0
@@ -73,12 +74,12 @@ class NavEKF:
 
         q_scale = self._q_scale()
         self.last_q_scale = q_scale
-        q_a = cfg.accel_noise ** 2 * q_scale
-        q_b = cfg.accel_bias_rw ** 2
+        q_a = cfg.accel_noise**2 * q_scale
+        q_b = cfg.accel_bias_rw**2
         Q = np.zeros((self.N, self.N))
         for i in range(2):
-            Q[i, i] = q_a * dt ** 3 / 3.0
-            Q[i, i + 2] = Q[i + 2, i] = q_a * dt ** 2 / 2.0
+            Q[i, i] = q_a * dt**3 / 3.0
+            Q[i, i + 2] = Q[i + 2, i] = q_a * dt**2 / 2.0
             Q[i + 2, i + 2] = q_a * dt
             Q[i + 4, i + 4] = q_b * dt
         self.P = F @ self.P @ F.T + Q
@@ -89,15 +90,19 @@ class NavEKF:
         scale = 1.0
         if cfg.adapt_q:
             scale *= self.monitor.q_scale(
-                cfg.adapt_q_min, cfg.adapt_q_max, cfg.adapt_q_min_count)
+                cfg.adapt_q_min, cfg.adapt_q_max, cfg.adapt_q_min_count
+            )
         if cfg.adapt_q_terrain:
             grad = self.terrain.gradient(self.x[0], self.x[1])
-            info = float(grad @ grad)                 # slope Fisher proxy
-            ref = cfg.adapt_q_terrain_ref ** 2
-            factor = 1.0 + (cfg.adapt_q_terrain_max - 1.0) / (1.0 + info / max(ref, 1e-9))
+            info = float(grad @ grad)  # slope Fisher proxy
+            ref = cfg.adapt_q_terrain_ref**2
+            factor = 1.0 + (cfg.adapt_q_terrain_max - 1.0) / (
+                1.0 + info / max(ref, 1e-9)
+            )
             scale *= float(np.clip(factor, 1.0, cfg.adapt_q_terrain_max))
-        return float(np.clip(scale, cfg.adapt_q_min,
-                             cfg.adapt_q_max * cfg.adapt_q_terrain_max))
+        return float(
+            np.clip(scale, cfg.adapt_q_min, cfg.adapt_q_max * cfg.adapt_q_terrain_max)
+        )
 
     # ---- terrain-referenced (single point) update ----------------------
     def update_trn(self, ground_elev_meas: float) -> UpdateInfo:
@@ -106,7 +111,8 @@ class NavEKF:
         R_base = est.terrain_meas_var(cfg)
         if cfg.ekf_stochastic_lin:
             h, grad, R_lin = est.stochastic_linearize(
-                self.terrain, self.x[0:2], self.P[0:2, 0:2], cfg)
+                self.terrain, self.x[0:2], self.P[0:2, 0:2], cfg
+            )
             R = R_base + R_lin
         else:
             h = float(self.terrain.elevation(px, py))
@@ -116,7 +122,7 @@ class NavEKF:
         y = ground_elev_meas - h
         S = float(H @ self.P @ H.T + R)
         nis = y * y / S
-        if nis > cfg.gate_chi2:            # scalar gate (generous)
+        if nis > cfg.gate_chi2:  # scalar gate (generous)
             # Repeated rejects are a real health signal. Cap the value so one
             # gross altimeter spike cannot dominate the adaptive-Q history.
             self.monitor.push(min(nis, 2.0 * cfg.gate_chi2))
@@ -144,10 +150,14 @@ class NavEKF:
         return UpdateInfo(True, float(np.linalg.norm(y)), nis)
 
     # ---- PF-driven recovery -------------------------------------------
-    def reset_from(self, pos: np.ndarray, cov: np.ndarray,
-                   vel: np.ndarray | None = None,
-                   vel_cov: np.ndarray | None = None,
-                   infl: float = 1.0) -> None:
+    def reset_from(
+        self,
+        pos: np.ndarray,
+        cov: np.ndarray,
+        vel: np.ndarray | None = None,
+        vel_cov: np.ndarray | None = None,
+        infl: float = 1.0,
+    ) -> None:
         """Re-seed the position marginal (and optionally velocity) from an
         external, more-trustworthy posterior - the recovery hook the coordinator
         uses when the robust filters flag the EKF as diverged. Cross-covariances
@@ -163,12 +173,16 @@ class NavEKF:
             self.x[2:4] = np.asarray(vel, float)
             self.P[2:4, :] = 0.0
             self.P[:, 2:4] = 0.0
-            vc = np.asarray(vel_cov, float) if vel_cov is not None \
-                else np.diag([self.cfg.init_vel_std ** 2] * 2)
+            vc = (
+                np.asarray(vel_cov, float)
+                if vel_cov is not None
+                else np.diag([self.cfg.init_vel_std**2] * 2)
+            )
             self.P[2:4, 2:4] = infl * vc
         # keep bias mean, but re-open its uncertainty
-        self.P[4:6, 4:6] = np.maximum(self.P[4:6, 4:6],
-                                      np.diag([self.cfg.accel_bias0 ** 2] * 2))
+        self.P[4:6, 4:6] = np.maximum(
+            self.P[4:6, 4:6], np.diag([self.cfg.accel_bias0**2] * 2)
+        )
         self.P = 0.5 * (self.P + self.P.T)
         self.monitor.buf.clear()
         self.n_resets += 1

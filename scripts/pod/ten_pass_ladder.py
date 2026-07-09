@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """10-pass escalating hard SO(2) training — run on RunPod A100 only."""
+
 from __future__ import annotations
 
 import os
@@ -51,10 +52,20 @@ def main() -> None:
     best_pass = 0
 
     for i, (ep, ns, bs, nt, lr, seed) in enumerate(PASSES, 1):
-        p(f"\n{'=' * 60}\nPASS {i}/10: {ep}ep x {ns} @{bs} terr={nt} lr={lr:.1e} hard\n{'=' * 60}")
+        p(
+            f"\n{'=' * 60}\nPASS {i}/10: {ep}ep x {ns} @{bs} terr={nt} lr={lr:.1e} hard\n{'=' * 60}"
+        )
         train(
-            epochs=ep, n_samples=ns, batch=bs, seed=seed, device="cuda",
-            n_terrains=nt, resume=str(dst), lr=lr, hard=True, model_path=str(dst),
+            epochs=ep,
+            n_samples=ns,
+            batch=bs,
+            seed=seed,
+            device="cuda",
+            n_terrains=nt,
+            resume=str(dst),
+            lr=lr,
+            hard=True,
+            model_path=str(dst),
         )
         shutil.copy(dst, f"models/tcm_so2_pass{i:02d}.pt")
 
@@ -74,9 +85,13 @@ def main() -> None:
             shutil.copy(dst, "models/tcm_so2_best.pt")
             p(f"  -> new best checkpoint (pass {i})")
 
-    p(f"\n=== FINAL EVAL best pass {best_pass} after_mean={best_after:.1f}m n=16384 ===")
+    p(
+        f"\n=== FINAL EVAL best pass {best_pass} after_mean={best_after:.1f}m n=16384 ==="
+    )
     m = build_model()
-    m.load_state_dict(torch.load("models/tcm_so2_best.pt", map_location="cuda", weights_only=True))
+    m.load_state_dict(
+        torch.load("models/tcm_so2_best.pt", map_location="cuda", weights_only=True)
+    )
     m.cuda().eval()
     terrains = [Terrain.synthetic(SimConfig(seed=i)) for i in range(32)]
     rng = np.random.default_rng(42)

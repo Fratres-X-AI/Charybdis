@@ -1,131 +1,180 @@
 # Charybdis
 
-GPS-denied terrain-aided navigation for research and harbor-patrol UUV concepts.
-Charybdis fuses inertial navigation with terrain contour matching (TERCOM/TRN),
-extended Kalman and particle filters, and — for UUV work — a hybrid
-surface/submerged sensor fusion layer with waypoint patrol execution.
+Charybdis is a hybrid-first navigation and patrol research package for
+surface/submerged UUV simulation. It provides hardware-neutral sensor
+contracts, an 8-state fusion filter, terrain-profile matching, navigation
+health diagnostics, and waypoint guidance.
+
+The repository also retains an explicit legacy interceptor-navigation stack
+and opt-in experimental research. Neither is imported by the package root.
+
+Charybdis is research and simulation software. It is not certified vehicle
+software, a safety controller, or evidence of real-world mission validation.
 
 ## Install
 
+Python 3.11 or newer is required. Authorized contributors can install the
+package from a repository checkout:
+
 ```bash
-git clone https://github.com/Fratres-X-AI/Charybdis.git
-cd Charybdis
-pip install -e .              # core package
-pip install -e ".[dev]"       # + pytest
-pip install -e ".[nn]"        # + torch (experimental NN matcher)
+python -m pip install -e .
 ```
 
-Or use `requirements.txt` for the full dev environment.
+For linting, typing, and tests:
 
-## Quick start
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Optional dependency groups include `nn`, `gebco`, and `console`. Installing a
+group does not change the default import boundary.
+
+## Run the examples
+
+Each example is deterministic and runs after the editable install:
 
 ```bash
 python examples/run_hybrid_patrol.py
-python run_sim.py
-python run_sim.py --montecarlo 15
-pytest -q -m "not console"
+python examples/terrain_profile_matching.py
+python examples/degraded_sensors.py
+python examples/legacy_interceptor.py
 ```
 
-## Repository layout
+See [`examples/README.md`](examples/README.md) for the purpose and operational
+boundary of each example.
 
-```
-Charybdis/
-├── charybdis/              # installable Python package
-│   ├── config.py, terrain.py, trajectory.py, imu.py, ins.py, bathy.py
-│   ├── hybrid/             # primary: surface/submerged UUV fusion + patrol
-│   │   ├── fusion.py, patrol.py, sensors.py, modes.py
-│   ├── legacy/             # isolated: interceptor TERCOM/EKF/PF/PMF stack
-│   │   ├── navigator.py, ekf.py, pf.py, pmf.py, tercom.py
-│   ├── simulation/         # end-to-end sim + hybrid harbor smoke sim
-│   ├── evaluation/         # Monte-Carlo CEP / NEES + stress gates
-│   └── experimental/       # opt-in research (SLAM, swarm, NN matcher)
-├── console/                # UUV tactical console (PAUSED)
-├── tests/                  # pytest suite
-├── scripts/                # MC, stress, pod helpers
-├── docs/                   # MISSION, MATURITY, ARCHITECTURE
-├── run_sim.py              # primary simulation entry point
-├── pyproject.toml
-├── README.md
-└── LICENSE
-```
+## Hybrid-first public API
 
-## Package API
+`import charybdis` exposes only the curated hybrid API:
 
-### Stable / Beta (`import charybdis`)
+- `__version__`
+- `BathymetryMap`, `TerrainProfileMatcher`
+- `NavMode`, `SensorPacket`
+- `HybridNavState`, `HybridSensorFusion`
+- `HybridNavigator`, `HybridStepResult`
+- `PatrolExecutor`
 
-| Area | Key types |
-|------|-----------|
-| Config | `SimConfig` |
-| Terrain | `Terrain`, `generate_truth` |
-| Hybrid UUV (primary) | `HybridSensorFusion`, `PatrolExecutor`, `SensorPacket`, `NavMode` |
-| Legacy interceptor | `Navigator`, `NavEstimate`, `NavEKF`, `TerrainParticleFilter` |
-| Simulation | `run_simulation`, `run_montecarlo` |
+The root deliberately does not export configuration, simulation, legacy, or
+experimental symbols. Detailed hybrid measurement and configuration types are
+available from `charybdis.hybrid`.
 
 ```python
 from charybdis import (
-    SimConfig, Navigator, HybridSensorFusion, PatrolExecutor, run_simulation,
+    HybridNavigator,
+    HybridSensorFusion,
+    NavMode,
+    PatrolExecutor,
+    SensorPacket,
+)
+from charybdis.hybrid import (
+    DepthMeasurement,
+    GpsMeasurement,
+    ImuMeasurement,
+    PatrolRoute,
+    Waypoint,
 )
 ```
 
-Submodule imports for focused access:
+`HybridNavigator.step()` is the recommended integration point. It processes
+one `SensorPacket`, then generates guidance from the resulting immutable
+`HybridNavState`.
+
+## Explicit secondary APIs
+
+The maintained interceptor stack must be imported explicitly:
 
 ```python
-from charybdis.hybrid import HybridSensorFusion, PatrolExecutor
-from charybdis.legacy import Navigator, NavEstimate
-from charybdis.evaluation import run_stress_harness
-from charybdis.bathy import load_npz
+from charybdis.config import SimConfig
+from charybdis.legacy import NavEstimate, Navigator
+from charybdis.simulation import run_simulation
 ```
 
-### Experimental (`import charybdis.experimental`)
-
-Unstable, opt-in modules. Not loaded by default `import charybdis`.
+Experimental modules are unstable and opt-in:
 
 ```python
-from charybdis.experimental import run_swarm, init_slam
-from charybdis.experimental.nn_matcher import match_position, train
+from charybdis.experimental import init_slam, run_swarm
+from charybdis.experimental.nn_matcher import match_position
 ```
 
-Use `charybdis.experimental.*` only — root-level shim files have been removed.
+There are no root-level compatibility shims for legacy or experimental
+features. Importing `charybdis` does not load `charybdis.legacy`,
+`charybdis.experimental`, or PyTorch.
 
-### Paused console (`console/`)
+## Runtime architecture
 
-The Streamlit UUV tactical console is isolated under `console/` and not part of
-active development. See [`console/README.md`](console/README.md).
+The primary path is:
 
-## Hybrid navigation layer
-
-For harbor-patrol UUV software (no hardware coupling), see `charybdis/hybrid/`:
-
-- **`sensors.py`** — abstract GPS, IMU, depth, DVL, bathymetry inputs
-- **`modes.py`** — surface vs submerged with depth hysteresis
-- **`fusion.py`** — conservative 8D EKF-style fusion with chi-square gating
-- **`patrol.py`** — waypoint routes with heading-aware LOS guidance
-- **`simulation/hybrid.py`** — small harbor mission smoke sim:
-  surface GPS → dive → submerged patrol → resurface GPS
-
-GPS is accepted in surface mode; bathymetry primarily in submerged mode.
-
-## Legacy interceptor stack
-
-The original terrain-aided interceptor navigation lives in `charybdis/legacy/`:
-
-```
- IMU ─► INS predict ─► EKF ─┬─ TERCOM (batch correlation fix)
- Radar/baro ─► TRN update ──┘         │
-                                      ▼
-                            Particle filter (parallel)
+```text
+sensor/log adapters
+        |
+        v
+SensorPacket -> HybridSensorFusion -> HybridNavState
+                                          |
+                                          v
+                                    PatrolExecutor
+                                          |
+                                          v
+                                    PatrolCommand
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/MISSION.md`](docs/MISSION.md).
+GPS updates are accepted only while surfaced. Bathymetry fixes are accepted
+only while submerged. Depth hysteresis controls mode selection by default;
+route hints do not override authoritative depth outside the hysteresis band.
+Measurement covariance is quality-scaled, innovations are chi-square gated,
+and guidance commands zero horizontal velocity when navigation health or
+uncertainty exceeds configured limits.
 
-## Tests
+The library produces guidance, not actuator commands. Hardware drivers,
+time synchronization, mission planning, collision avoidance, control
+allocation, and safety interlocks remain integration responsibilities.
+
+## Packaging boundary
+
+The wheel contains the `charybdis` package. The paused Streamlit source under
+`console/` is intentionally excluded from the wheel and is not part of the
+hybrid runtime. See [`console/README.md`](console/README.md).
+
+## Validation
+
+Fast CI-equivalent commands, confidence gates, artifacts, provenance fields,
+worker limits, and limitations are documented in
+[`docs/VALIDATION.md`](docs/VALIDATION.md).
+
+Start with:
 
 ```bash
-pytest -q -m "not console"     # core + hybrid (CI default)
-pytest -m console -q           # paused UUV console layer
-RUN_SLOW=1 pytest -m slow -q   # stress / MC gates
+python -m pytest tests/test_architecture.py
+python -m pytest -m "not console"
 ```
+
+On a prepared Linux pod, the canonical Phase 2 command is:
+
+```bash
+cd /workspace/Charybdis
+bash scripts/pod/pod_hybrid_phase2.sh
+```
+
+Phase 2 requires a clean worktree. It runs seven synthetic scenarios at 64
+engineering seeds and 256 release seeds per scenario, applies conservative 95%
+confidence-bound gates, characterizes terrain matching on a projected GEBCO
+2020 tile at both tiers, runs the retained legacy stress harness, and writes a
+dependency freeze plus SHA-256 inventory. Standalone validation is capped at 31
+workers.
+
+These are internal software-release and research checks. A passing matrix or
+GEBCO characterization is not a sea trial, operational acceptance, safety case,
+real-world validation, or certification.
+
+## Documentation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — components and import boundaries
+- [`docs/MATURITY.md`](docs/MATURITY.md) — feature status and evidence levels
+- [`docs/MISSION.md`](docs/MISSION.md) — project scope and non-goals
+- [`docs/VALIDATION.md`](docs/VALIDATION.md) — reproducible validation procedures
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — authorized contribution workflow
+- [`SECURITY.md`](SECURITY.md) — private vulnerability reporting
 
 ## License
 
-Proprietary — see [`LICENSE`](LICENSE). Research/simulation use only.
+Proprietary and confidential. See [`LICENSE`](LICENSE). No rights are granted
+without prior written permission from Fratres-X-AI.

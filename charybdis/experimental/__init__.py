@@ -6,6 +6,7 @@ directly from :mod:`charybdis.experimental.nn_matcher` for discoverability.
 
 Do not depend on these APIs from production navigation paths.
 """
+
 from __future__ import annotations
 
 from typing import Any

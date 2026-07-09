@@ -1,5 +1,5 @@
 import numpy as np
-from charybdis import SimConfig
+from charybdis.config import SimConfig
 from charybdis.imu_model import (
     allan_deviation,
     apply_imu_grade,

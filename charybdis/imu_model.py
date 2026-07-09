@@ -4,6 +4,7 @@ Provides IEEE-style Allan deviation analysis for simulated IMU data, named
 grade presets (navigation / tactical / consumer), and an optional slow
 sound-velocity-profile / tidal acceleration bias state in the sensor model.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
@@ -18,12 +19,27 @@ from .trajectory import generate_truth
 IMUGradeName = Literal["navigation", "tactical", "consumer"]
 
 IMU_GRADES: dict[str, dict[str, float]] = {
-    "navigation": dict(accel_noise=0.015, accel_bias0=0.008, accel_bias_rw=0.0003,
-                       gyro_noise=0.003, heading_bias0_deg=0.05),
-    "tactical": dict(accel_noise=0.08, accel_bias0=0.05, accel_bias_rw=0.002,
-                     gyro_noise=0.02, heading_bias0_deg=0.4),
-    "consumer": dict(accel_noise=0.35, accel_bias0=0.15, accel_bias_rw=0.012,
-                     gyro_noise=0.08, heading_bias0_deg=2.0),
+    "navigation": dict(
+        accel_noise=0.015,
+        accel_bias0=0.008,
+        accel_bias_rw=0.0003,
+        gyro_noise=0.003,
+        heading_bias0_deg=0.05,
+    ),
+    "tactical": dict(
+        accel_noise=0.08,
+        accel_bias0=0.05,
+        accel_bias_rw=0.002,
+        gyro_noise=0.02,
+        heading_bias0_deg=0.4,
+    ),
+    "consumer": dict(
+        accel_noise=0.35,
+        accel_bias0=0.15,
+        accel_bias_rw=0.012,
+        gyro_noise=0.08,
+        heading_bias0_deg=2.0,
+    ),
 }
 
 
@@ -33,8 +49,9 @@ def apply_imu_grade(cfg: SimConfig, grade: IMUGradeName = "tactical") -> SimConf
     return replace(cfg, **params)
 
 
-def allan_deviation(series: np.ndarray, dt: float,
-                    max_tau_frac: float = 0.25) -> tuple[np.ndarray, np.ndarray]:
+def allan_deviation(
+    series: np.ndarray, dt: float, max_tau_frac: float = 0.25
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute overlapping Allan deviation sigma(tau) for a 1-D error sequence."""
     x = np.asarray(series, float).ravel()
     n = x.size
@@ -49,7 +66,7 @@ def allan_deviation(series: np.ndarray, dt: float,
         if k < 1:
             break
         theta = np.cumsum(x) * dt
-        diff = theta[2 * m:2 * m + k] - 2 * theta[m:m + k] + theta[:k]
+        diff = theta[2 * m : 2 * m + k] - 2 * theta[m : m + k] + theta[:k]
         sig = np.sqrt(0.5 / (k * tau * tau) * np.mean(diff * diff))
         taus.append(tau)
         sigmas.append(sig)
@@ -70,13 +87,13 @@ def characterize_allan(series: np.ndarray, dt: float) -> AllanResult:
     tau, sigma = allan_deviation(series, dt)
     white = float(sigma[0]) if sigma.size else 0.0
     bias = float(np.min(sigma)) if sigma.size else 0.0
-    return AllanResult(tau=tau, sigma=sigma, white_noise=white,
-                       bias_instability=bias)
+    return AllanResult(tau=tau, sigma=sigma, white_noise=white, bias_instability=bias)
 
 
 def simulate_accel_error(cfg: SimConfig, axis: int = 0) -> np.ndarray:
     """Simulate per-sample accelerometer error on one axis (for Allan analysis)."""
     from .imu import IMU
+
     terrain = Terrain.synthetic(cfg)
     truth = generate_truth(cfg, terrain)
     imu = IMU(cfg, terrain)
@@ -87,8 +104,10 @@ def simulate_accel_error(cfg: SimConfig, axis: int = 0) -> np.ndarray:
     return err
 
 
-def grade_allan_table(grades: tuple[str, ...] = ("navigation", "tactical", "consumer"),
-                      duration: float = 120.0) -> dict[str, AllanResult]:
+def grade_allan_table(
+    grades: tuple[str, ...] = ("navigation", "tactical", "consumer"),
+    duration: float = 120.0,
+) -> dict[str, AllanResult]:
     """Allan metrics for each IMU grade preset."""
     out: dict[str, AllanResult] = {}
     for g in grades:

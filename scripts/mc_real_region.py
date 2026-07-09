@@ -8,6 +8,7 @@ Usage:
 
 No GPU / RunPod required. Keep n_runs small on laptops; use pod for large MC.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,11 +22,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from charybdis import SimConfig, Terrain
 from charybdis.bathy import load_npz, terrain_suitability
+from charybdis.config import SimConfig
 from charybdis.evaluation import run_montecarlo
 from charybdis.imu import IMU
 from charybdis.legacy.navigator import Navigator
+from charybdis.terrain import Terrain
 from charybdis.trajectory import generate_truth
 
 
@@ -40,7 +42,9 @@ def _load_terrain(npz: str | None, seed: int) -> Terrain:
     return terr
 
 
-def _run_on_terrain(cfg: SimConfig, terrain: Terrain, n_runs: int) -> dict[str, list[float]]:
+def _run_on_terrain(
+    cfg: SimConfig, terrain: Terrain, n_runs: int
+) -> dict[str, list[float]]:
     finals: dict[str, list[float]] = {"ekf": [], "ins": [], "pf": [], "pmf": []}
     for i in range(n_runs):
         c = replace(cfg, seed=cfg.seed + i)
@@ -51,16 +55,18 @@ def _run_on_terrain(cfg: SimConfig, terrain: Terrain, n_runs: int) -> dict[str, 
             nav.step(imu.sample(truth, k), k * c.dt)
         arr = nav.arrays()
         n = len(arr["ekf_pos"])
-        tpos = truth.pos[1:n + 1]
+        tpos = truth.pos[1 : n + 1]
         for key in ("ekf", "ins", "pf", "pmf"):
             pk = f"{key}_pos"
             if pk not in arr:
                 continue
-            err = np.linalg.norm(arr[pk] - tpos[:len(arr[pk])], axis=1)
+            err = np.linalg.norm(arr[pk] - tpos[: len(arr[pk])], axis=1)
             finals[key].append(float(err[-1]))
         est = nav.estimate("auto")
-        print(f"run {i}: source={est.source} r1s={est.error_radius_1sigma:.1f}m "
-              f"ekf={finals['ekf'][-1]:.1f}m")
+        print(
+            f"run {i}: source={est.source} r1s={est.error_radius_1sigma:.1f}m "
+            f"ekf={finals['ekf'][-1]:.1f}m"
+        )
     return finals
 
 
@@ -99,7 +105,9 @@ def main() -> int:
         if not vals:
             continue
         a = np.asarray(vals)
-        print(f"  {key:4s}  mean={a.mean():.1f}m  p50={np.percentile(a, 50):.1f}m  n={len(a)}")
+        print(
+            f"  {key:4s}  mean={a.mean():.1f}m  p50={np.percentile(a, 50):.1f}m  n={len(a)}"
+        )
     # Last-run action authority snapshot (autonomy contract).
     c = replace(cfg, seed=cfg.seed + args.n_runs - 1)
     truth = generate_truth(c, terrain)
@@ -108,8 +116,10 @@ def main() -> int:
     for k in range(1, len(truth)):
         nav.step(imu.sample(truth, k), k * c.dt)
     env = nav.action_envelope(t=c.duration)
-    print(f"\naction envelope: confidence={env.confidence:.2f} binding={env.binding} "
-          f"transit={env.permitted['transit']:.2f} rtb={env.permitted['rtb']:.2f}")
+    print(
+        f"\naction envelope: confidence={env.confidence:.2f} binding={env.binding} "
+        f"transit={env.permitted['transit']:.2f} rtb={env.permitted['rtb']:.2f}"
+    )
     return 0
 
 

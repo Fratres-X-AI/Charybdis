@@ -21,7 +21,9 @@ def pytest_collection_modifyitems(config, items):
     on_ci = os.environ.get("GITHUB_ACTIONS") == "true"
     if not on_ci or os.environ.get("RUN_SLOW") == "1":
         return
-    skip_slow = pytest.mark.skip(reason="slow integration test; validated on pod (set RUN_SLOW=1)")
+    skip_slow = pytest.mark.skip(
+        reason="slow integration test; validated on pod (set RUN_SLOW=1)"
+    )
     for item in items:
         if "slow" in item.keywords:
             item.add_marker(skip_slow)

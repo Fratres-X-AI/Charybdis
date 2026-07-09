@@ -9,6 +9,7 @@ The key assumption (same as fielded TERCOM/DSMAC systems): short-term INS
 *relative* geometry of the strip is accurate, only the *absolute* offset has
 drifted. So we solve for a single (dx, dy) shift.
 """
+
 from __future__ import annotations
 
 from collections import deque
@@ -23,10 +24,10 @@ from ..terrain import Terrain
 
 @dataclass
 class TercomFix:
-    pos: np.ndarray          # corrected position for latest sample [2]
-    offset: np.ndarray       # applied (dx, dy) [m]
-    cost: float              # residual MAD at best offset [m]
-    cov: np.ndarray          # 2x2 position measurement covariance [m^2]
+    pos: np.ndarray  # corrected position for latest sample [2]
+    offset: np.ndarray  # applied (dx, dy) [m]
+    cost: float  # residual MAD at best offset [m]
+    cov: np.ndarray  # 2x2 position measurement covariance [m^2]
     valid: bool
 
 
@@ -46,12 +47,13 @@ class Tercom:
         if not self.ready():
             return None
         cfg = self.cfg
-        pts = np.array([p for p, _ in self.buf])        # [S,2]
-        meas = np.array([m for _, m in self.buf])       # [S]
-        meas = meas - meas.mean()                       # remove baro/altitude bias
+        pts = np.array([p for p, _ in self.buf])  # [S,2]
+        meas = np.array([m for _, m in self.buf])  # [S]
+        meas = meas - meas.mean()  # remove baro/altitude bias
 
-        offs = np.arange(-cfg.tercom_search, cfg.tercom_search + 1e-6,
-                         cfg.tercom_search_step)
+        offs = np.arange(
+            -cfg.tercom_search, cfg.tercom_search + 1e-6, cfg.tercom_search_step
+        )
         cost = np.empty((offs.size, offs.size))
         for i, dx in enumerate(offs):
             for j, dy in enumerate(offs):
@@ -61,16 +63,25 @@ class Tercom:
 
         i0, j0 = np.unravel_index(np.argmin(cost), cost.shape)
         if not self._peak_is_distinct(cost, i0, j0):
-            return TercomFix(pos=pts[-1].copy(), offset=np.zeros(2),
-                             cost=float(cost[i0, j0]), cov=np.eye(2) * 1e9,
-                             valid=False)
+            return TercomFix(
+                pos=pts[-1].copy(),
+                offset=np.zeros(2),
+                cost=float(cost[i0, j0]),
+                cov=np.eye(2) * 1e9,
+                valid=False,
+            )
         dx, dy = self._subcell(offs, cost, i0, j0)
         fix = pts[-1] + np.array([dx, dy])
 
         # Covariance from local curvature of the correlation surface.
         cov = self._cov_from_surface(offs, cost, i0, j0)
-        return TercomFix(pos=fix, offset=np.array([dx, dy]),
-                         cost=float(cost[i0, j0]), cov=cov, valid=True)
+        return TercomFix(
+            pos=fix,
+            offset=np.array([dx, dy]),
+            cost=float(cost[i0, j0]),
+            cov=cov,
+            valid=True,
+        )
 
     def _peak_is_distinct(self, cost: np.ndarray, i0: int, j0: int) -> bool:
         """Reject flat or multi-peak correlation surfaces."""
@@ -93,6 +104,7 @@ class Tercom:
             if abs(denom) < 1e-9:
                 return center
             return center - 0.5 * step * (c_p - c_m) / denom
+
         step = offs[1] - offs[0]
         dx = offs[i0]
         dy = offs[j0]
@@ -105,15 +117,15 @@ class Tercom:
     def _cov_from_surface(self, offs, cost, i0, j0):
         step = offs[1] - offs[0]
         base = self.cfg.tercom_search_step
-        cxx = cyy = base ** 2
+        cxx = cyy = base**2
         if 0 < i0 < offs.size - 1:
             d2 = cost[i0 - 1, j0] - 2 * cost[i0, j0] + cost[i0 + 1, j0]
             if d2 > 1e-6:
-                cxx = max((step ** 2) * self._noise() / d2, base ** 2 * 0.25)
+                cxx = max((step**2) * self._noise() / d2, base**2 * 0.25)
         if 0 < j0 < offs.size - 1:
             d2 = cost[i0, j0 - 1] - 2 * cost[i0, j0] + cost[i0, j0 + 1]
             if d2 > 1e-6:
-                cyy = max((step ** 2) * self._noise() / d2, base ** 2 * 0.25)
+                cyy = max((step**2) * self._noise() / d2, base**2 * 0.25)
         return np.diag([cxx, cyy])
 
     def _noise(self) -> float:

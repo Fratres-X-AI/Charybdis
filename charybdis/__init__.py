@@ -1,40 +1,33 @@
-"""Charybdis high-level public API.
+"""Stable hybrid UUV navigation API.
 
-Only common entry points are exported here. Import sensor models and route
-types from :mod:`charybdis.hybrid`, interceptor filters from
-:mod:`charybdis.legacy`, and research tooling from its explicit submodule.
+Legacy interceptor and experimental research APIs require explicit subpackage
+imports and are never loaded by importing :mod:`charybdis`.
 """
+
 from __future__ import annotations
 
-from .config import SimConfig
 from .hybrid import (
+    BathymetryMap,
+    HybridNavigator,
     HybridNavState,
     HybridSensorFusion,
+    HybridStepResult,
     NavMode,
     PatrolExecutor,
     SensorPacket,
+    TerrainProfileMatcher,
 )
-from .legacy import NavEstimate, Navigator
-from .simulation import (
-    run_hybrid_harbor_simulation,
-    run_simulation,
-)
-from .terrain import Terrain
-from .trajectory import generate_truth
 from .version import __version__
 
 __all__ = [
     "__version__",
-    "SimConfig",
-    "Terrain",
-    "generate_truth",
+    "BathymetryMap",
     "NavMode",
     "SensorPacket",
     "HybridNavState",
     "HybridSensorFusion",
+    "HybridNavigator",
+    "HybridStepResult",
     "PatrolExecutor",
-    "Navigator",
-    "NavEstimate",
-    "run_simulation",
-    "run_hybrid_harbor_simulation",
+    "TerrainProfileMatcher",
 ]

@@ -2,17 +2,23 @@ from dataclasses import replace
 
 import numpy as np
 import pytest
-from charybdis import SimConfig, Terrain, run_simulation
+from charybdis.config import SimConfig
 from charybdis.evaluation import run_montecarlo
 from charybdis.legacy import TerrainParticleFilter
+from charybdis.simulation import run_simulation
+from charybdis.terrain import Terrain
 
 
 def test_pf_unit_predict_update():
     cfg = SimConfig(n_particles=400)
     terrain = Terrain.synthetic(cfg)
-    pf = TerrainParticleFilter(cfg, terrain, pos0=[4000.0, 4000.0],
-                               vel0=[180.0, 140.0],
-                               rng=np.random.default_rng(0))
+    pf = TerrainParticleFilter(
+        cfg,
+        terrain,
+        pos0=[4000.0, 4000.0],
+        vel0=[180.0, 140.0],
+        rng=np.random.default_rng(0),
+    )
     pf.predict(np.array([0.1, -0.2]), cfg.dt)
     z = float(terrain.elevation(4000.0, 4000.0))
     pf.update_trn(z)
@@ -37,8 +43,13 @@ def test_pf_competitive_nominal():
 @pytest.mark.slow
 def test_pf_recovers_large_initial_error():
     """TRN-only with a 450 m initial error: PF converges from a wide prior."""
-    base = SimConfig(duration=55.0, init_pos_error=450.0, init_pos_std=500.0,
-                     use_tercom=False, n_particles=600)
+    base = SimConfig(
+        duration=55.0,
+        init_pos_error=450.0,
+        init_pos_std=500.0,
+        use_tercom=False,
+        n_particles=600,
+    )
     for seed in (1, 2):
         s = run_simulation(replace(base, seed=seed)).summary()
         assert s["pf_final_m"] < 0.2 * base.init_pos_error
@@ -48,8 +59,13 @@ def test_pf_recovers_large_initial_error():
 @pytest.mark.slow
 def test_pmf_recovers_large_initial_error():
     """Marginalized PMF: grid TRN resolves large initial position ambiguity."""
-    base = SimConfig(duration=55.0, init_pos_error=450.0, init_pos_std=500.0,
-                     use_tercom=False, use_pf=False)
+    base = SimConfig(
+        duration=55.0,
+        init_pos_error=450.0,
+        init_pos_std=500.0,
+        use_tercom=False,
+        use_pf=False,
+    )
     for seed in (1, 2, 3):
         s = run_simulation(replace(base, seed=seed)).summary()
         assert s["pmf_final_m"] < 0.25 * base.init_pos_error
@@ -64,5 +80,5 @@ def test_montecarlo_cep_and_nees():
     assert mc.cep("ekf", 50) < mc.cep("ins", 50)
     assert mc.cep("pf", 50) < mc.cep("ins", 50)
     assert mc.cep("ekf", 95) >= mc.cep("ekf", 50)
-    assert 0.3 < mc.ekf_nees < 60.0                            # broad consistency band
+    assert 0.3 < mc.ekf_nees < 60.0  # broad consistency band
     assert "CEP50" in mc.table()

@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
-from charybdis import SimConfig, Terrain
+from charybdis.config import SimConfig
+from charybdis.terrain import Terrain
 
 
 def test_so2_model_forward():

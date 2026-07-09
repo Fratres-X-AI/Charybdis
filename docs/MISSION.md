@@ -1,50 +1,96 @@
 # Charybdis mission
 
-## Primary goal
+## Purpose
 
-**Charybdis is a GPS-denied terrain-aided navigation research platform.**
+Charybdis is a hybrid-first research and simulation platform for
+surface/submerged UUV navigation and patrol guidance in GPS-limited
+environments.
 
-The primary deliverable is a trustworthy navigation stack:
+The primary deliverable is a small, auditable software boundary that:
 
-- strapdown INS (dead-reckoning baseline)
-- TERCOM / TRN terrain aiding
-- EKF + particle filter (+ optional PMF)
-- Monte-Carlo evaluation (CEP, NEES, stress gates)
+- accepts hardware-neutral IMU, GPS, depth, velocity, and bathymetry inputs;
+- maintains a state estimate and explicit covariance;
+- handles surface/submerged mode transitions conservatively;
+- rejects statistically inconsistent measurements;
+- exposes bounded diagnostics for degraded navigation;
+- converts an immutable navigation state into waypoint guidance; and
+- supports deterministic simulation and reproducible fixed-seed evaluation.
 
-If a change does not improve filter correctness, evaluation honesty, or the ability to run those filters on real bathymetry, it is secondary.
+Correctness, uncertainty honesty, failure visibility, and reproducibility take
+priority over feature count.
 
-## Secondary product
+## Scope priorities
 
-**UUV tactical console** (`console/charybdis_*.py` + Streamlit UI) is an application layer that demonstrates contested underwater TCM, autonomy, and tracking. It is **paused** while we finish the airborne GDI package (`charybdis/`).
+First priority is the `charybdis.hybrid` path and the symbols exported from
+`charybdis/__init__.py`.
 
-Do not force a premature merge of the two stacks. Share ideas and APIs (`NavEstimate`, bathymetry loaders) first; share implementations only when adapters are clean.
+Second priority is simulation and evaluation support needed to test that path,
+including terrain-profile matching, named synthetic harbor scenarios,
+confidence-bounded Monte Carlo gates, provenance-tracked real-map
+characterization, and auditable validation artifacts.
 
-## Non-goals (for now)
+The interceptor estimator stack in `charybdis.legacy` is maintained for
+comparative research and existing internal use. It is not the architecture for
+new hybrid UUV work.
 
-- Production flight / dive software certification
-- Hardware-in-the-loop as a near-term gate
-- Expanding experimental features (NN TCM, SLAM, swarm, ROS2) before the core nav APIs are stable
-- Treating every research idea as a default import
+Neural matching, SLAM, and swarm research remain under
+`charybdis.experimental`. The repository-level console is paused and excluded
+from the wheel.
 
-## Feature promotion bar
+## Integration philosophy
 
-A module moves from **Experimental → Beta** only when all of the following hold:
+Charybdis stops at navigation state and patrol guidance. Integrators own:
 
-1. Beats a named baseline on a documented MC or stress scenario
-2. Has tests that run in CI, or are marked `@slow` with a documented pod recipe
-3. Is listed in [`MATURITY.md`](MATURITY.md) with an owner note
-4. Is **not** required for `import charybdis` to succeed
+- sensor drivers, calibration, clock synchronization, and frame transforms;
+- map acquisition, datum checks, and data quality;
+- mission management and operator authorization;
+- obstacle and collision avoidance;
+- control allocation, actuators, and vehicle dynamics;
+- watchdogs, independent safety monitors, and emergency behavior; and
+- cybersecurity controls for deployed systems.
 
-**Beta → Stable** additionally requires: used by `Navigator` or the UUV core path, covariance/uncertainty exposed, and no known silent failure modes in the stress harness.
+Examples model these seams but do not implement a deployable vehicle stack.
 
-## Default import policy
+## Non-goals
 
-```python
-import charybdis                    # Stable / Beta nav + data APIs only
-import charybdis.experimental       # NN matcher, SLAM, swarm (unstable)
-```
+The project does not currently claim:
 
-## Related docs
+- real-world vehicle, harbor, flight, or dive validation;
+- safety, regulatory, or mission certification;
+- hardware-in-the-loop qualification;
+- guaranteed performance on arbitrary bathymetry or sensor faults;
+- treating GEBCO matcher characterization as field or sea-trial evidence;
+- a complete autonomy or vehicle-control system;
+- stable APIs for experimental modules; or
+- support for the paused console as part of the released package.
 
-- [`MATURITY.md`](MATURITY.md) — per-module maturity labels
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — package layout and stack split
+Synthetic Monte Carlo results are engineering evidence for the modeled
+scenarios only. A real bathymetry grid improves map realism but does not make
+synthetic profiles, priors, and noise into real-world navigation validation.
+
+## Engineering rules
+
+1. Keep `import charybdis` hybrid-focused and free of legacy, experimental,
+   console, and optional deep-learning imports.
+2. Use immutable input and output contracts across integration boundaries.
+3. Preserve covariance and rejection diagnostics; do not hide estimator
+   uncertainty behind a position-only interface.
+4. Prefer conservative holds and explicit rejection statuses to silent
+   fallback behavior.
+5. Declare gates before release runs and record their confidence intervals,
+   seed sets, configuration, source revision, runtime versions, and output
+   artifacts.
+6. Cap standalone Monte Carlo at 31 workers and never nest pools under
+   pytest-xdist.
+7. Label simulated, experimental, and unvalidated behavior accurately.
+
+## Evidence and promotion
+
+Feature promotion requires a named use case, documented failure behavior,
+fast regression coverage, and reproducible evaluation against a stated
+baseline. Stable research interfaces additionally require an uncertainty
+contract and no known silent failure path in covered scenarios.
+
+Promotion is an API and evidence decision, not a claim of operational readiness.
+Detailed labels are in [`MATURITY.md`](MATURITY.md); reproducible commands and
+limitations are in [`VALIDATION.md`](VALIDATION.md).

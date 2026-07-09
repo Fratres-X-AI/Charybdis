@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
-from charybdis import SimConfig, Terrain
 from charybdis.bathy import load_npz, terrain_from_grid, terrain_suitability
+from charybdis.config import SimConfig
+from charybdis.terrain import Terrain
 
 
 def test_terrain_from_grid_roundtrip():
@@ -40,5 +41,6 @@ def test_gebco_netcdf_importorskip(tmp_path):
         lon[:] = [0, 1, 2, 3]
         elev[:, :] = np.arange(16).reshape(4, 4)
     from charybdis.bathy import load_gebco_netcdf
+
     t = load_gebco_netcdf(str(p))
     assert t.grid.shape == (4, 4)

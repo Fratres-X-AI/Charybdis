@@ -11,29 +11,37 @@ from charybdis.hybrid import (
 
 
 def test_fusion_predict_advances_8d_state():
-    fusion = HybridSensorFusion([0.0, 0.0], vel0=[1.0, -1.0])
-    fusion.x[fusion.DEPTH_RATE] = 2.0
+    fusion = HybridSensorFusion(
+        [0.0, 0.0],
+        vel0=[1.0, -1.0],
+        depth_rate0=2.0,
+    )
 
     fusion.predict(ImuMeasurement([0.5, 0.25], dt=2.0))
 
-    assert np.allclose(fusion.x[fusion.POS], [3.0, -1.5])
-    assert np.allclose(fusion.x[fusion.VEL], [2.0, -0.5])
-    assert fusion.x[fusion.DEPTH] == pytest.approx(4.0)
-    assert fusion.x[fusion.DEPTH_RATE] == pytest.approx(2.0 * np.exp(-0.2))
-    assert np.allclose(fusion.P, fusion.P.T)
-    assert np.linalg.eigvalsh(fusion.P).min() > 0.0
+    state = fusion.state_vector
+    covariance = fusion.covariance
+    assert np.allclose(state[fusion.POS], [3.0, -1.5])
+    assert np.allclose(state[fusion.VEL], [2.0, -0.5])
+    assert state[fusion.DEPTH] == pytest.approx(4.0)
+    assert state[fusion.DEPTH_RATE] == pytest.approx(2.0 * np.exp(-0.2))
+    assert np.allclose(covariance, covariance.T)
+    assert np.linalg.eigvalsh(covariance).min() > 0.0
+    with pytest.raises(ValueError):
+        state[0] = 1.0
 
 
 def test_fusion_reset_clamps_velocity_covariance():
     cfg = HybridFusionConfig(init_vel_std=0.4)
     fusion = HybridSensorFusion([0.0, 0.0], vel0=[2.0, -1.0], cfg=cfg)
-    fusion.P[3:5, 3:5] = np.eye(2) * 100.0
-    fusion.P[0:2, 3:5] = 5.0
-    fusion.P[3:5, 0:2] = 5.0
+    for _ in range(5):
+        fusion.predict(ImuMeasurement([0.1, -0.1], dt=1.0))
+    assert not np.allclose(fusion.covariance[0:2, 3:5], 0.0)
+    velocity_before_reset = fusion.state().vel
 
     state = fusion.reset([4.0, 5.0])
 
-    assert np.allclose(state.vel, [2.0, -1.0])
+    assert np.allclose(state.vel, velocity_before_reset)
     assert np.allclose(state.cov[3:5, 3:5], np.eye(2) * 0.4**2)
     assert np.allclose(state.cov[0:2, 3:5], 0.0)
     assert np.allclose(state.cov[3:5, 0:2], 0.0)
@@ -41,9 +49,13 @@ def test_fusion_reset_clamps_velocity_covariance():
 
 def test_fusion_reset_depth_block():
     cfg = HybridFusionConfig(init_depth_std=0.8, init_depth_rate_std=0.2)
-    fusion = HybridSensorFusion([0.0, 0.0], depth0=3.0, cfg=cfg)
-    fusion.x[fusion.DEPTH_RATE] = 1.5
-    fusion.P[fusion.DEPTH, 0] = fusion.P[0, fusion.DEPTH] = 2.0
+    fusion = HybridSensorFusion(
+        [0.0, 0.0],
+        depth0=3.0,
+        depth_rate0=1.5,
+        cfg=cfg,
+    )
+    fusion.predict(ImuMeasurement([0.0, 0.0], dt=1.0))
 
     state = fusion.reset([0.0, 0.0], depth_m=8.0)
 
@@ -56,10 +68,8 @@ def test_fusion_reset_depth_block():
 
 @pytest.mark.parametrize("dt", [0.0, -1.0, np.nan])
 def test_fusion_rejects_invalid_imu_dt(dt):
-    fusion = HybridSensorFusion([0.0, 0.0])
-
-    with pytest.raises(ValueError, match="positive and finite"):
-        fusion.predict(ImuMeasurement([0.0, 0.0], dt=dt))
+    with pytest.raises(ValueError, match="dt must be finite and positive"):
+        ImuMeasurement([0.0, 0.0], dt=dt)
 
 
 def test_patrol_loop_carrot_uses_last_segment():

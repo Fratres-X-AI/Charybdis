@@ -10,7 +10,7 @@ pytestmark = pytest.mark.console
 def test_tcm_recovers_offset():
     """Cross-correlation must recover the est->true offset near a node."""
     true = core.ANOMALIES["TRENCH ALPHA"] + np.array([1.5, -1.0])
-    est = true + np.array([4.0, -3.0])            # dead-reckoning error
+    est = true + np.array([4.0, -3.0])  # dead-reckoning error
     corrected, peak, surf = core.tcm_cross_correlation(true, est)
     assert peak > 0.9
     assert np.linalg.norm(corrected - true) < 1.0
@@ -21,14 +21,14 @@ def test_covariance_grows_then_resets_on_fix():
     p = core.SimParams(drift=15.0)
     s = core.init_state(seed=1)
     r0 = core.error_radius(s.P)
-    for _ in range(12):                            # stay clear of any node
+    for _ in range(12):  # stay clear of any node
         core.step(s, p)
     assert not s.fixes
     grown = core.error_radius(s.P)
     assert grown > r0
     core.request_ping(s)
     core.step(s, p)
-    assert core.error_radius(s.P) < 0.05          # flattened by the fix
+    assert core.error_radius(s.P) < 0.05  # flattened by the fix
     assert s.ping_ticks > 0
     assert "COMPROMISED" in s.ew_state
 
@@ -51,7 +51,7 @@ def test_tcm_fires_and_bounds_error():
         core.step(s, p)
     assert s.reached
     kinds = {k for _, k, _ in s.fixes}
-    assert "TCM" in kinds                          # at least one contour lock
+    assert "TCM" in kinds  # at least one contour lock
     # every automatic TCM fix must bound the estimate close to a real node
     for _, kind, pos in s.fixes:
         if kind == "TCM":

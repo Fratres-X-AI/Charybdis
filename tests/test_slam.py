@@ -1,12 +1,14 @@
 import numpy as np
 import pytest
-from charybdis import SimConfig, Terrain, generate_truth
+from charybdis.config import SimConfig
 from charybdis.experimental.slam import (
     gicp_align,
     init_slam,
     position_error,
     slam_step,
 )
+from charybdis.terrain import Terrain
+from charybdis.trajectory import generate_truth
 
 
 def test_gicp_recovers_translation():

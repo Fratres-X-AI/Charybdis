@@ -4,6 +4,7 @@ Produces a smooth, banking flight path (position, velocity, specific force,
 heading) over the terrain. This is ground-truth only; the navigator never
 sees it directly.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,12 +17,12 @@ from .terrain import Terrain
 
 @dataclass
 class Trajectory:
-    t: np.ndarray            # [N]
-    pos: np.ndarray          # [N, 2] ENU x, y  [m]
-    vel: np.ndarray          # [N, 2] [m/s]
-    acc: np.ndarray          # [N, 2] specific force in nav frame [m/s^2]
-    heading: np.ndarray      # [N] rad
-    alt_msl: np.ndarray      # [N] altitude above sea level [m]
+    t: np.ndarray  # [N]
+    pos: np.ndarray  # [N, 2] ENU x, y  [m]
+    vel: np.ndarray  # [N, 2] [m/s]
+    acc: np.ndarray  # [N, 2] specific force in nav frame [m/s^2]
+    heading: np.ndarray  # [N] rad
+    alt_msl: np.ndarray  # [N] altitude above sea level [m]
 
     def __len__(self) -> int:
         return self.t.size
@@ -34,8 +35,9 @@ def generate_truth(cfg: SimConfig, terrain: Terrain) -> Trajectory:
 
     # Heading profile: gentle serpentine turns to exercise 2-D nav.
     psi0 = np.deg2rad(cfg.heading0_deg)
-    turn = np.deg2rad(9.0) * np.sin(2 * np.pi * t / 55.0) \
-        + np.deg2rad(4.0) * np.sin(2 * np.pi * t / 23.0)
+    turn = np.deg2rad(9.0) * np.sin(2 * np.pi * t / 55.0) + np.deg2rad(4.0) * np.sin(
+        2 * np.pi * t / 23.0
+    )
     heading = psi0 + turn
 
     speed = cfg.cruise_speed

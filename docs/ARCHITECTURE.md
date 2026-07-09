@@ -1,119 +1,182 @@
 # Architecture
 
-## Current status
+## Architectural direction
 
-- **Primary development:** `charybdis.hybrid` for harbor UUV surface/submerged
-  navigation and patrol execution.
-- **Maintained legacy:** `charybdis.legacy` for interceptor TERCOM/EKF/PF/PMF
-  simulations and compatibility.
-- **Experimental:** `charybdis.experimental` for opt-in, unstable research.
-- **Paused:** `console/` is isolated from the navigation package.
+Charybdis has one primary runtime: `charybdis.hybrid`. It supports
+surface/submerged UUV navigation research with hardware-neutral measurements,
+conservative state estimation, bathymetry-derived position aiding, health
+diagnostics, and waypoint guidance.
 
-## Repository stacks
+Three boundaries are intentional:
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  charybdis/                 installable Python package   │
-│    config, terrain, imu, ins, bathy                      │
-│    hybrid/          surface/submerged UUV (primary)      │
-│    legacy/          interceptor TERCOM/EKF/PF/PMF        │
-│    simulation/      sim harnesses                        │
-│    evaluation/      Monte-Carlo + stress gates           │
-│    experimental/    SLAM, swarm, NN matcher (opt-in)     │
-└──────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────┐
-│  console/                   UUV tactical spine (PAUSED)  │
-│    charybdis_core, console, sensors, autonomy, ...       │
-└──────────────────────────────────────────────────────────┘
-```
+- `charybdis.legacy` preserves the interceptor TERCOM/EKF/PF/PMF stack.
+- `charybdis.experimental` contains unstable opt-in research.
+- `console/` is paused application source and is not included in the wheel.
 
-The GDI library and UUV console share the GPS-denied terrain-aiding problem but
-**do not share a single runtime**. Bridge via small APIs (`NavEstimate`, bathymetry
-loaders, hybrid `HybridNavState`) — not by merging codebases.
+The boundaries prevent legacy, experimental, UI, and optional deep-learning
+dependencies from entering the default runtime.
 
-## Package layout
+## Package boundary
 
-```
-charybdis/
-  __init__.py          curated public API
-  config.py, terrain.py, trajectory.py, imu.py, ins.py, bathy.py
-  hybrid/              fusion, patrol, sensors, modes (primary UUV)
-  legacy/              navigator, ekf, pf, pmf, tercom (interceptor)
-  simulation/          simulation harnesses
-  evaluation/          Monte-Carlo and stress gates
-  experimental/        opt-in research (SLAM, swarm, NN)
-console/               paused UUV console (separate package)
-tests/                 pytest
-scripts/               MC, stress, pod helpers
-docs/                  MISSION, MATURITY, ARCHITECTURE
-run_sim.py             primary simulation entry point
+`charybdis/__init__.py` is the curated public surface. It exports exactly the
+package version and these hybrid symbols:
+
+```text
+BathymetryMap
+TerrainProfileMatcher
+NavMode
+SensorPacket
+HybridNavState
+HybridSensorFusion
+HybridNavigator
+HybridStepResult
+PatrolExecutor
 ```
 
-## Hybrid vs Legacy Navigation
+Types needed to configure or populate those objects are available from
+`charybdis.hybrid`. Simulation, evaluation, shared data loaders, legacy
+estimators, and experimental modules require explicit submodule imports.
 
-| Question | `charybdis.hybrid` | `charybdis.legacy` |
-|---|---|---|
-| Primary use case | Harbor UUV patrol above and below the surface | Original interceptor terrain-aided navigation |
-| State model | 8D horizontal, vertical, and bias state | 6D horizontal position, velocity, and bias state |
-| Sensor inputs | GPS, IMU, depth, DVL-style velocity, bathymetry | IMU, radar/barometer terrain observations, TERCOM |
-| Estimators | Conservative EKF-style hybrid fusion | EKF, particle filter, point-mass filter, TERCOM |
-| Maintenance status | Active and recommended for new work | Maintained for reference and compatibility |
-| Import path | `from charybdis.hybrid import ...` | `from charybdis.legacy import ...` |
+The architecture tests enforce that importing `charybdis` does not import
+`charybdis.legacy`, `charybdis.experimental`, `console`, or PyTorch.
 
-Use `charybdis.hybrid` for all new harbor UUV navigation, mode-transition, and
-patrol work. Use `charybdis.legacy` only when reproducing interceptor
-simulations, evaluating TERCOM/TRN filters, or maintaining existing consumers.
-The two stacks share terrain, configuration, IMU, simulation, and evaluation
-infrastructure but do not share estimator state.
+## Primary hybrid path
 
-### Hybrid 8D state
+The production-facing integration boundary is a sensor cycle, not direct access
+to filter internals:
 
-`HybridSensorFusion` estimates:
+```text
+drivers, log replay, or simulation
+              |
+              v
+         SensorPacket
+              |
+              v
+    HybridNavigator.step()
+              |
+       +------+------+
+       |             |
+       v             v
+HybridNavState   PatrolCommand
+```
 
-| Indices | State | Meaning |
-|---|---|---|
-| 0–1 | `px`, `py` | Horizontal position in the local navigation frame |
-| 2 | `depth` | Positive-down depth |
-| 3–4 | `vx`, `vy` | Horizontal velocity |
-| 5 | `depth_rate` | Positive-down vertical speed |
-| 6–7 | `bax`, `bay` | Horizontal accelerometer bias |
+`HybridNavigator` owns a `HybridSensorFusion` and a `PatrolExecutor`. On every
+cycle it fuses the packet first and generates guidance from that exact immutable
+state snapshot. `resume()` re-anchors selected state blocks and selects the
+nearest route waypoint.
 
-The complete state is:
+The navigator intentionally does not implement drivers, clock discipline,
+mission planning, collision avoidance, vehicle dynamics, low-level control, or
+safety interlocks.
+
+## Hybrid components
+
+`charybdis.hybrid.sensors` defines immutable measurement contracts:
+
+- `ImuMeasurement` for horizontal specific force and a positive time step
+- `GpsMeasurement` for surface position and optional velocity
+- `DepthMeasurement` for positive-down pressure depth
+- `VelocityMeasurement` for DVL-style horizontal velocity
+- `BathymetryMeasurement` for a position fix or feature range/bearing
+- `SensorQuality` for availability and covariance inflation
+- `SensorPacket` for one timestamped fusion cycle
+
+`charybdis.hybrid.modes` implements a two-state mode manager. Depth is
+authoritative by default. Surface and submerged thresholds form a hysteresis
+band, and a route hint cannot override depth outside that band unless an
+integrator explicitly changes the configuration.
+
+`charybdis.hybrid.fusion` estimates:
 
 ```text
 [px, py, depth, vx, vy, depth_rate, bax, bay]
 ```
 
-Prediction integrates horizontal acceleration and a damped constant-rate depth
-model. Measurement updates use quality-scaled covariance and chi-square gates.
-GPS is accepted while surfaced; bathymetry fixes are accepted while submerged.
+Coordinates use a local metric navigation frame; depth is positive down.
+Prediction integrates horizontal acceleration, acceleration bias, and a damped
+depth-rate model. Measurement covariance is scaled by reported quality.
+Linear innovations are chi-square gated, and covariance updates use a
+stabilized Joseph form.
 
-## Navigator contract
+GPS is processed only in surface mode. Bathymetry fixes are processed only in
+submerged mode. Depth and velocity measurements can be processed in either
+mode. Rejections are bounded in history and contribute to `FusionDiagnostics`.
+Diagnostics expose recent accepted aiding sources. Position uncertainty,
+covariance validity, and recent rejection count determine filter health.
 
-`Navigator.estimate()` returns `NavEstimate` (position, 2×2 covariance, source
-filter, health flags). Downstream layers should consume this — not filter internals.
+`charybdis.hybrid.bathymetry` provides deterministic profile matching:
 
-## Hybrid UUV contract
-
-`HybridSensorFusion.step(SensorPacket)` returns `HybridNavState`. Patrol consumes
-`HybridNavState` and emits `PatrolCommand` (desired velocity, heading, depth, mode).
-
-The fusion layer owns state estimation and sensor acceptance. The patrol layer
-only consumes navigation state and emits guidance commands; it does not inspect
-filter internals.
-
-## Import policy
-
-```python
-import charybdis                         # curated stable / beta API
-from charybdis.hybrid import HybridSensorFusion, PatrolExecutor
-from charybdis.legacy import Navigator, NavEstimate
-from charybdis.experimental import run_swarm, init_slam
-from charybdis.experimental.nn_matcher import train  # needs torch
-from charybdis.evaluation import run_stress_harness
-from charybdis.bathy import load_npz              # advanced submodule
+```text
+BathymetryProfile + prior state + BathymetryMap
+                         |
+                         v
+                TerrainProfileMatcher
+                         |
+                         v
+     accepted BathymetryMeasurement or a rejection status
 ```
 
-Default `import charybdis` must not load torch or experimental side effects.
-Root-level experimental shims (`charybdis.slam`, `charybdis.swarm`,
-`charybdis.nn_matcher`) have been removed — use `charybdis.experimental.*`.
+The matcher searches a regular local grid, rejects insufficient relief,
+out-of-bounds searches, high residuals, and ambiguous minima, and derives a
+position covariance from nearby candidates. Matching is not performed
+automatically by `HybridNavigator`; the integration layer decides when to run
+the matcher and places only an accepted measurement into the next packet.
+
+`charybdis.hybrid.patrol` performs heading-aware line-of-sight waypoint
+guidance. A `PatrolCommand` contains desired horizontal velocity and heading,
+target depth and mode, waypoint index, and route-completion state. Guidance
+commands zero horizontal velocity when filter health is false or the configured
+navigation-error limit is exceeded. This is a conservative hold, not a complete
+vehicle fail-safe.
+
+## Shared simulation and evaluation
+
+Shared modules remain outside the root API:
+
+- `charybdis.simulation` exposes deterministic hybrid and legacy simulations.
+- `charybdis.evaluation` exposes Monte Carlo summaries, stress tools, and
+  validation artifact helpers.
+- `charybdis.bathy` loads or converts external bathymetry into package models.
+- `charybdis.config`, `terrain`, `trajectory`, `imu`, and `ins` support the
+  retained interceptor simulations.
+
+Explicit imports keep application dependencies and research workflows visible:
+
+```python
+from charybdis.evaluation import run_hybrid_montecarlo
+from charybdis.simulation import HybridHarborConfig
+```
+
+## Legacy and experimental stacks
+
+The legacy stack has its own estimator state and sensor assumptions. Use it only
+for interceptor simulation, regression work, or maintained consumers:
+
+```python
+from charybdis.config import SimConfig
+from charybdis.legacy import NavEstimate, Navigator
+```
+
+Legacy `Navigator.estimate()` returns a `NavEstimate` contract instead of a
+hybrid state. There is no supported conversion between the two estimator
+states.
+
+Experimental imports are always explicit:
+
+```python
+from charybdis.experimental import init_slam, run_swarm
+from charybdis.experimental.nn_matcher import train
+```
+
+Experimental APIs may change and may require optional dependencies. Root-level
+legacy and experimental compatibility modules are intentionally absent.
+
+## Packaging and console
+
+The Hatch wheel target packages only `charybdis`. The repository-level
+`console/` tree is therefore not installed with the wheel; CI inspects the wheel
+to enforce that exclusion. Installing the optional `console` dependencies does
+not install or activate the paused console source.
+
+Validation scope, provenance, metrics, and limitations are documented in
+[`VALIDATION.md`](VALIDATION.md).

@@ -7,6 +7,7 @@ Maintains local elevation submaps, detects loop closures via GICP alignment
 (Generalized ICP on gradient-weighted point clouds), and refines poses with
 sparse nonlinear least squares.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -43,8 +44,9 @@ def init_slam(start: np.ndarray | None = None) -> SlamState:
     return s
 
 
-def _submap_grid(sm: Submap, terrain: Terrain, n: int = 16,
-                 span: float = 400.0) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _submap_grid(
+    sm: Submap, terrain: Terrain, n: int = 16, span: float = 400.0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     axis = np.linspace(-span, span, n)
     gx, gy = np.meshgrid(axis, axis)
     wx = sm.anchor[0] + gx
@@ -55,7 +57,9 @@ def _submap_grid(sm: Submap, terrain: Terrain, n: int = 16,
     return pts, gx, gy
 
 
-def _gicp_step(src: np.ndarray, dst: np.ndarray, t: np.ndarray) -> tuple[np.ndarray, float]:
+def _gicp_step(
+    src: np.ndarray, dst: np.ndarray, t: np.ndarray
+) -> tuple[np.ndarray, float]:
     """One ICP iteration with elevation-gradient weights (GICP-lite)."""
     moved = src[:, :2] + t
     diff = moved[:, None, :] - dst[None, :, :2]
@@ -70,8 +74,12 @@ def _gicp_step(src: np.ndarray, dst: np.ndarray, t: np.ndarray) -> tuple[np.ndar
     return t + dt, err
 
 
-def gicp_align(src_pts: np.ndarray, dst_pts: np.ndarray,
-               init: np.ndarray | None = None, iters: int = 12) -> tuple[np.ndarray, float]:
+def gicp_align(
+    src_pts: np.ndarray,
+    dst_pts: np.ndarray,
+    init: np.ndarray | None = None,
+    iters: int = 12,
+) -> tuple[np.ndarray, float]:
     """Align src to dst; return translation [dx, dy] and final error."""
     t = np.zeros(2) if init is None else np.asarray(init, float).copy()
     err = 1e9
@@ -93,13 +101,13 @@ def predict(s: SlamState, velocity: np.ndarray, dt: float = 1.0) -> None:
         s.submaps.append(Submap(anchor=s.current.copy(), pose_idx=len(s.poses) - 1))
 
 
-def add_edge(s: SlamState, i: int, j: int, meas: np.ndarray,
-             info: float = 1.0) -> None:
+def add_edge(s: SlamState, i: int, j: int, meas: np.ndarray, info: float = 1.0) -> None:
     s.edges.append((i, j, np.asarray(meas, float).copy(), float(info)))
 
 
-def detect_loop_gicp(s: SlamState, terrain: Terrain,
-                     min_err: float = 80.0) -> tuple[int, int, np.ndarray] | None:
+def detect_loop_gicp(
+    s: SlamState, terrain: Terrain, min_err: float = 80.0
+) -> tuple[int, int, np.ndarray] | None:
     if len(s.submaps) < 2:
         return None
     cur = s.submaps[-1]
@@ -137,8 +145,9 @@ def optimize(s: SlamState, max_iter: int = 40) -> None:
     s.current = s.poses[-1].copy()
 
 
-def slam_step(s: SlamState, velocity: np.ndarray, terrain: Terrain,
-              dt: float = 1.0) -> bool:
+def slam_step(
+    s: SlamState, velocity: np.ndarray, terrain: Terrain, dt: float = 1.0
+) -> bool:
     prev = len(s.poses) - 1
     predict(s, velocity, dt)
     j = len(s.poses) - 1

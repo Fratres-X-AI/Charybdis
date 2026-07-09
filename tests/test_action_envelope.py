@@ -1,8 +1,10 @@
 """Tests for continuous action authority (ActionEnvelope)."""
 
-from charybdis import Navigator, SimConfig, Terrain
 from charybdis.action_envelope import ACTIONS, ActionEnvelope, compute_action_envelope
+from charybdis.config import SimConfig
 from charybdis.imu import IMU
+from charybdis.legacy import Navigator
+from charybdis.terrain import Terrain
 from charybdis.trajectory import generate_truth
 
 

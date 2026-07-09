@@ -1,4 +1,5 @@
 """End-to-end simulation harness for Charybdis."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -33,13 +34,14 @@ class SimResult:
     pmf_std: np.ndarray | None = None
     pmf_pcov: np.ndarray | None = None
     pmf_err: np.ndarray | None = None
-    n_ekf_resets: int = 0            # PF-driven EKF recoveries
-    n_ambiguous: int = 0            # ambiguity-flagged coordination checks
-    n_coord_checks: int = 0         # total coordination checks
+    n_ekf_resets: int = 0  # PF-driven EKF recoveries
+    n_ambiguous: int = 0  # ambiguity-flagged coordination checks
+    n_coord_checks: int = 0  # total coordination checks
 
     def summary(self) -> dict:
         def rmse(e):
-            return float(np.sqrt(np.mean(e ** 2)))
+            return float(np.sqrt(np.mean(e**2)))
+
         out = {
             "ekf_rmse_m": rmse(self.ekf_err),
             "ekf_final_m": float(self.ekf_err[-1]),
@@ -60,8 +62,9 @@ class SimResult:
         return out
 
 
-def run_simulation(cfg: SimConfig | None = None,
-                   terrain: Terrain | None = None) -> SimResult:
+def run_simulation(
+    cfg: SimConfig | None = None, terrain: Terrain | None = None
+) -> SimResult:
     cfg = cfg or SimConfig()
     terrain = terrain or Terrain.synthetic(cfg)
     truth = generate_truth(cfg, terrain)

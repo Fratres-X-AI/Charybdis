@@ -25,6 +25,7 @@ Prime-level features:
     coordinator uses to detect ambiguous terrain; :meth:`reinit_from` lets a
     confident sibling filter rescue an impoverished cloud.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -37,8 +38,14 @@ D = 6  # particle state dimension
 
 
 class TerrainParticleFilter:
-    def __init__(self, cfg: SimConfig, terrain: Terrain, pos0, vel0,
-                 rng: np.random.Generator | None = None):
+    def __init__(
+        self,
+        cfg: SimConfig,
+        terrain: Terrain,
+        pos0,
+        vel0,
+        rng: np.random.Generator | None = None,
+    ):
         self.cfg = cfg
         self.terrain = terrain
         self.rng = rng or np.random.default_rng(cfg.seed + 202)
@@ -63,8 +70,9 @@ class TerrainParticleFilter:
         a = a + self.rng.normal(0.0, sigma_a, (self.N, 2))
         self.X[:, 0:2] += self.X[:, 2:4] * dt + 0.5 * a * dt * dt
         self.X[:, 2:4] += a * dt
-        self.X[:, 4:6] += self.rng.normal(0.0, cfg.accel_bias_rw * np.sqrt(dt),
-                                          (self.N, 2))
+        self.X[:, 4:6] += self.rng.normal(
+            0.0, cfg.accel_bias_rw * np.sqrt(dt), (self.N, 2)
+        )
 
     # ---- measurement updates ------------------------------------------- #
     def _elev_var(self) -> np.ndarray:
@@ -73,11 +81,15 @@ class TerrainParticleFilter:
         R = np.full(self.N, est.terrain_meas_var(cfg))
         if cfg.map_interp_frac > 0.0:
             h = cfg.terrain_res
-            gx = (self.terrain.elevation(self.X[:, 0] + h, self.X[:, 1])
-                  - self.terrain.elevation(self.X[:, 0] - h, self.X[:, 1])) / (2 * h)
-            gy = (self.terrain.elevation(self.X[:, 0], self.X[:, 1] + h)
-                  - self.terrain.elevation(self.X[:, 0], self.X[:, 1] - h)) / (2 * h)
-            R = R + (cfg.map_interp_frac * h) ** 2 * (gx ** 2 + gy ** 2)
+            gx = (
+                self.terrain.elevation(self.X[:, 0] + h, self.X[:, 1])
+                - self.terrain.elevation(self.X[:, 0] - h, self.X[:, 1])
+            ) / (2 * h)
+            gy = (
+                self.terrain.elevation(self.X[:, 0], self.X[:, 1] + h)
+                - self.terrain.elevation(self.X[:, 0], self.X[:, 1] - h)
+            ) / (2 * h)
+            R = R + (cfg.map_interp_frac * h) ** 2 * (gx**2 + gy**2)
         return R
 
     def update_trn(self, ground_elev_meas: float) -> None:
@@ -98,24 +110,31 @@ class TerrainParticleFilter:
             return
         frac = self.neff() / self.N
         # low Neff (degenerate) -> inflate; healthy -> relax to 1
-        neff_target = 1.0 + (cfg.adapt_q_max - 1.0) * float(np.clip(
-            (cfg.pf_neff_frac - frac) / max(cfg.pf_neff_frac, 1e-6), 0.0, 1.0))
+        neff_target = 1.0 + (cfg.adapt_q_max - 1.0) * float(
+            np.clip((cfg.pf_neff_frac - frac) / max(cfg.pf_neff_frac, 1e-6), 0.0, 1.0)
+        )
         if cfg.adapt_q_terrain:
             grad = self.terrain.gradient(self.pos[0], self.pos[1])
             info = float(grad @ grad)
-            ref = cfg.adapt_q_terrain_ref ** 2
+            ref = cfg.adapt_q_terrain_ref**2
             terrain_target = 1.0 + (cfg.adapt_q_terrain_max - 1.0) / (
-                1.0 + info / max(ref, 1e-9))
+                1.0 + info / max(ref, 1e-9)
+            )
         else:
             terrain_target = 1.0
         target = max(neff_target, terrain_target)
         self._q_scale += 0.3 * (target - self._q_scale)
-        self._q_scale = float(np.clip(
-            self._q_scale, cfg.adapt_q_min,
-            cfg.adapt_q_max * cfg.adapt_q_terrain_max))
+        self._q_scale = float(
+            np.clip(
+                self._q_scale,
+                cfg.adapt_q_min,
+                cfg.adapt_q_max * cfg.adapt_q_terrain_max,
+            )
+        )
 
-    def update_position(self, pos_fix: np.ndarray, cov: np.ndarray,
-                        t: float | None = None) -> None:
+    def update_position(
+        self, pos_fix: np.ndarray, cov: np.ndarray, t: float | None = None
+    ) -> None:
         """Absolute TERCOM position fix.
 
         Steps: (1) *gate* the fix with a Mahalanobis test against the current
@@ -137,7 +156,7 @@ class TerrainParticleFilter:
         innov = pos_fix - self.pos
         S = cov + self.pos_cov()
         if float(innov @ np.linalg.inv(S) @ innov) > self.cfg.gate_chi2:
-            return                                       # reject outlier fix
+            return  # reject outlier fix
 
         Rinv = np.linalg.inv(cov)
         d = self.X[:, 0:2] - pos_fix
@@ -149,19 +168,23 @@ class TerrainParticleFilter:
         fix_std = float(np.sqrt(max(w_eig.max(), 0.0)))
         m = int(self.cfg.pf_inject * self.N)
         if m > 0 and fix_std <= self.cfg.pf_inject_std_max:
-            if self._last_fix_pos is not None and t is not None \
-                    and t > self._last_fix_t:
+            if (
+                self._last_fix_pos is not None
+                and t is not None
+                and t > self._last_fix_t
+            ):
                 v_inj = (pos_fix - self._last_fix_pos) / (t - self._last_fix_t)
             else:
                 v_inj = self.vel
             lo = (0.5 * self.cfg.tercom_search_step) ** 2
-            hi = self.cfg.pf_inject_std_max ** 2
+            hi = self.cfg.pf_inject_std_max**2
             cov_inj = V @ np.diag(np.clip(w_eig, lo, hi)) @ V.T
             L = np.linalg.cholesky(cov_inj + 1e-6 * np.eye(2))
-            sel = np.argsort(self.w)[:m]                 # replace weakest
+            sel = np.argsort(self.w)[:m]  # replace weakest
             self.X[sel, 0:2] = pos_fix + self.rng.normal(0, 1, (m, 2)) @ L.T
             self.X[sel, 2:4] = v_inj + self.rng.normal(
-                0, self.cfg.init_vel_std * 0.5, (m, 2))
+                0, self.cfg.init_vel_std * 0.5, (m, 2)
+            )
             self.w[sel] = 1.0 / self.N
             self.w /= self.w.sum()
 
@@ -169,8 +192,13 @@ class TerrainParticleFilter:
             self._last_fix_pos = pos_fix.copy()
             self._last_fix_t = t
 
-    def reinit_from(self, pos: np.ndarray, cov: np.ndarray,
-                    vel: np.ndarray | None = None, frac: float = 0.5) -> None:
+    def reinit_from(
+        self,
+        pos: np.ndarray,
+        cov: np.ndarray,
+        vel: np.ndarray | None = None,
+        frac: float = 0.5,
+    ) -> None:
         """Relocalise a fraction of the cloud around an external posterior.
 
         Used by the coordinator when a confident sibling filter (PMF/EKF) should
@@ -189,7 +217,8 @@ class TerrainParticleFilter:
         self.X[sel, 0:2] = pos + self.rng.normal(0, 1, (m, 2)) @ L.T
         if vel is not None:
             self.X[sel, 2:4] = np.asarray(vel, float) + self.rng.normal(
-                0, self.cfg.init_vel_std * 0.5, (m, 2))
+                0, self.cfg.init_vel_std * 0.5, (m, 2)
+            )
         self.w[sel] = 1.0 / self.N
         self.w /= self.w.sum()
 
@@ -205,7 +234,7 @@ class TerrainParticleFilter:
 
     # ---- resampling + roughening --------------------------------------- #
     def neff(self) -> float:
-        return float(1.0 / np.sum(self.w ** 2))
+        return float(1.0 / np.sum(self.w**2))
 
     def _resample(self) -> None:
         n = self.N
@@ -227,8 +256,7 @@ class TerrainParticleFilter:
     # ---- mode / ambiguity awareness ------------------------------------ #
     def modes(self) -> list[tuple[np.ndarray, float]]:
         """Spatial modes of the weighted cloud (multi-hypothesis structure)."""
-        return est.cluster_modes(self.X[:, 0:2], self.w,
-                                 self.cfg.mode_cluster_radius)
+        return est.cluster_modes(self.X[:, 0:2], self.w, self.cfg.mode_cluster_radius)
 
     def n_modes(self) -> int:
         return est.mode_count(self.modes(), self.cfg.mode_mass_frac)

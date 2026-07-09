@@ -3,6 +3,7 @@
 Localization can remain operational while evidence for the next action has
 degraded. This module maps nav/evidence signals to continuous permission scores.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -22,7 +23,7 @@ def _clip01(x: float) -> float:
 
 
 def _nav_score(terrain: Terrain, cfg: SimConfig, pos: np.ndarray) -> float:
-    R = cfg.radar_noise ** 2 + cfg.baro_noise ** 2
+    R = cfg.radar_noise**2 + cfg.baro_noise**2
     J = terrain_fisher_information(terrain, float(pos[0]), float(pos[1]), R)
     w = np.linalg.eigvalsh(J)
     # scale: ~0.02 weak, ~0.15 strong on synthetic tiles
@@ -42,9 +43,10 @@ def _recent_trn_health(nav: Navigator, window: int = 12) -> tuple[float, float]:
 @dataclass(frozen=True)
 class ActionEnvelope:
     """Continuous permission scores in [0, 1] for each action class."""
+
     permitted: dict[str, float] = field(default_factory=dict)
-    confidence: float = 0.0          # overall authority to act
-    binding: str = "none"            # dominant limiting factor
+    confidence: float = 0.0  # overall authority to act
+    binding: str = "none"  # dominant limiting factor
     pos_err_1sigma: float = 0.0
     nav_score: float = 0.0
     filter_spread_m: float = 0.0
@@ -105,13 +107,19 @@ def compute_action_envelope(
         neff_ok = _clip01(nav.pf.neff() / max(0.35 * nav.pf.N, 1.0))
 
     confidence = _clip01(
-        0.25 * uncert + 0.20 * innov + 0.15 * accept
-        + 0.15 * terrain_ok + 0.15 * agree + 0.10 * drift
+        0.25 * uncert
+        + 0.20 * innov
+        + 0.15 * accept
+        + 0.15 * terrain_ok
+        + 0.15 * agree
+        + 0.10 * drift
     )
 
     permitted = {
         "transit": _clip01(confidence * (0.6 + 0.4 * terrain_ok)),
-        "terrain_fix": _clip01(min(uncert, terrain_ok, accept, innov) * (0.5 + 0.5 * nav_s)),
+        "terrain_fix": _clip01(
+            min(uncert, terrain_ok, accept, innov) * (0.5 + 0.5 * nav_s)
+        ),
         "hold": _clip01(0.4 + 0.6 * (1.0 - uncert)),
         "rtb": _clip01(0.3 + 0.7 * (1.0 - confidence)),
         "go_dark": _clip01(threat_ok * (0.5 + 0.5 * (1.0 - accept))),

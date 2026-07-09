@@ -1,0 +1,11 @@
+# Pinned CI constraints for reproducible lint, typing, and test gates.
+build==1.2.2.post1
+hypothesis==6.135.26
+matplotlib==3.10.8
+mypy==1.17.0
+numpy==2.4.6
+pytest==8.4.1
+pytest-cov==6.2.1
+pytest-timeout==2.4.0
+ruff==0.15.20
+scipy==1.17.1

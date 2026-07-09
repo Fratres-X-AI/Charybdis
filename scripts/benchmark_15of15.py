@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Print benchmark numbers for the four deferred features."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -32,6 +33,7 @@ def bench_nn() -> dict:
     from pathlib import Path
 
     from console import charybdis_nn as nn
+
     tmp = Path("models/tcm_cnn.pt")
     if not tmp.is_file():
         nn.train(model_path=tmp, n_samples=4000, epochs=3, batch=256)
@@ -53,11 +55,15 @@ if __name__ == "__main__":
     print(f"SLAM drift reduction factor: {bench_slam():.2f}x")
     sw = bench_swarm()
     sw = swarm.montecarlo_compare(n_runs=12, ticks=70, workers=31)
-    print(f"Swarm team CEP50: {sw['team_cep50_m']:.2f} m  solo: {sw['solo_cep50_m']:.2f} m  "
-          f"({sw['improvement_x']:.2f}x)")
+    print(
+        f"Swarm team CEP50: {sw['team_cep50_m']:.2f} m  solo: {sw['solo_cep50_m']:.2f} m  "
+        f"({sw['improvement_x']:.2f}x)"
+    )
     try:
         nnm = bench_nn()
-        print(f"NN TCM err: {nnm['nn_err_m']:.2f} m  classical: {nnm['classical_err_m']:.2f} m")
+        print(
+            f"NN TCM err: {nnm['nn_err_m']:.2f} m  classical: {nnm['classical_err_m']:.2f} m"
+        )
     except Exception as exc:
         print(f"NN benchmark skipped: {exc}")
     print("ROS2: run scripts/ros2_smoke.sh (Docker, not in CI)")

@@ -3,6 +3,7 @@
 New harbor UUV development should use :mod:`charybdis.hybrid`. These exports
 remain available for interceptor simulations and backward-compatible tooling.
 """
+
 from __future__ import annotations
 
 from .ekf import NavEKF

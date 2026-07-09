@@ -33,6 +33,7 @@ References
 - Han, Kim & Kim (2013) - stochastic linearisation for terrain-referenced nav.
 - Bergman (1999); Anonsen & Hallingstad (2006) - point-mass TRN, terrain info.
 """
+
 from __future__ import annotations
 
 from collections import deque
@@ -45,7 +46,7 @@ import numpy as np
 # --------------------------------------------------------------------------- #
 def sensor_elev_var(cfg) -> float:
     """Raw altimeter-chain elevation variance [m^2] (radar AGL + baro MSL)."""
-    return cfg.radar_noise ** 2 + cfg.baro_noise ** 2
+    return cfg.radar_noise**2 + cfg.baro_noise**2
 
 
 def terrain_meas_var(cfg, slope: float | None = None) -> float:
@@ -61,7 +62,7 @@ def terrain_meas_var(cfg, slope: float | None = None) -> float:
     * ``interpolation``     - the DEM is only known at grid nodes, so the value
       between nodes is uncertain by roughly ``frac * cell * |slope|``.
     """
-    R = sensor_elev_var(cfg) + cfg.map_sigma ** 2
+    R = sensor_elev_var(cfg) + cfg.map_sigma**2
     if slope is not None and getattr(cfg, "map_interp_frac", 0.0) > 0.0:
         R += (cfg.map_interp_frac * cfg.terrain_res * float(abs(slope))) ** 2
     return float(R)
@@ -109,7 +110,7 @@ def stochastic_linearize(terrain, pos, P_pos, cfg):
 
     pts, wm = _sigma_points(pos, Pc, cfg.ekf_sl_kappa)
     z = terrain.elevation(pts[:, 0], pts[:, 1])
-    d = pts - pos                                   # offsets about the mean
+    d = pts - pos  # offsets about the mean
     A = np.column_stack([np.ones(len(pts)), d[:, 0], d[:, 1]])
     W = np.diag(wm)
     try:
@@ -119,7 +120,7 @@ def stochastic_linearize(terrain, pos, P_pos, cfg):
     h0 = float(beta[0])
     grad = np.array([beta[1], beta[2]], float)
     resid = z - A @ beta
-    R_lin = float(np.sum(wm * resid ** 2))
+    R_lin = float(np.sum(wm * resid**2))
     return h0, grad, R_lin
 
 
@@ -219,8 +220,9 @@ def covariance_intersection(xa, Pa, xb, Pb, omega: float | None = None):
 # --------------------------------------------------------------------------- #
 #  Terrain-ambiguity / multi-hypothesis detection
 # --------------------------------------------------------------------------- #
-def cluster_modes(pos: np.ndarray, w: np.ndarray, radius: float,
-                  top: int = 400) -> list[tuple[np.ndarray, float]]:
+def cluster_modes(
+    pos: np.ndarray, w: np.ndarray, radius: float, top: int = 400
+) -> list[tuple[np.ndarray, float]]:
     """Greedy weighted clustering of a particle cloud into spatial modes.
 
     Only the ``top`` heaviest particles are clustered (cheap and robust);
@@ -229,7 +231,7 @@ def cluster_modes(pos: np.ndarray, w: np.ndarray, radius: float,
     n = len(w)
     if n == 0:
         return []
-    order = np.argsort(w)[::-1][:min(top, n)]
+    order = np.argsort(w)[::-1][: min(top, n)]
     r2 = radius * radius
     centers: list[np.ndarray] = []
     masses: list[float] = []
@@ -290,8 +292,12 @@ def grid_multimodality(p: np.ndarray, frac: float = 0.4) -> tuple[int, float]:
                 m += float(p[cj, ci])
                 for dj, di in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                     nj, ni = cj + dj, ci + di
-                    if 0 <= nj < ny and 0 <= ni < nx and mask[nj, ni] \
-                            and not seen[nj, ni]:
+                    if (
+                        0 <= nj < ny
+                        and 0 <= ni < nx
+                        and mask[nj, ni]
+                        and not seen[nj, ni]
+                    ):
                         seen[nj, ni] = True
                         stack.append((nj, ni))
             comp_mass.append(m)

@@ -7,6 +7,7 @@ Runs multiple ``Navigator`` instances over a shared terrain map. Agents within
 comm range exchange one-way-travel-time (OWTT) range measurements and shared
 TRN fixes to bound team drift.
 """
+
 from __future__ import annotations
 
 import os
@@ -47,14 +48,16 @@ class SwarmResult:
     shared_fixes: int = 0
 
 
-def owtt_range(true_a: np.ndarray, true_b: np.ndarray,
-               rng: np.random.Generator, noise: float) -> float:
+def owtt_range(
+    true_a: np.ndarray, true_b: np.ndarray, rng: np.random.Generator, noise: float
+) -> float:
     d = float(np.linalg.norm(true_a - true_b))
     return d + rng.normal(0.0, noise)
 
 
-def fuse_owtt_range(nav_a: Navigator, nav_b: Navigator, meas: float,
-                    noise: float) -> None:
+def fuse_owtt_range(
+    nav_a: Navigator, nav_b: Navigator, meas: float, noise: float
+) -> None:
     pa, pb = nav_a.ekf.pos, nav_b.ekf.pos
     delta = pb - pa
     pred = float(np.linalg.norm(delta))
@@ -62,7 +65,7 @@ def fuse_owtt_range(nav_a: Navigator, nav_b: Navigator, meas: float,
         return
     H_a = np.array([delta[0] / pred, delta[1] / pred, 0, 0, 0, 0])
     H_b = np.array([-delta[0] / pred, -delta[1] / pred, 0, 0, 0, 0])
-    R = noise ** 2
+    R = noise**2
     innov = meas - pred
     for nav, H in ((nav_a, H_a), (nav_b, H_b)):
         S = float(H @ nav.ekf.P @ H + R)
@@ -81,14 +84,20 @@ def run_swarm(cfg: SwarmConfig | None = None) -> SwarmResult:
     rng = np.random.default_rng(cfg.seed + 909)
 
     runs: list[AgentRun] = []
-    formation = [np.zeros(2)] + [rng.normal(0, 150.0, size=2)
-                                   for _ in range(cfg.n_agents - 1)]
+    formation = [np.zeros(2)] + [
+        rng.normal(0, 150.0, size=2) for _ in range(cfg.n_agents - 1)
+    ]
     for i in range(cfg.n_agents):
         off = rng.normal(0, 60.0, size=2) if i else np.zeros(2)
         scfg = replace(base, seed=cfg.seed + i)
         pos0 = truth.pos[0] + off
-        nav = Navigator(scfg, terrain, pos0, truth.vel[0],
-                        rng=np.random.default_rng(cfg.seed + 200 + i))
+        nav = Navigator(
+            scfg,
+            terrain,
+            pos0,
+            truth.vel[0],
+            rng=np.random.default_rng(cfg.seed + 200 + i),
+        )
         imu = IMU(replace(scfg, seed=scfg.seed + 101), terrain)
         runs.append(AgentRun(nav=nav, imu=imu))
 
@@ -103,8 +112,9 @@ def run_swarm(cfg: SwarmConfig | None = None) -> SwarmResult:
             best = min(runs, key=lambda a: a.nav.ekf.pos_std.max())
             for ar in runs:
                 if ar.nav is not best.nav:
-                    ar.nav.ekf.update_position(best.nav.ekf.pos,
-                                               np.diag([400.0, 400.0]))
+                    ar.nav.ekf.update_position(
+                        best.nav.ekf.pos, np.diag([400.0, 400.0])
+                    )
                     share_n += 1
 
         for i in range(len(runs)):
@@ -125,8 +135,12 @@ def run_swarm(cfg: SwarmConfig | None = None) -> SwarmResult:
 def _solo(args):
     seed, duration = args
     from ..simulation import run_simulation
-    return float(run_simulation(
-        SimConfig(duration=duration, seed=seed, use_pf=False)).ekf_err[-1])
+
+    return float(
+        run_simulation(SimConfig(duration=duration, seed=seed, use_pf=False)).ekf_err[
+            -1
+        ]
+    )
 
 
 def _team(args):
@@ -135,8 +149,9 @@ def _team(args):
     return float(np.median([a.final_err for a in r.agents]))
 
 
-def montecarlo_swarm(n_runs: int = 16, duration: float = 80.0,
-                     n_agents: int = 3, workers: int = 31) -> dict:
+def montecarlo_swarm(
+    n_runs: int = 16, duration: float = 80.0, n_agents: int = 3, workers: int = 31
+) -> dict:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     nw = pool_workers(workers)
     seeds = list(range(1, n_runs + 1))
@@ -145,5 +160,8 @@ def montecarlo_swarm(n_runs: int = 16, duration: float = 80.0,
         team = pool.map(_team, [(s, duration, n_agents) for s in seeds])
     s50 = float(np.percentile(solo, 50))
     t50 = float(np.percentile(team, 50))
-    return {"solo_cep50_m": s50, "team_cep50_m": t50,
-            "improvement_x": s50 / max(t50, 1e-6)}
+    return {
+        "solo_cep50_m": s50,
+        "team_cep50_m": t50,
+        "improvement_x": s50 / max(t50, 1e-6),
+    }

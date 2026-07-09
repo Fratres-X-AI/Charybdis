@@ -4,6 +4,7 @@ Runs nominal + TRN-only over many seeds and a large-initial-error scenario,
 reporting per-filter CEP50/CEP95, mean final error, divergence count, and NEES.
 Usage: OMP_NUM_THREADS=1 python scripts/pmf_sweep.py [n_seeds]
 """
+
 from __future__ import annotations
 
 import os
@@ -18,8 +19,9 @@ os.environ.setdefault("MKL_NUM_THREADS", "1")
 from dataclasses import replace
 from multiprocessing import Pool
 
-from charybdis import SimConfig, run_simulation
+from charybdis.config import SimConfig
 from charybdis.parallel import pool_workers
+from charybdis.simulation import run_simulation
 
 
 def _nees_pos(pos, pcov, truth):
@@ -43,15 +45,20 @@ def one(args):
     elif mode == "trn":
         cfg = replace(base, seed=seed, use_tercom=False)
     elif mode == "large":
-        cfg = replace(base, seed=seed, use_tercom=False,
-                      init_pos_error=450.0, init_pos_std=500.0)
+        cfg = replace(
+            base, seed=seed, use_tercom=False, init_pos_error=450.0, init_pos_std=500.0
+        )
     r = run_simulation(cfg)
     s = r.summary()
     truth = r.truth.pos
     out = {
-        "seed": seed, "mode": mode,
-        "pmf": s["pmf_final_m"], "ekf": s["ekf_final_m"], "pf": s["pf_final_m"],
-        "pmf_rmse": s["pmf_rmse_m"], "ekf_rmse": s["ekf_rmse_m"],
+        "seed": seed,
+        "mode": mode,
+        "pmf": s["pmf_final_m"],
+        "ekf": s["ekf_final_m"],
+        "pf": s["pf_final_m"],
+        "pmf_rmse": s["pmf_rmse_m"],
+        "ekf_rmse": s["ekf_rmse_m"],
         "pmf_nees": _nees_pos(r.pmf_pos, r.pmf_pcov, truth),
         "ekf_nees": _nees_pos(r.ekf_pos, r.ekf_pcov, truth),
     }
@@ -60,10 +67,12 @@ def one(args):
 
 def summarize(rows, mode):
     rows = [r for r in rows if r["mode"] == mode]
+
     def stat(key):
         v = np.array([r[key] for r in rows], float)
         v = v[np.isfinite(v)]
         return v
+
     for f in ("pmf", "ekf", "pf"):
         v = stat(f)
         cep50 = np.percentile(v, 50)

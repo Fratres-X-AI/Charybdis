@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
-from charybdis import SimConfig, Terrain, run_simulation
+from charybdis.config import SimConfig
 from charybdis.legacy import Tercom
+from charybdis.simulation import run_simulation
+from charybdis.terrain import Terrain
 from charybdis.trajectory import generate_truth
 
 
@@ -21,10 +23,12 @@ def test_terrain_gradient_matches_finite_difference(terrain):
     x, y = 12_345.0, 9_876.0
     g = terrain.gradient(x, y)
     eps = 5.0
-    fd = np.array([
-        (terrain.elevation(x + eps, y) - terrain.elevation(x - eps, y)) / (2 * eps),
-        (terrain.elevation(x, y + eps) - terrain.elevation(x, y - eps)) / (2 * eps),
-    ])
+    fd = np.array(
+        [
+            (terrain.elevation(x + eps, y) - terrain.elevation(x - eps, y)) / (2 * eps),
+            (terrain.elevation(x, y + eps) - terrain.elevation(x, y - eps)) / (2 * eps),
+        ]
+    )
     assert np.allclose(g, fd, atol=0.05)
 
 
@@ -44,7 +48,7 @@ def test_tercom_recovers_known_offset(cfg, terrain):
     for k in range(cfg.tercom_strip):
         p = truth.pos[k]
         elev = float(terrain.elevation(p[0], p[1]))
-        tc.push(p + shift, elev)        # est position is offset from truth
+        tc.push(p + shift, elev)  # est position is offset from truth
     fix = tc.correlate()
     assert fix is not None and fix.valid
     recovered = fix.pos - (truth.pos[cfg.tercom_strip - 1] + shift)

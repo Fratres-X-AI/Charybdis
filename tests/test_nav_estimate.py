@@ -1,7 +1,10 @@
 """Tests for Navigator.estimate() / NavEstimate (stable autonomy contract)."""
+
 import numpy as np
-from charybdis import NavEstimate, Navigator, SimConfig, Terrain
+from charybdis.config import SimConfig
 from charybdis.imu import IMU
+from charybdis.legacy import NavEstimate, Navigator
+from charybdis.terrain import Terrain
 from charybdis.trajectory import generate_truth
 
 

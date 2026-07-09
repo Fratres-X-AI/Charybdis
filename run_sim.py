@@ -4,6 +4,7 @@ Usage:
     python run_sim.py [--duration S] [--seed N]
     python run_sim.py --montecarlo 15         # CEP / NEES evaluation
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,8 +15,9 @@ import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from charybdis import SimConfig, run_simulation
+from charybdis.config import SimConfig
 from charybdis.evaluation import run_montecarlo
+from charybdis.simulation import run_simulation
 
 OUT = os.path.join(os.path.dirname(__file__), "outputs")
 
@@ -23,21 +25,40 @@ OUT = os.path.join(os.path.dirname(__file__), "outputs")
 def plot_map(res, path: str) -> None:
     fig, ax = plt.subplots(figsize=(9, 8))
     ext = [0, res.terrain.size, 0, res.terrain.size]
-    im = ax.imshow(res.terrain.grid, origin="lower", extent=ext,
-                   cmap="terrain", alpha=0.9)
+    im = ax.imshow(
+        res.terrain.grid, origin="lower", extent=ext, cmap="terrain", alpha=0.9
+    )
     fig.colorbar(im, ax=ax, label="Elevation [m]", shrink=0.8)
     ax.plot(res.truth.pos[:, 0], res.truth.pos[:, 1], "k-", lw=2.0, label="Truth")
-    ax.plot(res.ins_pos[:, 0], res.ins_pos[:, 1], "r--", lw=1.3,
-            label="INS only (drift)")
-    ax.plot(res.ekf_pos[:, 0], res.ekf_pos[:, 1], "c-", lw=1.3,
-            label="Charybdis EKF (fused)")
+    ax.plot(
+        res.ins_pos[:, 0], res.ins_pos[:, 1], "r--", lw=1.3, label="INS only (drift)"
+    )
+    ax.plot(
+        res.ekf_pos[:, 0],
+        res.ekf_pos[:, 1],
+        "c-",
+        lw=1.3,
+        label="Charybdis EKF (fused)",
+    )
     if res.pf_pos is not None:
-        ax.plot(res.pf_pos[:, 0], res.pf_pos[:, 1], color="magenta", lw=1.3,
-                label="Particle filter")
+        ax.plot(
+            res.pf_pos[:, 0],
+            res.pf_pos[:, 1],
+            color="magenta",
+            lw=1.3,
+            label="Particle filter",
+        )
     if res.tercom_fix:
         fx = np.array([f[1] for f in res.tercom_fix])
-        ax.scatter(fx[:, 0], fx[:, 1], s=28, c="yellow", edgecolors="k",
-                   zorder=5, label="TERCOM fix")
+        ax.scatter(
+            fx[:, 0],
+            fx[:, 1],
+            s=28,
+            c="yellow",
+            edgecolors="k",
+            zorder=5,
+            label="TERCOM fix",
+        )
     ax.plot(*res.truth.pos[0], "go", ms=9, label="Launch")
     ax.set_xlabel("East [m]")
     ax.set_ylabel("North [m]")
@@ -81,8 +102,12 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--duration", type=float, default=None)
     ap.add_argument("--seed", type=int, default=None)
-    ap.add_argument("--montecarlo", type=int, default=0,
-                    help="run N-seed Monte-Carlo evaluation instead of a single flight")
+    ap.add_argument(
+        "--montecarlo",
+        type=int,
+        default=0,
+        help="run N-seed Monte-Carlo evaluation instead of a single flight",
+    )
     args = ap.parse_args()
 
     cfg = SimConfig()
@@ -104,13 +129,21 @@ def main() -> None:
 
     s = res.summary()
     print("=== Charybdis GDI simulation ===")
-    print(f" flight time      : {cfg.duration:.0f} s @ {1/cfg.dt:.0f} Hz")
+    print(f" flight time      : {cfg.duration:.0f} s @ {1 / cfg.dt:.0f} Hz")
     print(f" TERCOM fixes     : {s['n_tercom_fixes']}")
-    print(f" INS-only  RMSE   : {s['ins_rmse_m']:8.1f} m   final {s['ins_final_m']:8.1f} m")
-    print(f" Charybdis EKF RMSE: {s['ekf_rmse_m']:8.1f} m   final {s['ekf_final_m']:8.1f} m")
+    print(
+        f" INS-only  RMSE   : {s['ins_rmse_m']:8.1f} m   final {s['ins_final_m']:8.1f} m"
+    )
+    print(
+        f" Charybdis EKF RMSE: {s['ekf_rmse_m']:8.1f} m   final {s['ekf_final_m']:8.1f} m"
+    )
     if "pf_rmse_m" in s:
-        print(f" Particle  RMSE   : {s['pf_rmse_m']:8.1f} m   final {s['pf_final_m']:8.1f} m")
-    print(f" drift reduction  : {s['ins_final_m']/max(s['ekf_final_m'],1e-6):8.1f} x")
+        print(
+            f" Particle  RMSE   : {s['pf_rmse_m']:8.1f} m   final {s['pf_final_m']:8.1f} m"
+        )
+    print(
+        f" drift reduction  : {s['ins_final_m'] / max(s['ekf_final_m'], 1e-6):8.1f} x"
+    )
     print(f" plots            : {OUT}")
 
 

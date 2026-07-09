@@ -38,11 +38,14 @@ def test_stress_harness_subset():
 def test_evaluate_gates_structure():
     import numpy as np
     from charybdis.evaluation import MonteCarloResult, StressGates
+
     mc = MonteCarloResult(
-        n_runs=2, seeds=[1, 2],
+        n_runs=2,
+        seeds=[1, 2],
         final_err={"ekf": np.array([10.0, 20.0]), "pmf": np.array([15.0, 25.0])},
         rmse={"ekf": np.array([12.0, 22.0]), "pmf": np.array([17.0, 27.0])},
-        ekf_nees=3.0, pmf_nees=1.5,
+        ekf_nees=3.0,
+        pmf_nees=1.5,
     )
     gates = evaluate_gates(mc, StressGates())
     assert gates["ekf_cep95"] is True

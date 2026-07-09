@@ -2,6 +2,7 @@
 
 Usage: python scripts/stress_run.py [n_seeds]
 """
+
 from __future__ import annotations
 
 import os

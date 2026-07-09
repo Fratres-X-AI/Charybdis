@@ -6,6 +6,7 @@ paths. Import through :mod:`charybdis.experimental.nn_matcher`.
 Rotation-equivariant encoding via channel-wise max over discrete rotations,
 plus a scalar suitability score for terrain-aided fix quality.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -39,8 +40,9 @@ def _grid():
 _GX, _GY = _grid()
 
 
-def _scale_patches(obs_z: np.ndarray, mp_z: np.ndarray,
-                   relief: float) -> tuple[np.ndarray, np.ndarray]:
+def _scale_patches(
+    obs_z: np.ndarray, mp_z: np.ndarray, relief: float
+) -> tuple[np.ndarray, np.ndarray]:
     """Pair-normalize using the observation reference so offset signal is preserved."""
     ref = obs_z.mean(axis=(1, 2), keepdims=True) if obs_z.ndim == 3 else obs_z.mean()
     scale = max(float(relief), 1.0)
@@ -53,8 +55,9 @@ def _scale_patches(obs_z: np.ndarray, mp_z: np.ndarray,
     return obs.astype(np.float32), mp.astype(np.float32)
 
 
-def extract_pair_batch(true_xy: np.ndarray, est_xy: np.ndarray, terrain,
-                       relief: float = 350.0) -> tuple[np.ndarray, np.ndarray]:
+def extract_pair_batch(
+    true_xy: np.ndarray, est_xy: np.ndarray, terrain, relief: float = 350.0
+) -> tuple[np.ndarray, np.ndarray]:
     cx_t = true_xy[:, 0][:, None, None] + _GX[None]
     cy_t = true_xy[:, 1][:, None, None] + _GY[None]
     cx_e = est_xy[:, 0][:, None, None] + _GX[None]
@@ -70,8 +73,9 @@ def extract_patch(center: np.ndarray, terrain, relief: float = 350.0) -> np.ndar
     return obs
 
 
-def extract_patches_batch(centers: np.ndarray, terrain,
-                          relief: float = 350.0) -> np.ndarray:
+def extract_patches_batch(
+    centers: np.ndarray, terrain, relief: float = 350.0
+) -> np.ndarray:
     """Legacy batch extractor (single patch per center, obs-style reference)."""
     cx = centers[:, 0][:, None, None] + _GX[None]
     cy = centers[:, 1][:, None, None] + _GY[None]
@@ -171,8 +175,9 @@ def load_model(path: str | Path | None = None, device: str = "cpu"):
     return model
 
 
-def predict_offset(obs_patch: np.ndarray, map_patch: np.ndarray,
-                   model_path: str | Path | None = None) -> tuple[np.ndarray, float]:
+def predict_offset(
+    obs_patch: np.ndarray, map_patch: np.ndarray, model_path: str | Path | None = None
+) -> tuple[np.ndarray, float]:
     torch, _, _ = _require_torch()
     global _model
     if _model is None:
@@ -185,9 +190,13 @@ def predict_offset(obs_patch: np.ndarray, map_patch: np.ndarray,
     return off, float(suit.detach().cpu().numpy()[0])
 
 
-def match_position(true_pos: np.ndarray, est_pos: np.ndarray, terrain,
-                   model_path: str | Path | None = None,
-                   relief: float = 350.0) -> tuple[np.ndarray, float]:
+def match_position(
+    true_pos: np.ndarray,
+    est_pos: np.ndarray,
+    terrain,
+    model_path: str | Path | None = None,
+    relief: float = 350.0,
+) -> tuple[np.ndarray, float]:
     obs_z = terrain.elevation(true_pos[0] + _GX, true_pos[1] + _GY).astype(np.float32)
     mp_z = terrain.elevation(est_pos[0] + _GX, est_pos[1] + _GY).astype(np.float32)
     obs, mp = _scale_patches(obs_z, mp_z, relief)
@@ -204,8 +213,9 @@ def _pick_device(preferred: str | None = None) -> str:
     return "cpu"
 
 
-def _sample_errors(rng: np.random.Generator, batch: int,
-                   hard: bool = False) -> np.ndarray:
+def _sample_errors(
+    rng: np.random.Generator, batch: int, hard: bool = False
+) -> np.ndarray:
     """Mix error magnitudes; hard mode adds extreme 120-220 m outliers."""
     mag = np.empty(batch, dtype=np.float32)
     if hard:
@@ -221,18 +231,27 @@ def _sample_errors(rng: np.random.Generator, batch: int,
         mag[small] = rng.uniform(12.0, 55.0, size=int(small.sum()))
         mag[~small] = rng.uniform(55.0, 170.0, size=int((~small).sum()))
     theta = rng.uniform(0.0, 2 * np.pi, size=batch)
-    return np.stack([mag * np.cos(theta), mag * np.sin(theta)], axis=1).astype(np.float32)
+    return np.stack([mag * np.cos(theta), mag * np.sin(theta)], axis=1).astype(
+        np.float32
+    )
 
 
-def _sample_positions(rng: np.random.Generator, batch: int,
-                      margin: float) -> np.ndarray:
+def _sample_positions(
+    rng: np.random.Generator, batch: int, margin: float
+) -> np.ndarray:
     lo, hi = margin, 40000.0 - margin
     return rng.uniform(lo, hi, size=(batch, 2)).astype(np.float32)
 
 
-def eval_hard(model, terrains: list, relief: float, device: str,
-              rng: np.random.Generator, n: int = 4096,
-              infer_batch: int = 512) -> dict[str, float]:
+def eval_hard(
+    model,
+    terrains: list,
+    relief: float,
+    device: str,
+    rng: np.random.Generator,
+    n: int = 4096,
+    infer_batch: int = 512,
+) -> dict[str, float]:
     """Stress eval: mixed terrains, wide error distribution, position-level metrics."""
     torch, _, _ = _require_torch()
     model.eval()
@@ -269,29 +288,43 @@ def eval_hard(model, terrains: list, relief: float, device: str,
         "after_p90": float(np.percentile(after_a, 90)),
         "after_p95": float(np.percentile(after_a, 95)),
         "large_after_mean": float(after_a[large].mean()) if large.any() else 0.0,
-        "improve_pct": float(100.0 * (1.0 - after_a.mean() / max(before_a.mean(), 1e-3))),
+        "improve_pct": float(
+            100.0 * (1.0 - after_a.mean() / max(before_a.mean(), 1e-3))
+        ),
     }
 
 
 def _fmt_hard(m: dict[str, float]) -> str:
-    return (f"hard n=4096 corr={m['corr_mae']:.1f}m "
-            f"{m['before_mean']:.0f}->{m['after_mean']:.0f}m "
-            f"p50={m['after_p50']:.0f} p90={m['after_p90']:.0f} p95={m['after_p95']:.0f} "
-            f"large={m['large_after_mean']:.0f}m imp={m['improve_pct']:.0f}%")
+    return (
+        f"hard n=4096 corr={m['corr_mae']:.1f}m "
+        f"{m['before_mean']:.0f}->{m['after_mean']:.0f}m "
+        f"p50={m['after_p50']:.0f} p90={m['after_p90']:.0f} p95={m['after_p95']:.0f} "
+        f"large={m['large_after_mean']:.0f}m imp={m['improve_pct']:.0f}%"
+    )
 
 
-def train(model_path: str | Path | None = None, n_samples: int = 8000,
-          epochs: int = 25, batch: int = 256, seed: int = 0,
-          device: str | None = None, n_terrains: int = 8,
-          relief: float = 350.0, resume: str | Path | None = None,
-          lr: float = 3e-4, hard: bool = False):
+def train(
+    model_path: str | Path | None = None,
+    n_samples: int = 8000,
+    epochs: int = 25,
+    batch: int = 256,
+    seed: int = 0,
+    device: str | None = None,
+    n_terrains: int = 8,
+    relief: float = 350.0,
+    resume: str | Path | None = None,
+    lr: float = 3e-4,
+    hard: bool = False,
+):
     from ..config import SimConfig
     from ..terrain import Terrain
+
     torch, nn, _ = _require_torch()
     device = _pick_device(device)
     rng = np.random.default_rng(seed)
-    terrains = [Terrain.synthetic(SimConfig(seed=seed + i * 17))
-                for i in range(n_terrains)]
+    terrains = [
+        Terrain.synthetic(SimConfig(seed=seed + i * 17)) for i in range(n_terrains)
+    ]
     model = build_model().to(device)
     if resume is not None:
         ckpt = Path(resume)
@@ -331,9 +364,13 @@ def train(model_path: str | Path | None = None, n_samples: int = 8000,
             opt.step()
             total += float(loss.item())
         sched.step()
-        hm = eval_hard(model, terrains, relief, device, rng, infer_batch=min(batch, 512))
-        print(f"epoch {ep + 1}/{epochs} loss={total / nb:.4f} "
-              f"lr={sched.get_last_lr()[0]:.2e} dev={device} {_fmt_hard(hm)}")
+        hm = eval_hard(
+            model, terrains, relief, device, rng, infer_batch=min(batch, 512)
+        )
+        print(
+            f"epoch {ep + 1}/{epochs} loss={total / nb:.4f} "
+            f"lr={sched.get_last_lr()[0]:.2e} dev={device} {_fmt_hard(hm)}"
+        )
 
     out = Path(model_path or DEFAULT_MODEL)
     out.parent.mkdir(parents=True, exist_ok=True)

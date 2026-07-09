@@ -3,6 +3,7 @@
 Designed for pod-scale evaluation (31 workers, 1000+ seeds) with pass/fail
 gates on CEP, divergence rate, and filter consistency (NEES).
 """
+
 from __future__ import annotations
 
 import os
@@ -27,7 +28,8 @@ def adversarial_terrain(cfg: SimConfig) -> Terrain:
     gx, gy = np.meshgrid(xs, ys)
     period = 1800.0
     z = 8.0 + 0.35 * cfg.terrain_relief * (
-        np.sin(2 * np.pi * gx / period) + np.sin(2 * np.pi * gy / period))
+        np.sin(2 * np.pi * gx / period) + np.sin(2 * np.pi * gy / period)
+    )
     z += 0.08 * cfg.terrain_relief * np.sin(2 * np.pi * (gx + gy) / (period * 0.7))
     return Terrain(grid=z.astype(np.float64), res=cfg.terrain_res)
 
@@ -35,6 +37,7 @@ def adversarial_terrain(cfg: SimConfig) -> Terrain:
 @dataclass
 class StressGates:
     """Pass/fail thresholds for a stress scenario."""
+
     ekf_cep95_max_m: float = 120.0
     pmf_cep95_max_m: float = 150.0
     pf_cep95_max_m: float = 150.0
@@ -62,25 +65,43 @@ def default_stress_cases() -> list[StressCase]:
     return [
         StressCase("nominal", replace(base, use_tercom=True)),
         StressCase("trn_only", replace(base, use_tercom=False)),
-        StressCase("large_init", replace(base, use_tercom=False, use_pf=False,
-                                          init_pos_error=450.0, init_pos_std=500.0),
-                   gates=StressGates(pmf_cep95_max_m=120.0, ekf_cep95_max_m=150.0)),
-        StressCase("imu_fault", replace(base, use_tercom=False,
-                                         accel_bias_rw=0.015, accel_noise=0.20),
-                   gates=StressGates(ekf_cep95_max_m=200.0, pmf_cep95_max_m=200.0)),
-        StressCase("featureless", replace(base, use_tercom=False, terrain_relief=8.0),
-                   gates=StressGates(ekf_cep95_max_m=250.0, pmf_cep95_max_m=250.0),
-                   required=False),
-        StressCase("adversarial", replace(base, use_tercom=False, use_pf=False),
-                   terrain_fn=adversarial_terrain,
-                   gates=StressGates(pmf_cep95_max_m=180.0, ekf_cep95_max_m=200.0)),
+        StressCase(
+            "large_init",
+            replace(
+                base,
+                use_tercom=False,
+                use_pf=False,
+                init_pos_error=450.0,
+                init_pos_std=500.0,
+            ),
+            gates=StressGates(pmf_cep95_max_m=120.0, ekf_cep95_max_m=150.0),
+        ),
+        StressCase(
+            "imu_fault",
+            replace(base, use_tercom=False, accel_bias_rw=0.015, accel_noise=0.20),
+            gates=StressGates(ekf_cep95_max_m=200.0, pmf_cep95_max_m=200.0),
+        ),
+        StressCase(
+            "featureless",
+            replace(base, use_tercom=False, terrain_relief=8.0),
+            gates=StressGates(ekf_cep95_max_m=250.0, pmf_cep95_max_m=250.0),
+            required=False,
+        ),
+        StressCase(
+            "adversarial",
+            replace(base, use_tercom=False, use_pf=False),
+            terrain_fn=adversarial_terrain,
+            gates=StressGates(pmf_cep95_max_m=180.0, ekf_cep95_max_m=200.0),
+        ),
     ]
 
 
 def _run_one(args: tuple) -> MonteCarloResult:
     case_name, seed, cfg_dict, terrain_kind = args
     cfg = SimConfig(**cfg_dict)
-    terrain_fn = adversarial_terrain if terrain_kind == "adversarial" else Terrain.synthetic
+    terrain_fn = (
+        adversarial_terrain if terrain_kind == "adversarial" else Terrain.synthetic
+    )
     if terrain_kind == "featureless":
         cfg = replace(cfg, terrain_relief=8.0)
     res = run_simulation(cfg, terrain=terrain_fn(cfg))
@@ -92,7 +113,7 @@ def _run_one(args: tuple) -> MonteCarloResult:
         if err is None:
             continue
         out[f"{f}_final"] = float(err[-1])
-        out[f"{f}_rmse"] = float(np.sqrt(np.mean(err ** 2)))
+        out[f"{f}_rmse"] = float(np.sqrt(np.mean(err**2)))
     ekf_s = _nees_second_half(res.ekf_pos, res.ekf_pcov, res.truth.pos)
     out["ekf_nees"] = float(np.mean(ekf_s))
     out["ekf_nees_s"] = ekf_s
@@ -135,7 +156,10 @@ def _aggregate(rows: list[dict], n_runs: int) -> MonteCarloResult:
     samples = {f: np.concatenate(v) for f, v in nees_samp.items() if v}
     seeds = [r["seed"] for r in rows]
     return MonteCarloResult(
-        n_runs=n_runs, seeds=seeds, final_err=final, rmse=rmse,
+        n_runs=n_runs,
+        seeds=seeds,
+        final_err=final,
+        rmse=rmse,
         ekf_nees=float(np.mean(nees_all["ekf"])) if nees_all["ekf"] else 0.0,
         pmf_nees=float(np.mean(nees_all["pmf"])) if nees_all["pmf"] else 0.0,
         pf_nees=float(np.mean(nees_all["pf"])) if nees_all["pf"] else 0.0,
@@ -179,16 +203,19 @@ class StressResult:
         return all(self.gates.values()) if self.gates else False
 
 
-def run_stress_case(case: StressCase, seeds: list[int] | None = None,
-                    n_workers: int = 31) -> StressResult:
+def run_stress_case(
+    case: StressCase, seeds: list[int] | None = None, n_workers: int = 31
+) -> StressResult:
     seeds = seeds or list(range(1, 65))
     terrain_kind = "synthetic"
     if case.name == "adversarial":
         terrain_kind = "adversarial"
     elif case.name == "featureless":
         terrain_kind = "featureless"
-    cfg_dict = {f.name: getattr(case.cfg, f.name)
-                for f in case.cfg.__dataclass_fields__.values()}
+    cfg_dict = {
+        f.name: getattr(case.cfg, f.name)
+        for f in case.cfg.__dataclass_fields__.values()
+    }
     jobs = [(case.name, s, cfg_dict, terrain_kind) for s in seeds]
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     with Pool(processes=pool_workers(n_workers)) as pool:
@@ -198,9 +225,11 @@ def run_stress_case(case: StressCase, seeds: list[int] | None = None,
     return StressResult(case=case.name, mc=mc, gates=gates, required=case.required)
 
 
-def run_stress_harness(cases: list[StressCase] | None = None,
-                       seeds: list[int] | None = None,
-                       n_workers: int = 31) -> list[StressResult]:
+def run_stress_harness(
+    cases: list[StressCase] | None = None,
+    seeds: list[int] | None = None,
+    n_workers: int = 31,
+) -> list[StressResult]:
     cases = cases or default_stress_cases()
     return [run_stress_case(c, seeds=seeds, n_workers=n_workers) for c in cases]
 

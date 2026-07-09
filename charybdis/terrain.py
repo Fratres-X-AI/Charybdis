@@ -3,6 +3,7 @@
 Represents the stored terrain map the interceptor carries on-board and the
 "real" ground it flies over. Elevation is a function of local ENU (x, y).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,8 +15,8 @@ from .config import SimConfig
 
 @dataclass
 class Terrain:
-    grid: np.ndarray          # elevation [ny, nx] metres
-    res: float                # grid spacing [m]
+    grid: np.ndarray  # elevation [ny, nx] metres
+    res: float  # grid spacing [m]
     origin: tuple[float, float] = (0.0, 0.0)
 
     @property
@@ -37,9 +38,11 @@ class Terrain:
             fx = rng.uniform(0.4, 1.6) * k / cfg.terrain_size
             fy = rng.uniform(0.4, 1.6) * k / cfg.terrain_size
             ph = rng.uniform(0.0, 2 * np.pi, 2)
-            amp = cfg.terrain_relief / (k ** 1.35)
-            z += amp * np.sin(2 * np.pi * fx * gx + ph[0]) * np.cos(
-                2 * np.pi * fy * gy + ph[1]
+            amp = cfg.terrain_relief / (k**1.35)
+            z += (
+                amp
+                * np.sin(2 * np.pi * fx * gx + ph[0])
+                * np.cos(2 * np.pi * fy * gy + ph[1])
             )
 
         # Scattered peaks / basins for local distinctiveness.
@@ -47,7 +50,7 @@ class Terrain:
             cx, cy = rng.uniform(0, cfg.terrain_size, 2)
             sig = rng.uniform(600.0, 2600.0)
             amp = rng.uniform(-1.0, 1.0) * cfg.terrain_relief * 0.7
-            z += amp * np.exp(-(((gx - cx) ** 2 + (gy - cy) ** 2) / (2 * sig ** 2)))
+            z += amp * np.exp(-(((gx - cx) ** 2 + (gy - cy) ** 2) / (2 * sig**2)))
 
         z -= z.min()  # elevations >= 0
         return cls(grid=z.astype(np.float64), res=cfg.terrain_res)

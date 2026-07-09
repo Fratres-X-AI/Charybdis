@@ -2,6 +2,7 @@
 
 Torch and ROS2 tests are gated so default CI stays CPU-only and green.
 """
+
 import subprocess
 import sys
 from pathlib import Path
@@ -70,7 +71,12 @@ def test_ros2_nav_stub_runs_without_rclpy():
     node = ROOT / "ros2_ws" / "src" / "charybdis_ros" / "charybdis_ros" / "nav_node.py"
     out = subprocess.run(
         [sys.executable, str(node), "--ticks", "8"],
-        cwd=str(ROOT), capture_output=True, text=True, timeout=30, check=False)
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
     assert out.returncode == 0
     assert "CHARYBDIS_ROS_STUB" in out.stdout
 
@@ -78,9 +84,17 @@ def test_ros2_nav_stub_runs_without_rclpy():
 def test_nn_tcm_beats_large_offset():
     pytest.importorskip("torch")
     from console import charybdis_nn as nn
+
     tmp = ROOT / "models" / "tcm_cnn.pt"
     if not tmp.is_file():
-        nn.train(model_path=tmp, n_samples=8000, epochs=6, batch=256, device="cpu", num_workers=4)
+        nn.train(
+            model_path=tmp,
+            n_samples=8000,
+            epochs=6,
+            batch=256,
+            device="cpu",
+            num_workers=4,
+        )
     nn.load_model(tmp, device="cpu")
     true = core.ANOMALIES["SEAMOUNT CHARLIE"] + np.array([0.0, 0.0])
     est = true + np.array([5.0, -4.0])
@@ -92,6 +106,7 @@ def test_nn_tcm_beats_large_offset():
 def test_nn_integrated_via_core_flag():
     pytest.importorskip("torch")
     from console import charybdis_nn as nn
+
     tmp = ROOT / "models" / "_test_tcm2.pt"
     if not tmp.is_file():
         nn.train(model_path=tmp, n_samples=2000, epochs=2, batch=128)

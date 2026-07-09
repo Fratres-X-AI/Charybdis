@@ -25,6 +25,7 @@ covariance. Because the update weights the position correction by the grid
 covariance, the weakly-observable along-track direction is naturally trusted
 less, which keeps velocity/bias estimation stable.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -46,9 +47,9 @@ class TerrainPointMassFilter:
         self.x[0:2] = pos0
         self.x[2:4] = vel0
         p = np.zeros(self.N)
-        p[0:2] = cfg.init_pos_std ** 2
-        p[2:4] = cfg.init_vel_std ** 2
-        p[4:6] = cfg.accel_bias0 ** 2
+        p[0:2] = cfg.init_pos_std**2
+        p[2:4] = cfg.init_vel_std**2
+        p[4:6] = cfg.accel_bias0**2
         self.P = np.diag(p)
 
         # Grid of position offsets [m] around the backbone position estimate.
@@ -56,7 +57,7 @@ class TerrainPointMassFilter:
         n = int(round(half / self.res))
         self.axis = np.arange(-n, n + 1) * self.res
         self.G = self.axis.size
-        self.OX, self.OY = np.meshgrid(self.axis, self.axis)   # (G,G); OX->cols
+        self.OX, self.OY = np.meshgrid(self.axis, self.axis)  # (G,G); OX->cols
         self.p = np.full((self.G, self.G), 1.0 / (self.G * self.G))
 
         # Terrain-match noise inflated over raw sensor noise to account for DEM
@@ -64,8 +65,7 @@ class TerrainPointMassFilter:
         # consistent - a valid posterior stays no wider than the prior), plus an
         # explicit stored-map vertical error term (the bathymetry is not ground
         # truth).
-        self._R = (cfg.pmf_meas_infl * est.sensor_elev_var(cfg)
-                   + cfg.map_sigma ** 2)
+        self._R = cfg.pmf_meas_infl * est.sensor_elev_var(cfg) + cfg.map_sigma**2
         self._cov_floor = (0.35 * self.res) ** 2
 
     # ---- prediction (IMU driven, same model as the EKF) ---------------- #
@@ -81,12 +81,12 @@ class TerrainPointMassFilter:
         F[0:2, 4:6] = -0.5 * dt * dt * np.eye(2)
         F[2:4, 4:6] = -dt * np.eye(2)
 
-        q_a = cfg.accel_noise ** 2 * cfg.pmf_process_infl * self._q_scale()
-        q_b = cfg.accel_bias_rw ** 2
+        q_a = cfg.accel_noise**2 * cfg.pmf_process_infl * self._q_scale()
+        q_b = cfg.accel_bias_rw**2
         Q = np.zeros((self.N, self.N))
         for i in range(2):
-            Q[i, i] = q_a * dt ** 3 / 3.0
-            Q[i, i + 2] = Q[i + 2, i] = q_a * dt ** 2 / 2.0
+            Q[i, i] = q_a * dt**3 / 3.0
+            Q[i, i + 2] = Q[i + 2, i] = q_a * dt**2 / 2.0
             Q[i + 2, i + 2] = q_a * dt
             Q[i + 4, i + 4] = q_b * dt
         self.P = F @ self.P @ F.T + Q
@@ -100,7 +100,7 @@ class TerrainPointMassFilter:
             return 1.0
         grad = self.terrain.gradient(self.x[0], self.x[1])
         info = float(grad @ grad)
-        ref = cfg.adapt_q_terrain_ref ** 2
+        ref = cfg.adapt_q_terrain_ref**2
         factor = 1.0 + (cfg.adapt_q_terrain_max - 1.0) / (1.0 + info / max(ref, 1e-9))
         return float(np.clip(factor, 1.0, cfg.adapt_q_terrain_max))
 
@@ -151,8 +151,8 @@ class TerrainPointMassFilter:
         """Replace the position marginal with (g_pos, g_cov); propagate to the
         velocity/bias states through the prior cross-covariance (marginalized
         Rao-Blackwellised update / law of total covariance)."""
-        Ppl = self.P[0:2, 2:6]                 # 2x4 position<->linear cross-cov
-        J = Pinv @ Ppl                         # 2x4
+        Ppl = self.P[0:2, 2:6]  # 2x4 position<->linear cross-cov
+        J = Pinv @ Ppl  # 2x4
         dpos = g_pos - self.x[0:2]
 
         self.x[2:6] = self.x[2:6] + J.T @ dpos
@@ -169,8 +169,9 @@ class TerrainPointMassFilter:
         self.P = 0.5 * (self.P + self.P.T)
 
     # ---- TERCOM position fix (linear Gaussian update) ------------------ #
-    def update_position(self, pos_fix: np.ndarray, cov: np.ndarray,
-                        t: float | None = None) -> None:
+    def update_position(
+        self, pos_fix: np.ndarray, cov: np.ndarray, t: float | None = None
+    ) -> None:
         H = np.zeros((2, self.N))
         H[0, 0] = H[1, 1] = 1.0
         R = np.asarray(cov, float)
