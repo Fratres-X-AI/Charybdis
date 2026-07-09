@@ -110,6 +110,91 @@ def test_depth_measurement_is_gated_and_fused():
     assert fusion.rejections[-1][1] == "depth"
 
 
+def test_velocity_dropout_grows_horizontal_uncertainty():
+    fusion = HybridSensorFusion(
+        [0.0, 0.0],
+        [1.0, 0.0],
+        HybridFusionConfig(init_pos_std=2.0, init_vel_std=0.2),
+    )
+    for _ in range(3):
+        fusion.step(SensorPacket(
+            imu=ImuMeasurement(np.zeros(2), dt=1.0),
+            depth=DepthMeasurement(8.0),
+            velocity=VelocityMeasurement(np.array([1.0, 0.0]),
+                                         cov=np.diag([0.02, 0.02]) ** 2),
+        ))
+    aided_trace = float(np.trace(fusion.state().pos_cov))
+
+    for _ in range(10):
+        fusion.step(SensorPacket(
+            imu=ImuMeasurement(np.zeros(2), dt=1.0),
+            depth=DepthMeasurement(8.0),
+        ))
+    coasted = fusion.state()
+
+    assert coasted.mode == NavMode.SUBMERGED
+    assert float(np.trace(coasted.pos_cov)) > aided_trace
+    assert coasted.pos[0] > 10.0
+
+
+def test_depth_covariance_grows_without_depth_aiding():
+    fusion = HybridSensorFusion([0.0, 0.0], depth0=5.0)
+    start_std = fusion.state().depth_std
+    for _ in range(12):
+        fusion.step(SensorPacket(imu=ImuMeasurement(np.zeros(2), dt=1.0)))
+    assert fusion.state().depth_std > start_std
+
+
+def test_gps_reacquisition_after_submerged_leg_reduces_error():
+    fusion = HybridSensorFusion([0.0, 0.0], [0.0, 0.0])
+    fusion.step(SensorPacket(
+        imu=ImuMeasurement(np.zeros(2), dt=1.0),
+        depth=DepthMeasurement(0.2),
+        gps=GpsMeasurement(np.array([0.0, 0.0]), np.array([0.0, 0.0])),
+    ))
+
+    true_pos = np.zeros(2)
+    for _ in range(6):
+        true_pos += np.array([2.0, 0.0])
+        fusion.step(SensorPacket(
+            imu=ImuMeasurement(np.zeros(2), dt=1.0),
+            depth=DepthMeasurement(8.0),
+        ))
+    before = np.linalg.norm(fusion.state().pos - true_pos)
+
+    state = fusion.step(SensorPacket(
+        imu=ImuMeasurement(np.zeros(2), dt=1.0),
+        depth=DepthMeasurement(0.2),
+        gps=GpsMeasurement(true_pos, np.array([2.0, 0.0]),
+                           pos_cov=np.diag([2.0, 2.0]) ** 2),
+    ))
+
+    assert state.mode == NavMode.SURFACE
+    assert state.last_gps_t == state.t
+    assert np.linalg.norm(state.pos - true_pos) < before
+
+
+def test_bathymetry_outlier_rejected_while_submerged():
+    fusion = HybridSensorFusion([0.0, 0.0], [0.0, 0.0], depth0=8.0)
+    fusion.step(SensorPacket(
+        imu=ImuMeasurement(np.zeros(2), dt=1.0),
+        depth=DepthMeasurement(8.0),
+    ))
+    before = fusion.state().pos.copy()
+
+    fusion.step(SensorPacket(
+        imu=ImuMeasurement(np.zeros(2), dt=1.0),
+        depth=DepthMeasurement(8.0),
+        bathymetry=BathymetryMeasurement(
+            pos_fix=np.array([500.0, 500.0]),
+            pos_cov=np.diag([1.0, 1.0]) ** 2,
+        ),
+    ))
+
+    assert np.linalg.norm(fusion.state().pos - before) < 1.0
+    assert fusion.rejections[-1][1] == "bathymetry"
+
+
 def test_patrol_executor_handles_surface_and_submerged_segments():
     route = PatrolRoute((
         Waypoint([0.0, 0.0], mode=NavMode.SURFACE, depth_m=0.0),
@@ -150,3 +235,37 @@ def test_patrol_arrival_requires_heading_when_requested():
     good_heading = HybridNavState(np.array([10.0, 0.0]), np.array([1.0, 0.0]),
                                   np.eye(8), NavMode.SURFACE, t=1.0)
     assert patrol.update(good_heading).waypoint_index == 2
+
+
+def test_loop_patrol_wraps_after_final_waypoint():
+    route = PatrolRoute((
+        Waypoint([0.0, 0.0], radius_m=1.0),
+        Waypoint([5.0, 0.0], radius_m=1.0),
+    ), loop=True)
+    patrol = PatrolExecutor(route)
+
+    cmd = patrol.update(HybridNavState(np.array([0.0, 0.0]), np.array([1.0, 0.0]),
+                                       np.eye(8), NavMode.SURFACE, t=0.0))
+    assert cmd.waypoint_index == 1
+
+    cmd = patrol.update(HybridNavState(np.array([5.0, 0.0]), np.array([1.0, 0.0]),
+                                       np.eye(8), NavMode.SURFACE, t=1.0))
+    assert cmd.waypoint_index == 0
+    assert not cmd.route_complete
+
+
+def test_patrol_turn_rate_limits_desired_heading():
+    route = PatrolRoute((
+        Waypoint([0.0, 0.0], radius_m=1.0),
+        Waypoint([10.0, 0.0], radius_m=0.2, lookahead_m=1.0),
+        Waypoint([10.0, 10.0], radius_m=1.0),
+    ))
+    patrol = PatrolExecutor(route, max_turn_rate_radps=0.25)
+
+    first = patrol.update(HybridNavState(np.array([0.0, 0.0]), np.array([1.0, 0.0]),
+                                         np.eye(8), NavMode.SURFACE, t=0.0))
+    assert abs(first.desired_heading_rad) < 1e-9
+
+    second = patrol.update(HybridNavState(np.array([9.5, 0.0]), np.array([1.0, 0.0]),
+                                          np.eye(8), NavMode.SURFACE, t=1.0))
+    assert 0.0 < second.desired_heading_rad <= 0.25 + 1e-9

@@ -99,6 +99,8 @@ For harbor-patrol UUV software (no hardware coupling):
 - **`modes.py`** — surface vs submerged with depth hysteresis
 - **`fusion.py`** — conservative 8D EKF-style fusion with chi-square gating
 - **`patrol.py`** — waypoint routes with heading-aware LOS guidance
+- **`hybrid_simulation.py`** — small harbor mission smoke sim:
+  surface GPS → dive → submerged patrol → resurface GPS
 
 GPS is accepted in surface mode; bathymetry primarily in submerged mode.
 

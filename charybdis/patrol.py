@@ -156,9 +156,11 @@ class PatrolExecutor:
 
     def _heading_ok(self, state: HybridNavState, wp: Waypoint,
                     desired_heading: float) -> bool:
-        target = desired_heading if wp.heading_rad is None else float(wp.heading_rad)
+        if wp.heading_rad is None:
+            return True
+        target = float(wp.heading_rad)
         if np.linalg.norm(state.vel) <= self.low_speed_heading_mps:
-            return wp.heading_rad is None
+            return False
         current = float(np.arctan2(state.vel[1], state.vel[0]))
         return abs(_wrap_pi(current - target)) <= wp.heading_tolerance_rad
 

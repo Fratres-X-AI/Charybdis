@@ -32,6 +32,8 @@ from .sensors import (
 )
 from .fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
 from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
+from .hybrid_simulation import (HybridHarborConfig, HybridHarborResult,
+                                run_hybrid_harbor_simulation)
 
 # --- GDI navigation ----------------------------------------------------------
 from .imu import IMU, ImuSample
@@ -121,6 +123,9 @@ __all__ = [
     "PatrolRoute",
     "PatrolCommand",
     "PatrolExecutor",
+    "HybridHarborConfig",
+    "HybridHarborResult",
+    "run_hybrid_harbor_simulation",
     # simulation & evaluation
     "run_simulation",
     "SimResult",
