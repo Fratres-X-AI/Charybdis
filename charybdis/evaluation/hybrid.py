@@ -29,6 +29,7 @@ class HybridMonteCarloResult:
     route_complete: NDArray[np.bool_]
     filter_healthy: NDArray[np.bool_]
     fusion_rejections: NDArray[np.int64]
+    max_gps_reacquisition_jump_m: FloatArray
 
     @property
     def cep50_m(self) -> float:
@@ -44,6 +45,11 @@ class HybridMonteCarloResult:
     def depth_cep95_m(self) -> float:
         """95th-percentile absolute final depth error."""
         return float(np.percentile(self.final_depth_error_m, 95.0))
+
+    @property
+    def gps_reacquisition_jump_cep95_m(self) -> float:
+        """95th-percentile per-run maximum GPS reacquisition jump."""
+        return float(np.percentile(self.max_gps_reacquisition_jump_m, 95.0))
 
     @property
     def route_completion_rate(self) -> float:
@@ -75,6 +81,10 @@ class HybridMonteCarloResult:
             "depth_anees_mean": float(np.mean(self.depth_anees)),
             "divergence_rate_50m": self.divergence_rate(),
             "fusion_rejections_total": int(np.sum(self.fusion_rejections)),
+            "gps_reacquisition_jump_cep95_m": self.gps_reacquisition_jump_cep95_m,
+            "max_gps_reacquisition_jump_m": [
+                float(value) for value in self.max_gps_reacquisition_jump_m
+            ],
         }
 
 
@@ -132,6 +142,10 @@ def run_hybrid_montecarlo(
         fusion_rejections=np.asarray(
             [summary["fusion_rejections"] for summary in summaries],
             dtype=np.int64,
+        ),
+        max_gps_reacquisition_jump_m=np.asarray(
+            [summary["max_gps_reacquisition_jump_m"] for summary in summaries],
+            dtype=np.float64,
         ),
     )
 

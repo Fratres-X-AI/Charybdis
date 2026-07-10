@@ -202,11 +202,12 @@ The engineering tier always returns exit status zero after writing assessments,
 even when a gate reports `FAIL`. The release tier returns status 2 when any
 selected scenario fails, which makes the pod workflow stop.
 
-`ValidationGates` also declares
-`max_gps_reacquisition_jump_m=12.0`. The current Monte Carlo result does not
-contain a reacquisition-jump metric, and `assess_validation()` does not evaluate
-that field. It is serialized with the gates but is not part of the current
-matrix pass/fail decision.
+`ValidationGates` also declares `max_gps_reacquisition_jump_m=12.0`. Each run
+records the largest horizontal estimate jump on a GPS reacquisition step: a
+cycle where GPS is present after at least one prior cycle without GPS and after
+the mission's initial GPS acquisition. The release tier applies a deterministic
+bootstrap upper bound to the 95th percentile of those per-run maxima and fails
+when the bound exceeds 12.0 m.
 
 Very small smoke samples are not substitutes for either tier. In particular,
 wide Wilson intervals can make the rate gates fail even when every smoke case
@@ -224,6 +225,7 @@ Each scenario artifact reports:
 - `position_anees_mean` and `depth_anees_mean`;
 - `divergence_rate_50m`;
 - `fusion_rejections_total`;
+- `gps_reacquisition_jump_cep95_m` and per-run `max_gps_reacquisition_jump_m`;
 - wall-clock `runtime_s`;
 - a `peak_rss_mib` resource-usage estimate when supported;
 - declared gates; and
@@ -388,7 +390,6 @@ settings reduce, but do not prove the absence of all runtime oversubscription.
   gates. There is no independent holdout set or external reference estimator.
 - The interval checks do not correct for multiple comparisons across scenarios
   and metrics.
-- The declared GPS-reacquisition threshold is not currently evaluated.
 - Aggregate artifacts omit per-step trajectories and most per-run values,
   limiting retrospective analysis.
 - Direct real-bathymetry runs do not reject a dirty worktree; the official

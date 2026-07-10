@@ -180,6 +180,7 @@ class HybridHarborResult:
     route_complete: bool
     final_state: HybridNavState
     bathymetry_map: BathymetryMap
+    max_gps_reacquisition_jump_m: float = 0.0
 
     def summary(self) -> dict[str, int | float | bool | str | None]:
         """Return a JSON-compatible deterministic summary."""
@@ -207,6 +208,7 @@ class HybridHarborResult:
             "used_submerged": any(mode == NavMode.SUBMERGED for mode in self.modes),
             "last_gps_t": self.final_state.last_gps_t,
             "last_bathy_t": self.final_state.last_bathy_t,
+            "max_gps_reacquisition_jump_m": float(self.max_gps_reacquisition_jump_m),
         }
 
 
@@ -268,6 +270,9 @@ def run_hybrid_harbor_simulation(
     position_nees: list[float] = []
     depth_nees: list[float] = []
     match_statuses: list[MatchStatus | None] = []
+    gps_reacquisition_jumps: list[float] = []
+    had_gps_prev = False
+    had_gps_ever = False
 
     for step in range(cfg.max_steps):
         truth_pos, truth_vel, truth_depth = _propagate_truth(
@@ -292,9 +297,18 @@ def run_hybrid_harbor_simulation(
             cfg,
             rng,
         )
+        pos_before = state.pos.copy()
+        gps_now = packet.gps is not None
         cycle = navigator.step(packet)
         state = cycle.state
         command = cycle.command
+        if gps_now and not had_gps_prev and had_gps_ever:
+            gps_reacquisition_jumps.append(
+                float(np.linalg.norm(state.pos - pos_before))
+            )
+        if gps_now:
+            had_gps_ever = True
+        had_gps_prev = gps_now
 
         error = state.pos - truth_pos
         truth_pos_history.append(truth_pos.copy())
@@ -314,6 +328,7 @@ def run_hybrid_harbor_simulation(
     est_pos_array = np.asarray(est_pos_history)
     truth_depth_array = np.asarray(truth_depth_history)
     est_depth_array = np.asarray(est_depth_history)
+    max_gps_jump = float(max(gps_reacquisition_jumps) if gps_reacquisition_jumps else 0.0)
     return HybridHarborResult(
         truth_pos=truth_pos_array,
         est_pos=est_pos_array,
@@ -329,6 +344,7 @@ def run_hybrid_harbor_simulation(
         route_complete=command.route_complete,
         final_state=state,
         bathymetry_map=bathymetry_map,
+        max_gps_reacquisition_jump_m=max_gps_jump,
     )
 
 

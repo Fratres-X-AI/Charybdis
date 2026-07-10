@@ -58,9 +58,31 @@ def test_release_assessment_passes_good_sample() -> None:
         route_complete=np.ones(runs, dtype=np.bool_),
         filter_healthy=np.ones(runs, dtype=np.bool_),
         fusion_rejections=np.zeros(runs, dtype=np.int64),
+        max_gps_reacquisition_jump_m=np.zeros(runs),
     )
 
     assessment = assess_validation(result, validation_gates("harbor_nominal"))
 
     assert assessment.passed
     assert all(check["passed"] for check in assessment.checks.values())
+
+
+def test_release_assessment_fails_large_gps_reacquisition_jump() -> None:
+    runs = 64
+    result = HybridMonteCarloResult(
+        seeds=tuple(range(runs)),
+        final_error_m=np.ones(runs),
+        max_error_m=np.ones(runs) * 2.0,
+        final_depth_error_m=np.ones(runs) * 0.1,
+        position_anees=np.ones(runs),
+        depth_anees=np.ones(runs),
+        route_complete=np.ones(runs, dtype=np.bool_),
+        filter_healthy=np.ones(runs, dtype=np.bool_),
+        fusion_rejections=np.zeros(runs, dtype=np.int64),
+        max_gps_reacquisition_jump_m=np.full(runs, 20.0),
+    )
+
+    assessment = assess_validation(result, validation_gates("harbor_nominal"))
+
+    assert not assessment.passed
+    assert assessment.checks["gps_reacquisition_jump_upper_m"]["passed"] is False

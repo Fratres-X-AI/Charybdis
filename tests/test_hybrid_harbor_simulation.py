@@ -16,6 +16,8 @@ def test_hybrid_harbor_simulation_runs_surface_submerged_surface():
     assert res.modes[0] == NavMode.SURFACE
     assert res.modes[-1] == NavMode.SURFACE
     assert NavMode.SUBMERGED in res.modes
+    assert s["max_gps_reacquisition_jump_m"] > 0.0
+    assert s["max_gps_reacquisition_jump_m"] < 12.0
 
 
 def test_hybrid_harbor_simulation_is_deterministic_for_seed():

@@ -104,6 +104,11 @@ def assess_validation(
         95.0,
         seed=20_260_710,
     )
+    gps_jump95 = bootstrap_percentile_interval(
+        result.max_gps_reacquisition_jump_m,
+        95.0,
+        seed=20_260_711,
+    )
     checks = {
         "route_completion_lower": _minimum_check(
             completion[0],
@@ -129,6 +134,11 @@ def assess_validation(
             depth95[1],
             gates.max_depth_cep95_m,
             interval=depth95,
+        ),
+        "gps_reacquisition_jump_upper_m": _maximum_check(
+            gps_jump95[1],
+            gates.max_gps_reacquisition_jump_m,
+            interval=gps_jump95,
         ),
     }
     return ValidationAssessment(

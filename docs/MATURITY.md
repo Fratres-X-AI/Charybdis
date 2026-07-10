@@ -110,9 +110,9 @@ Wilson or deterministic bootstrap interval endpoints, records full scenario
 configuration and map/source hashes, characterizes the matcher on a projected
 GEBCO tile, captures dependencies, and inventories completed artifacts.
 
-The release tier is blocking for the checks that are implemented. The declared
-GPS-reacquisition-jump threshold is not yet computed or assessed. The GEBCO
-phase uses a real map but synthetic positions and observations.
+The release tier is blocking for all declared synthetic gates, including the
+GPS-reacquisition-jump bound. The GEBCO phase uses a real map but synthetic
+positions and observations.
 
 This evidence does not provide hardware-in-the-loop results, field or sea-trial
 data, an independent implementation, operational acceptance, or certification.

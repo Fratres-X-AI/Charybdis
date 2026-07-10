@@ -29,6 +29,7 @@ def test_hybrid_harbor_golden_summary():
         "last_bathy_t": 73.0,
         "last_gps_t": 91.0,
         "max_error_m": 1.23010359,
+        "max_gps_reacquisition_jump_m": 1.62916481,
         "mean_error_m": 0.84763305,
         "position_anees": 2.47216607,
         "route_complete": True,

@@ -103,6 +103,7 @@ def _write_report(
                 f"- Route completion: `{result['route_completion_rate']:.3%}`",
                 f"- Healthy final state: `{result['healthy_rate']:.3%}`",
                 f"- Divergence (>50 m): `{result['divergence_rate_50m']:.3%}`",
+                f"- GPS reacquisition jump CEP95: `{result['gps_reacquisition_jump_cep95_m']:.3f} m`",
                 f"- Runtime: `{result['runtime_s']:.3f} s`",
                 "",
             ]
