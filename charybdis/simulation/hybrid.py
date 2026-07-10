@@ -328,7 +328,9 @@ def run_hybrid_harbor_simulation(
     est_pos_array = np.asarray(est_pos_history)
     truth_depth_array = np.asarray(truth_depth_history)
     est_depth_array = np.asarray(est_depth_history)
-    max_gps_jump = float(max(gps_reacquisition_jumps) if gps_reacquisition_jumps else 0.0)
+    max_gps_jump = float(
+        max(gps_reacquisition_jumps) if gps_reacquisition_jumps else 0.0
+    )
     return HybridHarborResult(
         truth_pos=truth_pos_array,
         est_pos=est_pos_array,
