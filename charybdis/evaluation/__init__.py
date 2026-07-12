@@ -8,6 +8,16 @@ from .confidence import (
     bootstrap_percentile_interval,
     wilson_interval,
 )
+from .deep import (
+    DEEP_VALIDATION_SCENARIOS,
+    assess_deep_validation,
+    run_hybrid_deep_montecarlo,
+)
+from .deep_scenarios import (
+    DeepValidationGates,
+    build_deep_validation_scenario,
+    deep_validation_gates,
+)
 from .evaluate import FILTERS, MonteCarloResult, run_montecarlo
 from .hybrid import HybridMonteCarloResult, run_hybrid_montecarlo
 from .scenarios import (
@@ -43,6 +53,12 @@ __all__ = [
     "run_montecarlo",
     "HybridMonteCarloResult",
     "run_hybrid_montecarlo",
+    "DEEP_VALIDATION_SCENARIOS",
+    "DeepValidationGates",
+    "assess_deep_validation",
+    "build_deep_validation_scenario",
+    "deep_validation_gates",
+    "run_hybrid_deep_montecarlo",
     "VALIDATION_SCENARIOS",
     "ValidationGates",
     "build_validation_scenario",
