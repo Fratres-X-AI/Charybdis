@@ -6,7 +6,17 @@ may change before the next major release.
 
 ## Unreleased
 
+### Validation
+
+- Enforced GPS reacquisition jump as a blocking release gate with per-run metrics
+  and bootstrap assessment in Phase 2 matrices.
+- Pod sprint scripts for private-repo sync, 45s polling, and artifact fetch.
+
 ### Documentation
+
+- Added repository hero image and validation snapshot to the README.
+
+### Documentation (earlier)
 
 - Defined the hybrid-only root API and explicit legacy/experimental boundaries.
 - Documented the wheel exclusion for the paused console.

@@ -1,15 +1,34 @@
+<p align="center">
+  <img src="docs/assets/charybdis-hero.png" alt="Charybdis hybrid UUV navigation" width="920">
+</p>
+
 # Charybdis
 
-Charybdis is a hybrid-first navigation and patrol research package for
-surface/submerged UUV simulation. It provides hardware-neutral sensor
-contracts, an 8-state fusion filter, terrain-profile matching, navigation
-health diagnostics, and waypoint guidance.
+Hybrid-first navigation and patrol research for surface/submerged UUVs.
+Hardware-neutral sensor contracts, conservative 8-state fusion, bathymetric
+terrain aiding, navigation-health diagnostics, and waypoint guidance — with
+reproducible validation gates and an explicit production integration boundary.
 
-The repository also retains an explicit legacy interceptor-navigation stack
-and opt-in experimental research. Neither is imported by the package root.
+The repository also retains a maintained legacy interceptor stack and opt-in
+experimental research. Neither is imported by the package root.
 
 Charybdis is research and simulation software. It is not certified vehicle
 software, a safety controller, or evidence of real-world mission validation.
+
+## Validation snapshot
+
+Latest pod sprint at `10869ea` (RTX 4090, 31 workers):
+
+| Tier | Result |
+|------|--------|
+| Phase 1 pod acceptance | PASSED (ruff, mypy, arch, 112 tests, wheel) |
+| Engineering matrix | 7/7 PASS @ 64 seeds/scenario |
+| Release matrix | 7/7 PASS @ 256 seeds/scenario (incl. GPS reacquisition gate) |
+| Real-bathymetry (GEBCO tile) | PASS engineering + release |
+| Legacy stress harness | 5/5 required scenarios |
+
+Artifacts: `artifacts/validation/20260712T175513Z-10869ea` — see
+[`docs/VALIDATION.md`](docs/VALIDATION.md) for procedures and limitations.
 
 ## Install
 
