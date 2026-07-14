@@ -57,8 +57,7 @@ def _jsonify(value: Any) -> Any:
     return value
 
 
-def _build_measurement(name: str, data: dict[str, Any]) -> Any:
-    cls = _MEASUREMENT_TYPES[name]
+def _build_measurement(cls: type[Any], data: dict[str, Any]) -> Any:
     kwargs: dict[str, Any] = {}
     for field in fields(cls):
         raw = data[field.name]
@@ -79,6 +78,15 @@ def _build_measurement(name: str, data: dict[str, Any]) -> Any:
     return cls(**kwargs)
 
 
+_PACKET_FIELD_TYPES: dict[str, type[Any]] = {
+    "imu": ImuMeasurement,
+    "gps": GpsMeasurement,
+    "depth": DepthMeasurement,
+    "velocity": VelocityMeasurement,
+    "bathymetry": BathymetryMeasurement,
+}
+
+
 def packet_to_dict(packet: SensorPacket) -> dict[str, Any]:
     """Return a JSON-compatible packet representation."""
     return _jsonify(packet)
@@ -92,8 +100,8 @@ def packet_from_dict(data: dict[str, Any]) -> SensorPacket:
             kwargs[key] = None
         elif key == "mode_hint":
             kwargs[key] = NavMode(raw)
-        elif key in _MEASUREMENT_TYPES:
-            kwargs[key] = _build_measurement(key, raw)
+        elif key in _PACKET_FIELD_TYPES:
+            kwargs[key] = _build_measurement(_PACKET_FIELD_TYPES[key], raw)
         else:
             kwargs[key] = raw
     return SensorPacket(**kwargs)
