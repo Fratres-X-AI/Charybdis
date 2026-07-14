@@ -233,7 +233,16 @@ class ReplayManifest:
         self.max_steps = max_steps
 
     def to_dict(self) -> dict[str, Any]:
-        return _jsonify(self)
+        return {
+            "schema_version": self.schema_version,
+            "charybdis_version": self.charybdis_version,
+            "harbor_config": self.harbor_config,
+            "pos0": list(self.pos0),
+            "vel0": list(self.vel0),
+            "depth0": self.depth0,
+            "patrol_max_turn_rate_radps": self.patrol_max_turn_rate_radps,
+            "max_steps": self.max_steps,
+        }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ReplayManifest:
