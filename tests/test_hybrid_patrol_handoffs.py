@@ -80,9 +80,7 @@ def test_intermediate_surface_wp_allows_depth_mismatch():
     patrol = PatrolExecutor(route)
     patrol.set_index(1)
 
-    cmd = patrol.update(
-        _state([50.0, 0.0], depth_m=6.0, mode=NavMode.SURFACE, t=1.0)
-    )
+    cmd = patrol.update(_state([50.0, 0.0], depth_m=6.0, mode=NavMode.SURFACE, t=1.0))
     assert cmd.waypoint_index == 2
 
 
