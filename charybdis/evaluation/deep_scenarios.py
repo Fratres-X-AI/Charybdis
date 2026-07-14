@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
+from ..hybrid.fusion import HybridFusionConfig
 from ..hybrid.modes import NavMode
 from ..hybrid.patrol import PatrolRoute
-from ..simulation.deep import HybridDeepConfig, _deep_wp
+from ..simulation.deep import HybridDeepConfig, _deep_wp, _default_fusion_config
 
 DEEP_VALIDATION_SCENARIOS = (
     "deep_nominal",
@@ -15,6 +16,7 @@ DEEP_VALIDATION_SCENARIOS = (
     "deep_dvl_dropout",
     "deep_sparse_bathymetry",
     "deep_steady_current",
+    "deep_long_blackout",
 )
 
 
@@ -67,6 +69,14 @@ def build_deep_validation_scenario(name: str) -> HybridDeepConfig:
             max_steps=2400,
             current_xy_mps=(0.12, -0.08),
         )
+    if name == "deep_long_blackout":
+        return HybridDeepConfig(
+            name=name,
+            max_steps=2800,
+            route=_long_blackout_route(),
+            gps_dropout_steps=(120, 2720),
+            fusion=_long_blackout_fusion_config(),
+        )
     choices = ", ".join(DEEP_VALIDATION_SCENARIOS)
     raise ValueError(
         f"unknown deep validation scenario {name!r}; choose from {choices}"
@@ -92,6 +102,13 @@ def deep_validation_gates(name: str) -> DeepValidationGates:
         return DeepValidationGates(max_cep95_m=55.0, max_depth_cep95_m=4.5)
     if name == "deep_sparse_bathymetry":
         return DeepValidationGates(max_cep95_m=60.0, max_depth_cep95_m=5.0)
+    if name == "deep_long_blackout":
+        return DeepValidationGates(
+            max_cep95_m=62.0,
+            max_depth_cep95_m=5.5,
+            min_route_completion_rate=0.85,
+            max_gps_reacquisition_jump_m=30.0,
+        )
     return DeepValidationGates(max_cep95_m=52.0, max_depth_cep95_m=4.5)
 
 
@@ -125,6 +142,27 @@ def _max_depth_route() -> PatrolRoute:
             ),
         )
     )
+
+
+def _long_blackout_route() -> PatrolRoute:
+    """Surface start, long submerged transit, terminal surface GPS recovery."""
+    return PatrolRoute(
+        (
+            _deep_wp([0.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.6, radius_m=10.0),
+            _deep_wp([120.0, 0.0], mode=NavMode.SUBMERGED, depth_m=180.0),
+            _deep_wp([520.0, 0.0], mode=NavMode.SUBMERGED, depth_m=350.0),
+            _deep_wp([900.0, 0.0], mode=NavMode.SUBMERGED, depth_m=420.0),
+            _deep_wp([980.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=18.0),
+            _deep_wp(
+                [860.0, 140.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=22.0
+            ),
+        )
+    )
+
+
+def _long_blackout_fusion_config() -> HybridFusionConfig:
+    base = _default_fusion_config()
+    return replace(base, aiding_timeout_s=900.0, max_recent_rejections=400)
 
 
 __all__ = [

@@ -20,6 +20,17 @@ from .deep_scenarios import (
 )
 from .evaluate import FILTERS, MonteCarloResult, run_montecarlo
 from .hybrid import HybridMonteCarloResult, run_hybrid_montecarlo
+from .packet_replay import (
+    ReplayLog,
+    ReplayManifest,
+    assert_replay_matches,
+    load_replay_log,
+    packet_from_dict,
+    packet_to_dict,
+    record_harbor_packets,
+    replay_packets,
+    save_replay_log,
+)
 from .scenarios import (
     VALIDATION_SCENARIOS,
     ValidationGates,
@@ -75,4 +86,13 @@ __all__ = [
     "ValidationManifest",
     "load_validation_seeds",
     "write_validation_artifact",
+    "ReplayLog",
+    "ReplayManifest",
+    "assert_replay_matches",
+    "load_replay_log",
+    "packet_from_dict",
+    "packet_to_dict",
+    "record_harbor_packets",
+    "replay_packets",
+    "save_replay_log",
 ]

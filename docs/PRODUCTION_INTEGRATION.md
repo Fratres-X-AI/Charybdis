@@ -77,3 +77,20 @@ acceptance and Phase 2 when fusion, matcher, scenario, or validation behavior
 changes. See `[docs/VALIDATION.md](VALIDATION.md)` for exact commands and
 limitations.
 
+## Deterministic log replay
+
+Third parties can verify navigation output without hardware using the evaluation
+replay harness:
+
+```python
+from charybdis.evaluation import record_harbor_packets, replay_packets, save_replay_log
+
+log = record_harbor_packets(max_steps=80)
+results = replay_packets(log)
+save_replay_log("mission_replay.json", log)
+```
+
+Feed your own recorded `SensorPacket` JSON through `packet_from_dict()` and
+`HybridNavigator.step()`. The manifest captures fusion config, route, and initial
+state so replay reproduces the same estimates bit-for-bit when logs are complete.
+

@@ -37,6 +37,8 @@ sensor packet policy, health handoff, and required external supervision.
 | Git SHA | `ad7fa3e` |
 | Harbor release | 7/7 PASS (CEP95 ~1.0–1.4 m) |
 | Deep release | 6/6 PASS (CEP95 ~1.1–1.3 m) |
+| Deep long blackout | `deep_long_blackout` scenario (43+ min GPS outage) |
+| Replay harness | `charybdis.evaluation.packet_replay` |
 | Promoted matcher | `models/tcm_so2.pt` (A100 pass 5, ~66 m after_mean hard eval) |
 | Bronze stamp | `20260714T153106Z-ad7fa3e` |
 | A100 stamp | `20260714T132210Z-ad7fa3e` |

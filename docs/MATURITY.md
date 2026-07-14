@@ -104,11 +104,15 @@ Fast CI currently provides:
 - package and hybrid coverage thresholds
 - wheel-content and clean-install smoke tests
 
-RunPod Phase 2 provides seven fixed-seed synthetic scenarios at 64-run
-engineering and 256-run release tiers. It applies internal release gates to 95%
-Wilson or deterministic bootstrap interval endpoints, records full scenario
-configuration and map/source hashes, characterizes the matcher on a projected
-GEBCO tile, captures dependencies, and inventories completed artifacts.
+RunPod Phase 2 provides seven fixed-seed synthetic harbor scenarios and seven
+deep-ocean scenarios at 64-run engineering and 256-run release tiers. It applies
+internal release gates to 95% Wilson or deterministic bootstrap interval
+endpoints, records full scenario configuration and map/source hashes,
+characterizes the matcher on a projected GEBCO tile, captures dependencies, and
+inventories completed artifacts.
+
+Deterministic packet-log replay is available under `charybdis.evaluation` for
+integrator verification without hardware.
 
 The release tier is blocking for all declared synthetic gates, including the
 GPS-reacquisition-jump bound. The GEBCO phase uses a real map but synthetic
