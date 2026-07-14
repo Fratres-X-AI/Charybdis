@@ -63,8 +63,8 @@ commands and CI ever differ.
 
 ## RunPod Phase 2
 
-Phase 2 is a Linux-only, confidence-bounded validation workflow. It runs two
-seven-scenario synthetic matrices, characterizes the terrain matcher on a
+Phase 2 is a Linux-only, confidence-bounded validation workflow. It runs harbor
+and deep seven-scenario synthetic matrices, characterizes the terrain matcher on a
 projected GEBCO tile, runs the retained legacy stress harness, captures
 dependency versions, and hashes the completed artifact set.
 
@@ -299,6 +299,12 @@ vehicle position, observed profiles, prior error, and sensor noise are
 synthetic. The generated metadata explicitly warns that the GEBCO data is not
 for navigation or safety-at-sea use.
 
+For integration-grade bathymetry claims, run the same script with
+`--require-integration-grade-map`. That option rejects tiles coarser than
+50 metres per cell before running matcher statistics. The default GEBCO subset is
+coarse characterization only and is expected to record
+`resolution_class="coarse_characterization"`.
+
 ## Legacy stress phase
 
 The wrapper also runs:
@@ -345,19 +351,21 @@ artifacts/validation/<UTC_STAMP>-<SHORT_SHA>/
   SHA256SUMS
 ```
 
-Each synthetic scenario manifest records the full Git SHA, ordered seeds,
-worker count, scenario, UTC creation time, package/Python/NumPy/platform
-versions, tier, dirty-worktree flag, seed-file path, synthetic-map SHA-256, and
-the fully serialized scenario configuration.
+Each synthetic scenario artifact carries top-level `schema_version="1"`.
+Each synthetic scenario manifest records the full Git SHA, ordered seeds, worker
+count, scenario, UTC creation time, package/Python/NumPy/platform versions,
+tier, dirty-worktree flag, seed-file path, synthetic-map SHA-256, and the fully
+serialized scenario configuration.
 
-`matrix_summary.json` records tier-level outcomes and artifact names;
-`REPORT.md` provides a concise readable summary. The root dependency freeze and
-`SHA256SUMS` cover the generated JSON, reports, real-bathymetry source and tile,
-legacy log, and dependency list.
+`matrix_summary.json` also carries top-level `schema_version="1"` and records
+tier-level outcomes and artifact names; `REPORT.md` provides a concise readable
+summary. The root dependency freeze and `SHA256SUMS` cover the generated JSON,
+reports, real-bathymetry source and tile, legacy log, and dependency list.
 
 The real-bathymetry result separately records Git SHA, tier, seeds, worker
-count, tile path and SHA-256, map shape, and map resolution. Source URL and
-download hash remain in the tile and its metadata sidecar.
+count, tile path and SHA-256, map shape, map resolution, resolution class, and
+whether integration-grade map resolution was required. Source URL and download
+hash remain in the tile and its metadata sidecar.
 
 Retain the entire artifact directory, source revision, pod or container image
 identity, and hardware details. The generated metadata does not identify the

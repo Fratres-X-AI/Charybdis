@@ -18,6 +18,7 @@ from typing import Any
 import numpy as np
 from charybdis.evaluation import (
     DEEP_VALIDATION_SCENARIOS,
+    VALIDATION_ARTIFACT_SCHEMA_VERSION,
     ValidationManifest,
     assess_deep_validation,
     build_deep_validation_scenario,
@@ -206,6 +207,7 @@ def main() -> int:
         payload["assessment"]["passed"] for payload in scenario_payloads.values()
     )
     summary = {
+        "schema_version": VALIDATION_ARTIFACT_SCHEMA_VERSION,
         "tier": args.tier,
         "envelope": "deep_1_1000m",
         "runs_per_scenario": runs,

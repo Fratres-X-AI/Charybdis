@@ -21,6 +21,7 @@ from .deep_scenarios import (
 from .evaluate import FILTERS, MonteCarloResult, run_montecarlo
 from .hybrid import HybridMonteCarloResult, run_hybrid_montecarlo
 from .packet_replay import (
+    REPLAY_SCHEMA_VERSION,
     ReplayLog,
     ReplayManifest,
     assert_replay_matches,
@@ -49,6 +50,7 @@ from .stress import (
     stress_report,
 )
 from .validation import (
+    VALIDATION_ARTIFACT_SCHEMA_VERSION,
     ValidationManifest,
     load_validation_seeds,
     write_validation_artifact,
@@ -86,6 +88,8 @@ __all__ = [
     "ValidationManifest",
     "load_validation_seeds",
     "write_validation_artifact",
+    "VALIDATION_ARTIFACT_SCHEMA_VERSION",
+    "REPLAY_SCHEMA_VERSION",
     "ReplayLog",
     "ReplayManifest",
     "assert_replay_matches",

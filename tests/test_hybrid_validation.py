@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pytest
 from charybdis.evaluation import (
+    VALIDATION_ARTIFACT_SCHEMA_VERSION,
     VALIDATION_SCENARIOS,
     HybridMonteCarloResult,
+    ValidationManifest,
     assess_validation,
     bootstrap_percentile_interval,
     build_validation_scenario,
     validation_gates,
     wilson_interval,
+    write_validation_artifact,
 )
 
 
@@ -86,3 +92,20 @@ def test_release_assessment_fails_large_gps_reacquisition_jump() -> None:
 
     assert not assessment.passed
     assert assessment.checks["gps_reacquisition_jump_upper_m"]["passed"] is False
+
+
+def test_validation_artifact_has_explicit_schema_version(tmp_path: Path) -> None:
+    target = tmp_path / "artifact.json"
+    manifest = ValidationManifest(
+        git_sha="abc123",
+        seeds=(1, 2, 3),
+        workers=1,
+        scenario="harbor_nominal",
+    )
+
+    write_validation_artifact(target, manifest=manifest, results={"passed": True})
+
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == VALIDATION_ARTIFACT_SCHEMA_VERSION
+    assert payload["manifest"]["scenario"] == "harbor_nominal"
+    assert payload["results"]["passed"] is True

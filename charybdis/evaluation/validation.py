@@ -16,6 +16,8 @@ import numpy as np
 
 from ..version import __version__
 
+VALIDATION_ARTIFACT_SCHEMA_VERSION = "1"
+
 
 @dataclass(frozen=True)
 class ValidationManifest:
@@ -84,6 +86,7 @@ def write_validation_artifact(
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     payload = {
+        "schema_version": VALIDATION_ARTIFACT_SCHEMA_VERSION,
         "manifest": manifest.to_dict(),
         "results": _json_value(results),
     }
@@ -109,6 +112,7 @@ def _json_value(value: Any) -> Any:
 
 
 __all__ = [
+    "VALIDATION_ARTIFACT_SCHEMA_VERSION",
     "ValidationManifest",
     "load_validation_seeds",
     "write_validation_artifact",

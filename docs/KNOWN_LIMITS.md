@@ -12,12 +12,13 @@ not operational deployment, certification, or safety assurance.
 - Actuator control, saturation handling, or safety interlocks
 - Cyber security, tamper evidence, or configuration management beyond git SHA
 - MIL-STD, DO-178, or regulatory certification claims
-- High-resolution bathymetry navigation guarantees (coarse GEBCO is characterization only)
+- Navigation-grade bathymetry guarantees. Coarse GEBCO is characterization only;
+  integration claims require `--require-integration-grade-map`.
 - Current estimation inside the core filter (truth may include current; filter does not)
 
 ## Synthetic validation scope
 
-- Seven harbor and six deep scenarios use modeled maps, dynamics, sensor errors,
+- Seven harbor and seven deep scenarios use modeled maps, dynamics, sensor errors,
   outages, and outliers.
 - GEBCO characterization uses a real grid with **synthetic** positions and matcher
   observations.
@@ -34,13 +35,16 @@ sensor packet policy, health handoff, and required external supervision.
 
 | Field | Value |
 |---|---|
-| Git SHA | `ad7fa3e` |
+| Git SHA | `164ea68` |
+| CI | PASS (`29357300247`) |
 | Harbor release | 7/7 PASS (CEP95 ~1.0–1.4 m) |
-| Deep release | 6/6 PASS (CEP95 ~1.1–1.3 m) |
-| Deep long blackout | `deep_long_blackout` scenario (43+ min GPS outage) |
-| Replay harness | `charybdis.evaluation.packet_replay` |
+| Deep release | 7/7 PASS (CEP95 ~1.1–1.3 m) |
+| Deep long blackout | PASS; CEP95 ~1.16 m in 512-run worst sweep |
+| Stable API | `docs/STABLE_API.md` |
+| Replay harness | `charybdis.evaluation.packet_replay`, schema version `1` |
 | Promoted matcher | `models/tcm_so2.pt` (A100 pass 5, ~66 m after_mean hard eval) |
-| Bronze stamp | `20260714T153106Z-ad7fa3e` |
+| L40S stamp | `artifacts/pod_l40s_pull_20260714T180953Z` |
 | A100 stamp | `20260714T132210Z-ad7fa3e` |
 
-Artifact trees with `SHA256SUMS` live under `artifacts/pod_*_pull_20260714/`.
+Artifact trees with `SHA256SUMS` or pull manifests live under
+`artifacts/pod_*_pull_20260714*/`.

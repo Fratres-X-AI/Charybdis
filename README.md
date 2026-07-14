@@ -17,17 +17,17 @@ software, a safety controller, or evidence of real-world mission validation.
 
 ## Validation snapshot
 
-Latest pod sprint at `10869ea` (RTX 4090, 31 workers):
+Latest L40S pod validation at `164ea68` (31-worker CPU validation):
 
 | Tier | Result |
 |------|--------|
-| Phase 1 pod acceptance | PASSED (ruff, mypy, arch, 112 tests, wheel) |
-| Engineering matrix | 7/7 PASS @ 64 seeds/scenario |
-| Release matrix | 7/7 PASS @ 256 seeds/scenario (incl. GPS reacquisition gate) |
-| Real-bathymetry (GEBCO tile) | PASS engineering + release |
-| Legacy stress harness | 5/5 required scenarios |
+| CI | PASSED on `main` (`29357300247`) |
+| Integration grade | Harbor 7/7 + deep 7/7 PASS @ 64 seeds/scenario |
+| Release matrix | Harbor 7/7 + deep 7/7 PASS @ 256 seeds/scenario |
+| Deep long blackout | PASS, CEP95 ~1.16 m in 512-run worst sweep |
+| Real-bathymetry (GEBCO tile) | PASS engineering + release; coarse characterization only |
 
-Artifacts: `artifacts/validation/20260712T175513Z-10869ea` — see
+Artifacts: `artifacts/pod_l40s_pull_20260714T180953Z` — see
 [`docs/VALIDATION.md`](docs/VALIDATION.md) for procedures and limitations.
 
 ## Install
@@ -63,8 +63,10 @@ python examples/legacy_interceptor.py
 See [`examples/README.md`](examples/README.md) for the purpose and operational
 boundary of each example.
 
-Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) for the stable
-API walkthrough and [`docs/PRODUCTION_INTEGRATION.md`](docs/PRODUCTION_INTEGRATION.md)
+Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) for the runtime
+walkthrough, [`docs/STABLE_API.md`](docs/STABLE_API.md) for the supported API
+contract, [`docs/INTEGRATION_HANDOFF.md`](docs/INTEGRATION_HANDOFF.md) for the
+handoff bundle, and [`docs/PRODUCTION_INTEGRATION.md`](docs/PRODUCTION_INTEGRATION.md)
 before connecting logs or hardware.
 
 ## Hybrid-first public API
@@ -81,6 +83,7 @@ before connecting logs or hardware.
 The root deliberately does not export configuration, simulation, legacy, or
 experimental symbols. Detailed hybrid measurement and configuration types are
 available from `charybdis.hybrid`.
+`docs/STABLE_API.md` is the compatibility contract for these imports.
 
 ```python
 from charybdis import (

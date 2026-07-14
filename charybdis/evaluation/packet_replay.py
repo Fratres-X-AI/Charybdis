@@ -31,6 +31,8 @@ from ..simulation.hybrid import (
     build_synthetic_harbor_map,
 )
 
+REPLAY_SCHEMA_VERSION = "1"
+
 _MEASUREMENT_TYPES: dict[str, type[Any]] = {
     "ImuMeasurement": ImuMeasurement,
     "GpsMeasurement": GpsMeasurement,
@@ -246,8 +248,13 @@ class ReplayManifest:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ReplayManifest:
+        schema_version = str(data["schema_version"])
+        if schema_version != REPLAY_SCHEMA_VERSION:
+            raise ValueError(
+                f"unsupported replay schema version: {schema_version!r}"
+            )
         return cls(
-            schema_version=str(data["schema_version"]),
+            schema_version=schema_version,
             charybdis_version=str(data["charybdis_version"]),
             harbor_config=dict(data["harbor_config"]),
             pos0=tuple(data["pos0"]),
@@ -362,7 +369,7 @@ def record_harbor_packets(
         command = cycle.command
 
     manifest = ReplayManifest(
-        schema_version="1",
+        schema_version=REPLAY_SCHEMA_VERSION,
         charybdis_version=getattr(charybdis, "__version__", "unknown"),
         harbor_config=_jsonify(cfg),
         pos0=tuple(pos0.tolist()),
@@ -438,6 +445,7 @@ def load_replay_log(path: Path | str) -> ReplayLog:
 
 
 __all__ = [
+    "REPLAY_SCHEMA_VERSION",
     "ReplayLog",
     "ReplayManifest",
     "assert_replay_matches",

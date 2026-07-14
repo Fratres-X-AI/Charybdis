@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import charybdis
+import charybdis.evaluation as evaluation
 import charybdis.hybrid as hybrid
 
 
@@ -46,3 +47,8 @@ def test_hybrid_convenience_api_is_explicit_and_stable() -> None:
         "PatrolCommand",
         "PatrolExecutor",
     ]
+
+
+def test_evaluation_contract_versions_are_named_and_stable() -> None:
+    assert evaluation.REPLAY_SCHEMA_VERSION == "1"
+    assert evaluation.VALIDATION_ARTIFACT_SCHEMA_VERSION == "1"
