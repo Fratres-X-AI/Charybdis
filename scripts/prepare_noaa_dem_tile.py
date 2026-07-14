@@ -15,8 +15,7 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.io import netcdf_file
 
 DEFAULT_URL = (
-    "https://www.ngdc.noaa.gov/thredds/fileServer/regional/"
-    "monterey_bay_P080_2018.nc"
+    "https://www.ngdc.noaa.gov/thredds/fileServer/regional/monterey_bay_P080_2018.nc"
 )
 DEFAULT_SOURCE = "NOAA/NCEI Monterey Bay P080 bathymetric DEM"
 # High-relief natural underwater window inside the P080 tile.
@@ -48,7 +47,9 @@ def _finite_grid(variable: Any) -> np.ndarray:
     return grid
 
 
-def _sort_axis(axis: np.ndarray, grid: np.ndarray, axis_index: int) -> tuple[np.ndarray, np.ndarray]:
+def _sort_axis(
+    axis: np.ndarray, grid: np.ndarray, axis_index: int
+) -> tuple[np.ndarray, np.ndarray]:
     if axis.size < 3:
         raise ValueError("DEM axis is too small")
     order = np.argsort(axis)
@@ -151,7 +152,9 @@ def _subset_bbox(
     return cropped_longitude, cropped_latitude, cropped_grid
 
 
-def _axis_metres(longitude: np.ndarray, latitude: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _axis_metres(
+    longitude: np.ndarray, latitude: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     latitude_origin = float(latitude[0])
     longitude_origin = float(longitude[0])
     latitude_midpoint = float(np.mean(latitude))
@@ -380,7 +383,10 @@ def main() -> int:
     else:
         depth_m = full_depth_m
     underwater_fraction = float(np.mean(depth_m > 0.0))
-    if underwater_fraction < args.min_underwater_fraction and not args.auto_crop_underwater:
+    if (
+        underwater_fraction < args.min_underwater_fraction
+        and not args.auto_crop_underwater
+    ):
         lon_min, lon_max, lat_min, lat_max, underwater_fraction = _auto_underwater_bbox(
             full_depth_m,
             full_longitude,

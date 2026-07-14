@@ -122,7 +122,9 @@ def _run_case(job: tuple[BathymetryMap, int]) -> dict[str, Any]:
 
     true_position: np.ndarray | None = None
     true_depths: np.ndarray | None = None
-    placement_attempts = 500 if resolution <= INTEGRATION_GRADE_MAX_RESOLUTION_M else 200
+    placement_attempts = (
+        500 if resolution <= INTEGRATION_GRADE_MAX_RESOLUTION_M else 200
+    )
     for _ in range(placement_attempts):
         candidate = np.array(
             [

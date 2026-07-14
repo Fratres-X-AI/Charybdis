@@ -250,9 +250,7 @@ class ReplayManifest:
     def from_dict(cls, data: dict[str, Any]) -> ReplayManifest:
         schema_version = str(data["schema_version"])
         if schema_version != REPLAY_SCHEMA_VERSION:
-            raise ValueError(
-                f"unsupported replay schema version: {schema_version!r}"
-            )
+            raise ValueError(f"unsupported replay schema version: {schema_version!r}")
         return cls(
             schema_version=schema_version,
             charybdis_version=str(data["charybdis_version"]),
