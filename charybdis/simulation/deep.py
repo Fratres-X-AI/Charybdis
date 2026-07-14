@@ -115,6 +115,7 @@ class HybridDeepConfig:
     current_xy_mps: tuple[float, float] = (0.0, 0.0)
     initial_pos_error_xy_m: tuple[float, float] = (0.0, 0.0)
     gps_dropout_steps: tuple[int, int] | None = None
+    gps_dropout_submerged_only: bool = False
     velocity_dropout_steps: tuple[int, int] | None = None
     bathy_dropout_steps: tuple[int, int] | None = None
     bathy_outlier_steps: tuple[int, ...] = ()
@@ -154,6 +155,8 @@ class HybridDeepConfig:
             raise TypeError("seed must be int")
         if not isinstance(self.use_mode_hints, bool):
             raise TypeError("use_mode_hints must be bool")
+        if not isinstance(self.gps_dropout_submerged_only, bool):
+            raise TypeError("gps_dropout_submerged_only must be bool")
         for name, vector in (
             ("current_xy_mps", self.current_xy_mps),
             ("initial_pos_error_xy_m", self.initial_pos_error_xy_m),
@@ -441,7 +444,10 @@ def _make_packet(
     altitude = _altitude_above_bottom(pos, depth, bathymetry_map)
 
     gps = None
-    if surface and not _in_window(step, cfg.gps_dropout_steps):
+    gps_blocked = _in_window(step, cfg.gps_dropout_steps)
+    if cfg.gps_dropout_submerged_only and surface:
+        gps_blocked = False
+    if surface and not gps_blocked:
         gps = GpsMeasurement(
             pos + rng.normal(0.0, cfg.gps_noise_m, size=2),
             vel + rng.normal(0.0, cfg.gps_vel_noise_mps, size=2),

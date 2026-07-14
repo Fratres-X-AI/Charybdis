@@ -70,11 +70,13 @@ def build_deep_validation_scenario(name: str) -> HybridDeepConfig:
             current_xy_mps=(0.12, -0.08),
         )
     if name == "deep_long_blackout":
+        # ~31 min submerged GPS denial; surface sniff WPs still get fixes.
         return HybridDeepConfig(
             name=name,
-            max_steps=2800,
+            max_steps=2400,
             route=_long_blackout_route(),
-            gps_dropout_steps=(120, 2720),
+            gps_dropout_steps=(150, 2100),
+            gps_dropout_submerged_only=True,
             fusion=_long_blackout_fusion_config(),
         )
     choices = ", ".join(DEEP_VALIDATION_SCENARIOS)
@@ -145,19 +147,8 @@ def _max_depth_route() -> PatrolRoute:
 
 
 def _long_blackout_route() -> PatrolRoute:
-    """Surface start, long submerged transit, terminal surface GPS recovery."""
-    return PatrolRoute(
-        (
-            _deep_wp([0.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.6, radius_m=10.0),
-            _deep_wp([120.0, 0.0], mode=NavMode.SUBMERGED, depth_m=180.0),
-            _deep_wp([520.0, 0.0], mode=NavMode.SUBMERGED, depth_m=350.0),
-            _deep_wp([900.0, 0.0], mode=NavMode.SUBMERGED, depth_m=420.0),
-            _deep_wp([980.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=18.0),
-            _deep_wp(
-                [860.0, 140.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=22.0
-            ),
-        )
-    )
+    """Midwater-style staged dive with surface GPS sniff legs (proven handoffs)."""
+    return _midwater_route()
 
 
 def _long_blackout_fusion_config() -> HybridFusionConfig:
