@@ -15,11 +15,8 @@ mkdir -p "$VAL_DIR" "$MODEL_DIR" "$LOG_DIR"
 
 echo "fetch validation artifacts..."
 scp -P "$PORT" -i "$KEY" -o StrictHostKeyChecking=no -r \
-  "${HOST}:/workspace/Charybdis/artifacts/validation/20260714T124300Z-594f4e9/." \
-  "${VAL_DIR}/deep_engineering/" 2>/dev/null || true
-scp -P "$PORT" -i "$KEY" -o StrictHostKeyChecking=no -r \
-  "${HOST}:/workspace/Charybdis/artifacts/validation/20260714T124447Z-594f4e9/." \
-  "${VAL_DIR}/deep_release/" 2>/dev/null || true
+  "${HOST}:/workspace/Charybdis/artifacts/validation/20260714T132210Z-ad7fa3e/." \
+  "${VAL_DIR}/phase2_complete/" 2>/dev/null || true
 scp -P "$PORT" -i "$KEY" -o StrictHostKeyChecking=no -r \
   "${HOST}:/workspace/Charybdis/artifacts/validation/20260714T120829Z-39732b9/engineering/." \
   "${VAL_DIR}/harbor_engineering/" 2>/dev/null || true
@@ -30,7 +27,7 @@ scp -P "$PORT" -i "$KEY" -o StrictHostKeyChecking=no \
   "${MODEL_DIR}/" 2>/dev/null || true
 
 echo "fetch logs..."
-for f in pod_deep_matrix.log pod_deep_release.log pod_gpu_lane0.log pod_harbor_matrix.log; do
+for f in pod_deep_matrix.log pod_deep_release.log pod_gpu_lane0.log pod_harbor_matrix.log pod_harbor_release.log pod_a100_finish.log; do
   scp -P "$PORT" -i "$KEY" -o StrictHostKeyChecking=no \
     "${HOST}:/tmp/${f}" "${LOG_DIR}/" 2>/dev/null || true
 done

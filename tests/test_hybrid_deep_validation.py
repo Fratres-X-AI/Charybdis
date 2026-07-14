@@ -12,6 +12,7 @@ from charybdis.evaluation import (
     deep_validation_gates,
     run_hybrid_deep_montecarlo,
 )
+from charybdis.parallel import pool_workers
 
 
 def test_all_deep_validation_scenarios_build_with_matching_names() -> None:
@@ -30,10 +31,12 @@ def test_unknown_deep_validation_scenario_is_rejected() -> None:
 
 @pytest.mark.slow
 def test_deep_engineering_matrix_passes_locally() -> None:
-    seeds = tuple(range(16))
+    # Match pod engineering tier (64 runs) so Wilson bounds are meaningful.
+    seeds = tuple(range(64))
+    workers = pool_workers(31)
     for name in DEEP_VALIDATION_SCENARIOS:
         config = build_deep_validation_scenario(name)
-        result = run_hybrid_deep_montecarlo(config, seeds=seeds, workers=1)
+        result = run_hybrid_deep_montecarlo(config, seeds=seeds, workers=workers)
         assessment = assess_deep_validation(result, deep_validation_gates(name))
         assert assessment.passed, (
             f"{name} failed local engineering gates: {assessment.checks}"

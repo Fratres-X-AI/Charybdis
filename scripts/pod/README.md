@@ -6,7 +6,17 @@ These scripts are **operational tooling**, not the product API.
 - Hard rule: max **31** workers for standalone MC; never nest pools under `pytest -n`.
 - Paths often assume `/workspace/Charybdis` on RunPod images.
 
-See `docs/MATURITY.md` (CI / pod policy) and `docs/MISSION.md`.
+See `docs/MATURITY.md` (CI / pod policy), `docs/KNOWN_LIMITS.md`, and `docs/MISSION.md`.
+
+## Bronze / A100 helpers
+
+```bash
+bash scripts/pod/launch_bronze_military.sh   # full Phase 2 eng+release
+bash scripts/pod/launch_bronze_beach.sh      # beach pytest + eng matrix
+bash scripts/pod/poll_bronze.sh
+bash scripts/pod/pull_pod_bronze.sh
+```
+
 
 ## Finish today (RunPod)
 
