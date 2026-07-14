@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from charybdis.hybrid import BathymetryMap
 from scripts.real_bathymetry_validate import (
     INTEGRATION_GRADE_MAX_RESOLUTION_M,
     REAL_BATHYMETRY_SCHEMA_VERSION,
@@ -11,7 +12,6 @@ from scripts.real_bathymetry_validate import (
     _profile_sampling_for_map,
     _resolution_class,
 )
-from charybdis.hybrid import BathymetryMap
 
 
 def test_real_bathymetry_artifact_schema_version_is_named() -> None:
