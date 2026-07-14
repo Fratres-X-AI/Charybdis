@@ -56,15 +56,11 @@ def _default_route() -> PatrolRoute:
             _deep_wp([165.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
             _deep_wp([280.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
             _deep_wp([365.0, 0.0], mode=NavMode.SUBMERGED, depth_m=500.0),
-            _deep_wp(
-                [400.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0
-            ),
+            _deep_wp([400.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
             _deep_wp(
                 [717.0, 0.0], mode=NavMode.SUBMERGED, depth_m=1000.0, speed_mps=1.5
             ),
-            _deep_wp(
-                [717.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0
-            ),
+            _deep_wp([717.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
             _deep_wp(
                 [360.0, 120.0], mode=NavMode.SURFACE, speed_mps=1.5, radius_m=22.0
             ),

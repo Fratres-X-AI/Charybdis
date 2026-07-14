@@ -99,7 +99,10 @@ def _midwater_route() -> PatrolRoute:
     return PatrolRoute(
         (
             _deep_wp([0.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.6, radius_m=10.0),
+            _deep_wp([200.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
+            _deep_wp([300.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
             _deep_wp([365.0, 0.0], mode=NavMode.SUBMERGED, depth_m=500.0),
+            _deep_wp([400.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
             _deep_wp([480.0, 0.0], mode=NavMode.SUBMERGED, depth_m=500.0),
             _deep_wp(
                 [360.0, 120.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=22.0

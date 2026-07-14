@@ -165,7 +165,7 @@ class PatrolExecutor:
         delta = wp_pos - state.pos
         dist = float(np.linalg.norm(delta))
         desired_heading = self._bearing(delta, state.vel)
-        if dist <= wp.radius_m and self._arrival_ok(state, wp):
+        if self._within_arrival_envelope(state, wp) and self._arrival_ok(state, wp):
             self._advance()
             wp = self.route.waypoints[self.index]
             wp_pos = cast(FloatArray, wp.pos)
@@ -286,12 +286,54 @@ class PatrolExecutor:
         current = float(np.arctan2(state.vel[1], state.vel[0]))
         return abs(_wrap_pi(current - target)) <= wp.heading_tolerance_rad
 
-    def _arrival_ok(self, state: HybridNavState, wp: Waypoint) -> bool:
-        mode_and_depth_ok = (
-            state.mode == wp.mode
-            and abs(state.depth_m - wp.depth_m) <= wp.depth_tolerance_m
+    def _within_arrival_envelope(self, state: HybridNavState, wp: Waypoint) -> bool:
+        wp_pos = cast(FloatArray, wp.pos)
+        dist = float(np.linalg.norm(wp_pos - state.pos))
+        if dist <= wp.radius_m:
+            return True
+        return self._passed_waypoint_horizontally(state.pos, wp)
+
+    def _passed_waypoint_horizontally(self, pos: FloatArray, wp: Waypoint) -> bool:
+        if self.index == 0 and not self.route.loop:
+            return False
+        wp_pos = cast(FloatArray, wp.pos)
+        previous_pos = (
+            self.route.waypoints[-1].pos
+            if self.index == 0
+            else self.route.waypoints[self.index - 1].pos
         )
-        return mode_and_depth_ok and self._heading_ok(state, wp)
+        prev = cast(FloatArray, previous_pos)
+        seg = wp_pos - prev
+        seg_len = float(np.linalg.norm(seg))
+        if seg_len < 1e-9:
+            return False
+        along = float(np.clip((pos - prev) @ (seg / seg_len), 0.0, seg_len))
+        return along >= seg_len - wp.radius_m
+
+    def _arrival_ok(self, state: HybridNavState, wp: Waypoint) -> bool:
+        if state.mode != wp.mode:
+            return False
+        depth_ok = abs(state.depth_m - wp.depth_m) <= wp.depth_tolerance_m
+        if not depth_ok and wp.mode == NavMode.SUBMERGED and self._next_is_surface():
+            # Allow horizontal hand-off to a surface GPS fix while still diving.
+            depth_ok = True
+        elif (
+            not depth_ok
+            and wp.mode == NavMode.SURFACE
+            and not self._is_terminal_waypoint()
+        ):
+            # Intermediate surface legs are GPS sniff / transit points.
+            depth_ok = True
+        return depth_ok and self._heading_ok(state, wp)
+
+    def _is_terminal_waypoint(self) -> bool:
+        return self.index == len(self.route.waypoints) - 1
+
+    def _next_is_surface(self) -> bool:
+        nxt = self.index + 1
+        if nxt >= len(self.route.waypoints):
+            return False
+        return self.route.waypoints[nxt].mode == NavMode.SURFACE
 
     def _limit_heading(self, desired_heading: float, t: float) -> float:
         if self._last_heading is None or self._last_t is None:
