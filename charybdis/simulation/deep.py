@@ -57,7 +57,13 @@ def _default_route() -> PatrolRoute:
             _deep_wp([280.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
             _deep_wp([365.0, 0.0], mode=NavMode.SUBMERGED, depth_m=500.0),
             _deep_wp(
+                [400.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0
+            ),
+            _deep_wp(
                 [717.0, 0.0], mode=NavMode.SUBMERGED, depth_m=1000.0, speed_mps=1.5
+            ),
+            _deep_wp(
+                [717.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0
             ),
             _deep_wp(
                 [360.0, 120.0], mode=NavMode.SURFACE, speed_mps=1.5, radius_m=22.0
@@ -75,10 +81,10 @@ def _default_fusion_config() -> HybridFusionConfig:
         depth_process_noise=0.8,
         depth_rate_noise=0.25,
         depth_rate_tau_s=12.0,
-        max_recent_rejections=200,
+        max_recent_rejections=250,
         health_window_s=15.0,
         max_position_std_m=2500.0,
-        aiding_timeout_s=180.0,
+        aiding_timeout_s=300.0,
     )
 
 
@@ -98,7 +104,7 @@ class HybridDeepConfig:
 
     name: str = "deep_nominal"
     dt: float = 1.0
-    max_steps: int = 1600
+    max_steps: int = 2400
     seed: int = 17
     gps_noise_m: float = 2.5
     gps_vel_noise_mps: float = 0.1
@@ -253,6 +259,7 @@ def run_hybrid_deep_simulation(
         cfg.route,
         max_turn_rate_radps=np.deg2rad(90.0),
         max_nav_error_m=2500.0,
+        hold_when_unhealthy=False,
     )
 
     truth_pos = np.asarray(cfg.route.waypoints[0].pos, dtype=float).copy()
@@ -430,7 +437,10 @@ def _make_packet(
     rng: np.random.Generator,
 ) -> tuple[SensorPacket, MatchStatus | None]:
     timestamp = (step + 1) * cfg.dt
-    surface = depth <= cfg.fusion.mode.surface_depth_m
+    commanding_surface = command.target_mode == NavMode.SURFACE
+    surface = depth <= cfg.fusion.mode.surface_depth_m or (
+        commanding_surface and depth <= cfg.fusion.mode.submerged_depth_m
+    )
     submerged = depth >= cfg.fusion.mode.submerged_depth_m
     altitude = _altitude_above_bottom(pos, depth, bathymetry_map)
 

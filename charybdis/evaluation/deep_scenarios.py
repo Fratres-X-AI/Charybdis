@@ -37,25 +37,25 @@ def build_deep_validation_scenario(name: str) -> HybridDeepConfig:
     if name == "deep_midwater":
         return HybridDeepConfig(
             name=name,
-            max_steps=1600,
+            max_steps=2400,
             route=_midwater_route(),
         )
     if name == "deep_1000m":
         return HybridDeepConfig(
             name=name,
-            max_steps=1600,
+            max_steps=2400,
             route=_max_depth_route(),
         )
     if name == "deep_dvl_dropout":
         return HybridDeepConfig(
             name=name,
-            max_steps=1600,
+            max_steps=2400,
             velocity_dropout_steps=(180, 260),
         )
     if name == "deep_sparse_bathymetry":
         return HybridDeepConfig(
             name=name,
-            max_steps=1600,
+            max_steps=2400,
             bathy_period_steps=16,
             bathy_dropout_steps=(240, 320),
             bathy_outlier_steps=(200, 216),
@@ -64,7 +64,7 @@ def build_deep_validation_scenario(name: str) -> HybridDeepConfig:
     if name == "deep_steady_current":
         return HybridDeepConfig(
             name=name,
-            max_steps=1600,
+            max_steps=2400,
             current_xy_mps=(0.12, -0.08),
         )
     choices = ", ".join(DEEP_VALIDATION_SCENARIOS)
@@ -86,6 +86,7 @@ def deep_validation_gates(name: str) -> DeepValidationGates:
             max_cep95_m=58.0,
             max_depth_cep95_m=5.0,
             min_route_completion_rate=0.85,
+            max_gps_reacquisition_jump_m=35.0,
         )
     if name == "deep_dvl_dropout":
         return DeepValidationGates(max_cep95_m=55.0, max_depth_cep95_m=4.5)

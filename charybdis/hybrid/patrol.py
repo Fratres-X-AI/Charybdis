@@ -136,6 +136,7 @@ class PatrolExecutor:
         max_turn_rate_radps: float = np.deg2rad(25.0),
         low_speed_heading_mps: float = 0.15,
         max_nav_error_m: float = 100.0,
+        hold_when_unhealthy: bool = True,
     ) -> None:
         """Initialize guidance for a route and its turn-rate constraint."""
         values = (max_turn_rate_radps, low_speed_heading_mps, max_nav_error_m)
@@ -145,12 +146,15 @@ class PatrolExecutor:
             raise ValueError("turn rate and low-speed threshold must be non-negative")
         if max_nav_error_m <= 0.0:
             raise ValueError("max_nav_error_m must be positive")
+        if not isinstance(hold_when_unhealthy, bool):
+            raise TypeError("hold_when_unhealthy must be bool")
         self.route = route
         self.index = 0
         self.complete = False
         self.max_turn_rate_radps = float(max_turn_rate_radps)
         self.low_speed_heading_mps = float(low_speed_heading_mps)
         self.max_nav_error_m = float(max_nav_error_m)
+        self.hold_when_unhealthy = hold_when_unhealthy
         self._last_heading: float | None = None
         self._last_t: float | None = None
 
@@ -174,9 +178,9 @@ class PatrolExecutor:
             desired_heading = self._bearing(delta, state.vel)
 
         desired_heading = self._limit_heading(desired_heading, state.t)
-        nav_safe = state.filter_healthy and (
-            state.error_radius_1sigma <= self.max_nav_error_m
-        )
+        nav_safe = state.error_radius_1sigma <= self.max_nav_error_m
+        if self.hold_when_unhealthy:
+            nav_safe = nav_safe and state.filter_healthy
         if dist > 1e-9 and not self.complete and nav_safe:
             desired = (
                 np.array([np.cos(desired_heading), np.sin(desired_heading)])
