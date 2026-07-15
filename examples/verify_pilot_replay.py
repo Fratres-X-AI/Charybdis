@@ -35,8 +35,11 @@ def main() -> int:
         print(f"MISSING replay file: {replay_path}", file=sys.stderr)
         return 1
 
-    meta_path = Path(args.meta) if args.meta else replay_path.with_suffix(".meta.json")
-    if meta_path.exists():
+    meta_path = Path(args.meta) if args.meta else None
+    if meta_path is not None:
+        if not meta_path.exists():
+            print(f"MISSING meta file: {meta_path}", file=sys.stderr)
+            return 1
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         digest = hashlib.sha256(replay_path.read_bytes()).hexdigest()
         if digest != meta.get("sha256"):

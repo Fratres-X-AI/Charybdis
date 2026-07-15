@@ -1,3 +1,1 @@
-* text=auto
-*.sh text eol=lf
-scripts/pod/** text eol=lf
+pilot_integration_kit/samples/*.json text eol=lf

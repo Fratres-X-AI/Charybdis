@@ -60,6 +60,11 @@ python -m pip install -c requirements/ci.txt -e ".[dev]"
 ```bash
 python examples/verify_pilot_replay.py \
   --replay samples/mission_replay.json
+
+# Optional integrity check when meta is bundled:
+python examples/verify_pilot_replay.py \
+  --replay samples/mission_replay.json \
+  --meta samples/mission_replay.meta.json
 ```
 
 Expected output ends with `PILOT_REPLAY_VERIFY_PASS`.
