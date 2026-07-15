@@ -23,6 +23,7 @@ from .fusion import (
 from .modes import NavMode
 from .navigator import HybridNavigator, HybridStepResult
 from .patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
+from .power import PowerBudgetConfig, PowerBudgetState
 from .sensors import (
     BathymetryMeasurement,
     DepthMeasurement,
@@ -56,4 +57,6 @@ __all__ = [
     "PatrolRoute",
     "PatrolCommand",
     "PatrolExecutor",
+    "PowerBudgetConfig",
+    "PowerBudgetState",
 ]

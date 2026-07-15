@@ -259,7 +259,9 @@ def _run_case(job: tuple[BathymetryMap, int]) -> dict[str, Any]:
         if true_position is None or true_depths is None:
             continue
 
-        noisy_depths = true_depths + rng.normal(0.0, noise_std_m, size=true_depths.shape)
+        noisy_depths = true_depths + rng.normal(
+            0.0, noise_std_m, size=true_depths.shape
+        )
         candidate_profile = BathymetryProfile(
             profile_offsets,
             noisy_depths,

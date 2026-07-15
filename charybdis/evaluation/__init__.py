@@ -20,6 +20,16 @@ from .deep_scenarios import (
 )
 from .evaluate import FILTERS, MonteCarloResult, run_montecarlo
 from .hybrid import HybridMonteCarloResult, run_hybrid_montecarlo
+from .mission_scenarios import (
+    MISSION_DESCRIPTIONS,
+    MISSION_SCENARIOS,
+    MissionDomain,
+    MissionScenarioSpec,
+    build_mission_scenario,
+    mission_domain,
+    mission_gates,
+    mission_spec,
+)
 from .packet_replay import (
     REPLAY_SCHEMA_VERSION,
     ReplayLog,
@@ -72,6 +82,14 @@ __all__ = [
     "build_deep_validation_scenario",
     "deep_validation_gates",
     "run_hybrid_deep_montecarlo",
+    "MISSION_DESCRIPTIONS",
+    "MISSION_SCENARIOS",
+    "MissionDomain",
+    "MissionScenarioSpec",
+    "build_mission_scenario",
+    "mission_domain",
+    "mission_gates",
+    "mission_spec",
     "VALIDATION_SCENARIOS",
     "ValidationGates",
     "build_validation_scenario",

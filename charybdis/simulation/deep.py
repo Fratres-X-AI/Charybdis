@@ -18,6 +18,12 @@ from ..hybrid.fusion import HybridFusionConfig, HybridNavState, HybridSensorFusi
 from ..hybrid.modes import NavMode
 from ..hybrid.navigator import HybridNavigator
 from ..hybrid.patrol import PatrolCommand, PatrolExecutor, PatrolRoute, Waypoint
+from ..hybrid.power import (
+    PowerBudgetConfig,
+    PowerBudgetState,
+    init_power_state,
+    step_power_budget,
+)
 from ..hybrid.sensors import (
     DepthMeasurement,
     GpsMeasurement,
@@ -124,6 +130,7 @@ class HybridDeepConfig:
     route: PatrolRoute = field(default_factory=_default_route)
     fusion: HybridFusionConfig = field(default_factory=_default_fusion_config)
     matcher: TerrainMatcherConfig = field(default_factory=_default_matcher_config)
+    power: PowerBudgetConfig = field(default_factory=PowerBudgetConfig)
 
     def __post_init__(self) -> None:
         positive = {
@@ -174,6 +181,8 @@ class HybridDeepConfig:
                 raise ValueError(f"{name} must be a non-negative [start, stop) range")
         if any(step < 0 for step in self.bathy_outlier_steps):
             raise ValueError("bathy_outlier_steps must be non-negative")
+        if not isinstance(self.power, PowerBudgetConfig):
+            raise TypeError("power must be PowerBudgetConfig")
 
 
 @dataclass(frozen=True)
@@ -195,6 +204,9 @@ class HybridDeepResult:
     final_state: HybridNavState
     bathymetry_map: BathymetryMap
     max_gps_reacquisition_jump_m: float = 0.0
+    power_energy_frac: FloatArray | None = None
+    power_rtb_triggered: bool = False
+    power_energy_depleted: bool = False
 
     def summary(self) -> dict[str, int | float | bool | str | None]:
         """Return a JSON-compatible deterministic summary."""
@@ -204,7 +216,7 @@ class HybridDeepResult:
         attempted_matches = sum(
             status is not None for status in self.bathy_match_status
         )
-        return {
+        payload: dict[str, int | float | bool | str | None] = {
             "scenario": "hybrid_deep",
             "steps": int(self.pos_error.size),
             "route_complete": bool(self.route_complete),
@@ -224,6 +236,17 @@ class HybridDeepResult:
             "last_bathy_t": self.final_state.last_bathy_t,
             "max_gps_reacquisition_jump_m": float(self.max_gps_reacquisition_jump_m),
         }
+        if self.power_energy_frac is not None:
+            payload.update(
+                {
+                    "power_enabled": True,
+                    "final_energy_frac": float(self.power_energy_frac[-1]),
+                    "min_energy_frac": float(np.min(self.power_energy_frac)),
+                    "rtb_triggered": bool(self.power_rtb_triggered),
+                    "energy_depleted": bool(self.power_energy_depleted),
+                }
+            )
+        return payload
 
 
 def build_synthetic_deep_map(seed: int = 202) -> BathymetryMap:
@@ -296,6 +319,8 @@ def run_hybrid_deep_simulation(
     gps_reacquisition_jumps: list[float] = []
     had_gps_prev = False
     had_gps_ever = False
+    power_state = init_power_state(cfg.power)
+    power_history: list[float] = []
 
     for step in range(cfg.max_steps):
         truth_pos, truth_vel, truth_depth = _propagate_truth(
@@ -305,6 +330,16 @@ def run_hybrid_deep_simulation(
             command,
             cfg,
         )
+        if power_state is not None:
+            _update_power(
+                power_state,
+                cfg,
+                speed_mps=float(np.linalg.norm(truth_vel)),
+                depth_m=truth_depth,
+                step=step,
+                commanding_surface=command.target_mode == NavMode.SURFACE,
+            )
+            power_history.append(power_state.energy_frac)
         acceleration = (truth_vel - last_vel) / cfg.dt
         last_vel = truth_vel.copy()
         packet, match_status = _make_packet(
@@ -370,6 +405,47 @@ def run_hybrid_deep_simulation(
         final_state=state,
         bathymetry_map=bathymetry_map,
         max_gps_reacquisition_jump_m=max_gps_jump,
+        power_energy_frac=(
+            np.asarray(power_history, dtype=np.float64) if power_history else None
+        ),
+        power_rtb_triggered=bool(power_state.rtb_triggered) if power_state else False,
+        power_energy_depleted=(
+            bool(power_state.energy_depleted) if power_state else False
+        ),
+    )
+
+
+def _update_power(
+    power_state: PowerBudgetState,
+    cfg: HybridDeepConfig,
+    *,
+    speed_mps: float,
+    depth_m: float,
+    step: int,
+    commanding_surface: bool,
+) -> None:
+    surface_depth = cfg.fusion.mode.surface_depth_m
+    submerged_depth = cfg.fusion.mode.submerged_depth_m
+    surfaced = depth_m <= surface_depth or (
+        commanding_surface and depth_m <= submerged_depth
+    )
+    submerged = depth_m >= submerged_depth
+    bathy_ping = (
+        submerged
+        and step % cfg.bathy_period_steps == 0
+        and not _in_window(step, cfg.bathy_dropout_steps)
+    )
+    step_power_budget(
+        power_state,
+        cfg.power,
+        speed_mps=speed_mps,
+        depth_m=depth_m,
+        surface_depth_m=surface_depth,
+        submerged=submerged,
+        bathy_ping=bathy_ping,
+        current_xy_mps=cfg.current_xy_mps,
+        dt_s=cfg.dt,
+        surfaced=surfaced,
     )
 
 
