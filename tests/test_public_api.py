@@ -46,6 +46,8 @@ def test_hybrid_convenience_api_is_explicit_and_stable() -> None:
         "PatrolRoute",
         "PatrolCommand",
         "PatrolExecutor",
+        "PowerBudgetConfig",
+        "PowerBudgetState",
     ]
 
 

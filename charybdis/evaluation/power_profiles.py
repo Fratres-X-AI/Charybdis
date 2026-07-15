@@ -26,7 +26,7 @@ def hydrokinetic_harvest_power(*, endurance_s: float = 5400.0) -> PowerBudgetCon
     return PowerBudgetConfig(
         enabled=True,
         endurance_s=endurance_s,
-        hydro_charge_coeff=0.07,
+        hydro_charge_coeff=0.65,
         hydro_drag_coeff=0.018,
     )
 
