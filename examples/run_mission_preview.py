@@ -7,7 +7,8 @@ import argparse
 import json
 from dataclasses import asdict, replace
 
-from charybdis.evaluation.mission_scenarios import (
+import numpy as np
+from charybdis.evaluation import (
     MISSION_DESCRIPTIONS,
     MISSION_SCENARIOS,
     build_mission_scenario,
@@ -18,6 +19,14 @@ from charybdis.simulation import (
     run_hybrid_deep_simulation,
     run_hybrid_harbor_simulation,
 )
+
+
+def _json_default(value: object) -> object:
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 def main() -> int:
@@ -45,7 +54,7 @@ def main() -> int:
         "config": asdict(config),
         "summary": summary,
     }
-    print(json.dumps(payload, indent=2, sort_keys=True))
+    print(json.dumps(payload, default=_json_default, indent=2, sort_keys=True))
     return 0
 
 
