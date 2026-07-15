@@ -33,10 +33,10 @@ def test_integration_grade_matcher_uses_wider_profile_and_tighter_prior() -> Non
     cfg = _matcher_config_for_map(bathymetry_map)
     offsets, prior_sigma, min_relief = _profile_sampling_for_map(bathymetry_map)
 
-    assert cfg.min_cost_margin == 0.10
+    assert cfg.min_cost_margin == 0.11
     assert cfg.max_normalized_cost == 6.0
     assert offsets.shape == (25, 2)
-    assert prior_sigma == 5.0
+    assert prior_sigma == 4.0
     assert min_relief == pytest.approx(3.0)
 
 

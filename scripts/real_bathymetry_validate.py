@@ -49,10 +49,10 @@ def _matcher_config_for_map(bathymetry_map: BathymetryMap) -> TerrainMatcherConf
         return TerrainMatcherConfig(
             search_radius_m=2.0 * resolution,
             grid_step_m=resolution,
-            prior_weight=0.10,
+            prior_weight=0.12,
             min_profile_relief_m=max(3.0, 0.008 * depth_range),
             max_normalized_cost=6.0,
-            min_cost_margin=0.10,
+            min_cost_margin=0.11,
             ambiguity_separation_m=1.25 * resolution,
             covariance_cost_window=6.0,
         )
@@ -77,7 +77,7 @@ def _profile_sampling_for_map(
     if resolution <= INTEGRATION_GRADE_MAX_RESOLUTION_M:
         span = 4.0 * resolution
         axis = np.linspace(-span, span, 5)
-        prior_sigma = 0.5 * resolution
+        prior_sigma = 0.4 * resolution
         min_relief = max(3.0, 0.008 * depth_range)
     else:
         span = 2.0 * resolution

@@ -60,7 +60,7 @@ def build_validation_scenario(name: str) -> HybridHarborConfig:
             bathy_dropout_steps=(45, 65),
             bathy_outlier_steps=(36, 48, 72),
             bathy_outlier_m=12.0,
-            fusion=replace(_default_fusion_config(), bathy_gate_chi2=16.0),
+            fusion=replace(_default_fusion_config(), bathy_gate_chi2=12.0),
         )
     if name == "steady_current":
         return HybridHarborConfig(
@@ -80,7 +80,8 @@ def build_validation_scenario(name: str) -> HybridHarborConfig:
             max_steps=560,
             route=_repeated_transition_route(),
             use_mode_hints=True,
-            matcher=replace(_default_matcher_config(), min_cost_margin=0.25),
+            matcher=replace(_default_matcher_config(), min_cost_margin=0.28),
+            fusion=replace(_default_fusion_config(), bathy_gate_chi2=14.0),
         )
     choices = ", ".join(VALIDATION_SCENARIOS)
     raise ValueError(f"unknown validation scenario {name!r}; choose from {choices}")

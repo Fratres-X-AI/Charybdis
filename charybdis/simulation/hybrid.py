@@ -72,7 +72,7 @@ def _default_route() -> PatrolRoute:
 
 def _default_fusion_config() -> HybridFusionConfig:
     return HybridFusionConfig(
-        init_pos_std=8.0,
+        init_pos_std=8.5,
         init_vel_std=0.4,
         depth_process_noise=0.8,
         depth_rate_noise=0.25,

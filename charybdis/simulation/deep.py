@@ -77,7 +77,7 @@ def _default_fusion_config() -> HybridFusionConfig:
         depth_process_noise=1.0,
         depth_rate_noise=0.25,
         depth_rate_tau_s=12.0,
-        max_recent_rejections=250,
+        max_recent_rejections=300,
         health_window_s=15.0,
         max_position_std_m=2500.0,
         aiding_timeout_s=300.0,
