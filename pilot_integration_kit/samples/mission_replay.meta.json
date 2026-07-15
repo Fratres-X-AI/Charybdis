@@ -1,0 +1,15 @@
+{
+  "file": "mission_replay.json",
+  "final_mode": "surface",
+  "final_position_m": [
+    2.149658862523082,
+    21.841560073258094
+  ],
+  "git_sha": "cc4321b3458db6afb49eae4d54916efbef798867",
+  "replay_deterministic": true,
+  "schema_version": "1",
+  "seed": 23390824,
+  "sha256": "4ff0a3ed750ca2634c43799f86ec86b7331539bc68e465d8f896528eb8518754",
+  "steps": 120,
+  "waypoint_index": 5
+}

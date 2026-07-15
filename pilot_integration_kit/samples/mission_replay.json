@@ -1,0 +1,6942 @@
+{
+  "manifest": {
+    "schema_version": "1",
+    "charybdis_version": "0.3.0",
+    "harbor_config": {
+      "name": "harbor_nominal",
+      "dt": 1.0,
+      "max_steps": 240,
+      "seed": 23390824,
+      "gps_noise_m": 1.5,
+      "gps_vel_noise_mps": 0.08,
+      "velocity_noise_mps": 0.05,
+      "depth_noise_m": 0.15,
+      "bathy_profile_noise_m": 0.2,
+      "bathy_period_steps": 6,
+      "accel_noise_mps2": 0.01,
+      "depth_tau_s": 8.0,
+      "current_xy_mps": [
+        0.0,
+        0.0
+      ],
+      "initial_pos_error_xy_m": [
+        0.0,
+        0.0
+      ],
+      "gps_dropout_steps": null,
+      "velocity_dropout_steps": null,
+      "bathy_dropout_steps": null,
+      "bathy_outlier_steps": [],
+      "bathy_outlier_m": 8.0,
+      "use_mode_hints": false,
+      "route": {
+        "waypoints": [
+          {
+            "pos": [
+              0.0,
+              0.0
+            ],
+            "mode": "surface",
+            "depth_m": 0.0,
+            "speed_mps": 1.5,
+            "radius_m": 3.0,
+            "heading_rad": null,
+            "heading_tolerance_rad": 0.3490658503988659,
+            "lookahead_m": 12.0,
+            "depth_tolerance_m": 0.75
+          },
+          {
+            "pos": [
+              35.0,
+              0.0
+            ],
+            "mode": "surface",
+            "depth_m": 0.0,
+            "speed_mps": 1.8,
+            "radius_m": 4.0,
+            "heading_rad": null,
+            "heading_tolerance_rad": 0.3490658503988659,
+            "lookahead_m": 12.0,
+            "depth_tolerance_m": 0.75
+          },
+          {
+            "pos": [
+              55.0,
+              15.0
+            ],
+            "mode": "submerged",
+            "depth_m": 8.0,
+            "speed_mps": 1.5,
+            "radius_m": 9.0,
+            "heading_rad": null,
+            "heading_tolerance_rad": 0.3490658503988659,
+            "lookahead_m": 12.0,
+            "depth_tolerance_m": 0.75
+          },
+          {
+            "pos": [
+              55.0,
+              45.0
+            ],
+            "mode": "submerged",
+            "depth_m": 8.0,
+            "speed_mps": 1.5,
+            "radius_m": 9.0,
+            "heading_rad": null,
+            "heading_tolerance_rad": 0.3490658503988659,
+            "lookahead_m": 12.0,
+            "depth_tolerance_m": 0.75
+          },
+          {
+            "pos": [
+              20.0,
+              45.0
+            ],
+            "mode": "submerged",
+            "depth_m": 8.0,
+            "speed_mps": 1.5,
+            "radius_m": 9.0,
+            "heading_rad": null,
+            "heading_tolerance_rad": 0.3490658503988659,
+            "lookahead_m": 12.0,
+            "depth_tolerance_m": 0.75
+          },
+          {
+            "pos": [
+              0.0,
+              20.0
+            ],
+            "mode": "surface",
+            "depth_m": 0.0,
+            "speed_mps": 1.6,
+            "radius_m": 8.0,
+            "heading_rad": null,
+            "heading_tolerance_rad": 0.3490658503988659,
+            "lookahead_m": 12.0,
+            "depth_tolerance_m": 0.75
+          }
+        ],
+        "loop": false
+      },
+      "fusion": {
+        "init_pos_std": 8.0,
+        "init_depth_std": 1.0,
+        "init_vel_std": 0.4,
+        "init_depth_rate_std": 0.15,
+        "init_bias_std": 0.05,
+        "accel_noise": 0.08,
+        "depth_process_noise": 0.8,
+        "depth_rate_noise": 0.25,
+        "depth_rate_tau_s": 10.0,
+        "accel_bias_rw": 0.002,
+        "gps_gate_chi2": 25.0,
+        "depth_gate_chi2": 9.0,
+        "velocity_gate_chi2": 16.0,
+        "bathy_gate_chi2": 25.0,
+        "min_cov": 1e-06,
+        "rejection_history_size": 256,
+        "health_window_s": 30.0,
+        "max_recent_rejections": 12,
+        "max_position_std_m": 500.0,
+        "aiding_timeout_s": 30.0,
+        "mode": {
+          "surface_depth_m": 1.5,
+          "submerged_depth_m": 3.0,
+          "hint_overrides_depth": false
+        }
+      },
+      "matcher": {
+        "search_radius_m": 16.0,
+        "grid_step_m": 2.0,
+        "prior_weight": 0.2,
+        "min_profile_relief_m": 0.5,
+        "max_normalized_cost": 9.0,
+        "min_cost_margin": 0.2,
+        "ambiguity_separation_m": 5.0,
+        "covariance_cost_window": 6.0,
+        "remove_vertical_bias": true
+      }
+    },
+    "pos0": [
+      0.0,
+      0.0
+    ],
+    "vel0": [
+      0.0,
+      0.0
+    ],
+    "depth0": 0.0,
+    "patrol_max_turn_rate_radps": 2.0943951023931953,
+    "max_steps": 120
+  },
+  "packets": [
+    {
+      "imu": {
+        "accel": [
+          0.6360971144926376,
+          0.009604125318337913
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 1.0
+      },
+      "gps": {
+        "pos": [
+          1.0012731427038601,
+          0.2555785051805562
+        ],
+        "vel": [
+          0.5269354684347309,
+          0.08195680600305734
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 1.0
+      },
+      "depth": {
+        "depth_m": 0.06435995137424874,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 1.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 1.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.4085910810861078,
+          -0.013555310406531141
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 2.0
+      },
+      "gps": {
+        "pos": [
+          1.5614720231627934,
+          -0.43063697979248255
+        ],
+        "vel": [
+          1.0060483928712278,
+          0.004768236825309765
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 2.0
+      },
+      "depth": {
+        "depth_m": 0.02052106942782172,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 2.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 2.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.27226960154923896,
+          0.009067777911023365
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 3.0
+      },
+      "gps": {
+        "pos": [
+          3.6638831803207466,
+          1.26100952489789
+        ],
+        "vel": [
+          1.3270023246505163,
+          0.08996355593384216
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 3.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 3.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 3.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.17123744422676657,
+          -0.02569120944469172
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 4.0
+      },
+      "gps": {
+        "pos": [
+          6.964169331540463,
+          2.473140333833678
+        ],
+        "vel": [
+          1.4567593279582374,
+          -0.22313874402227682
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 4.0
+      },
+      "depth": {
+        "depth_m": 0.07372767391696994,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 4.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 4.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.11805954961074479,
+          -0.03011921650304098
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 5.0
+      },
+      "gps": {
+        "pos": [
+          5.006428447160774,
+          2.0895953988011553
+        ],
+        "vel": [
+          1.5713024834046283,
+          -0.029201895262640047
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 5.0
+      },
+      "depth": {
+        "depth_m": 0.0968558564414164,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 5.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 5.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.058785878237417,
+          -0.038755427559947285
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 6.0
+      },
+      "gps": {
+        "pos": [
+          7.640028111635198,
+          -0.07234982163227396
+        ],
+        "vel": [
+          1.7091310450418569,
+          -0.19078537423281053
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 6.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 6.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 6.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.06510593983119174,
+          -0.010961545048263965
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 7.0
+      },
+      "gps": {
+        "pos": [
+          8.465199964319531,
+          -1.0370543499494074
+        ],
+        "vel": [
+          1.6495126659221906,
+          -0.03451494204264782
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 7.0
+      },
+      "depth": {
+        "depth_m": 0.14076802296519417,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 7.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 7.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.0561852952334969,
+          0.006978624414886641
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 8.0
+      },
+      "gps": {
+        "pos": [
+          8.576804213063454,
+          -1.489589411739307
+        ],
+        "vel": [
+          1.7419634787813245,
+          -0.034565877807194736
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 8.0
+      },
+      "depth": {
+        "depth_m": 0.07227349526911053,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 8.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 8.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.03682724244047114,
+          0.04668031690919325
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 9.0
+      },
+      "gps": {
+        "pos": [
+          14.287294372383164,
+          3.1937097630914333
+        ],
+        "vel": [
+          1.7553291885075393,
+          -0.03653840130781423
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 9.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 9.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 9.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.008915182748682287,
+          0.010287543485755049
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 10.0
+      },
+      "gps": {
+        "pos": [
+          14.031177789854155,
+          -0.1718718299023973
+        ],
+        "vel": [
+          1.867860389050446,
+          0.0609022183894638
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 10.0
+      },
+      "depth": {
+        "depth_m": 0.09427897870776704,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 10.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 10.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.019879453432530305,
+          0.009047336848072454
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 11.0
+      },
+      "gps": {
+        "pos": [
+          17.939039006025432,
+          -1.5508547114188223
+        ],
+        "vel": [
+          1.731137138855532,
+          0.008990159699498665
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 11.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 11.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 11.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0004936231754874947,
+          0.008573479695207135
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 12.0
+      },
+      "gps": {
+        "pos": [
+          16.867469049655956,
+          -1.5644833627130348
+        ],
+        "vel": [
+          1.6984748883079934,
+          -0.07362078737104184
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 12.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 12.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 12.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.002823783513422062,
+          -0.0017489029304492976
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 13.0
+      },
+      "gps": {
+        "pos": [
+          20.57545178738333,
+          -2.1751377793067923
+        ],
+        "vel": [
+          1.6825003546773898,
+          0.07252101700296679
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 13.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 13.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 13.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.007595140329433505,
+          0.009310227609276736
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 14.0
+      },
+      "gps": {
+        "pos": [
+          21.172720415424585,
+          0.11382319361148951
+        ],
+        "vel": [
+          1.7592007270532926,
+          -0.08503899743467824
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 14.0
+      },
+      "depth": {
+        "depth_m": 0.02821344486561864,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 14.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 14.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.002313064309457976,
+          0.013314158003454594
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 15.0
+      },
+      "gps": {
+        "pos": [
+          21.56795508992759,
+          1.3289502905996518
+        ],
+        "vel": [
+          1.8349882097287444,
+          -0.2043079300557083
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 15.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 15.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 15.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.011644622194538767,
+          0.011981544500613426
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 16.0
+      },
+      "gps": {
+        "pos": [
+          27.93077074327024,
+          -2.3369443366195366
+        ],
+        "vel": [
+          1.9078245839736314,
+          0.11270778015394382
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 16.0
+      },
+      "depth": {
+        "depth_m": 0.024070353387196607,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 16.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 16.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.01975217245732652,
+          0.08604291465780232
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 17.0
+      },
+      "gps": {
+        "pos": [
+          25.127350020546608,
+          2.4422142072873596
+        ],
+        "vel": [
+          1.6307160320628529,
+          0.04253078466886369
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 17.0
+      },
+      "depth": {
+        "depth_m": 0.07208329613797922,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 17.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 17.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0005932137173557585,
+          0.07460169440938189
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 18.0
+      },
+      "gps": {
+        "pos": [
+          29.560866477367462,
+          -1.3578049905237477
+        ],
+        "vel": [
+          1.8288242445207081,
+          0.18521294351614356
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 18.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 18.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 18.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.022654138847776673,
+          0.13333580003613954
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 19.0
+      },
+      "gps": {
+        "pos": [
+          31.562034119912987,
+          -1.8834520465935074
+        ],
+        "vel": [
+          1.6600394123424898,
+          0.20044899009408904
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 19.0
+      },
+      "depth": {
+        "depth_m": 0.2827852978771733,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 19.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 19.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.043461463701576816,
+          0.13116584894113442
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 20.0
+      },
+      "gps": {
+        "pos": [
+          32.90907225912201,
+          -0.29336426338953975
+        ],
+        "vel": [
+          1.6658565636539708,
+          0.49966885824157914
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 20.0
+      },
+      "depth": {
+        "depth_m": 0.11838703537864934,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 20.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 20.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.14042333745410354,
+          0.10625815989476402
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 21.0
+      },
+      "gps": {
+        "pos": [
+          34.32597840269376,
+          2.6102429794761606
+        ],
+        "vel": [
+          1.4652720344906978,
+          0.32911749449292693
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 21.0
+      },
+      "depth": {
+        "depth_m": 1.1805563023803731,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 21.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 21.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.09889800193510785,
+          0.06785587085181492
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 22.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 1.6567308818942612,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 22.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 22.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0678640408395369,
+          0.06320769547019243
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 23.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 2.6135313933433486,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 23.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 23.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.06042133803391782,
+          0.05711947532195082
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 24.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 3.4777726114829437,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 24.0
+      },
+      "velocity": {
+        "vel": [
+          1.3144643943744305,
+          0.8325818515915887
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 24.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 24.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.04752435204347213,
+          0.03248213154465865
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 25.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 3.945211153756586,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 25.0
+      },
+      "velocity": {
+        "vel": [
+          1.2767791671047546,
+          0.7289035371953085
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 25.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          39.98707005436083,
+          2.7310708377087076
+        ],
+        "pos_cov": [
+          [
+            1.289042042308812,
+            -0.4127160403812549
+          ],
+          [
+            -0.4127160403812549,
+            1.3320015392741902
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 25.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 25.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0398037985607114,
+          0.034921252179641184
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 26.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 4.34955007410633,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 26.0
+      },
+      "velocity": {
+        "vel": [
+          1.2720142040215228,
+          0.8344641110624932
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 26.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 26.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.03692952162290414,
+          0.020130933806169198
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 27.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 4.631790210176882,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 27.0
+      },
+      "velocity": {
+        "vel": [
+          1.2176916825795778,
+          0.821915735807715
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 27.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 27.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.02082198276223424,
+          0.020355661521427763
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 28.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 5.386343457401366,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 28.0
+      },
+      "velocity": {
+        "vel": [
+          1.2348667771704,
+          0.7883853540190872
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 28.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 28.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.014905567547287288,
+          0.022368438907264546
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 29.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 5.628836326645652,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 29.0
+      },
+      "velocity": {
+        "vel": [
+          1.2041538372431813,
+          0.9391954031061797
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 29.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 29.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.0025149258276322885,
+          -0.004229981040082171
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 30.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.029655913391575,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 30.0
+      },
+      "velocity": {
+        "vel": [
+          1.2661394900759753,
+          0.9881514578145495
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 30.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 30.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.009364018785583286,
+          -0.013561793728833451
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 31.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.380285179366517,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 31.0
+      },
+      "velocity": {
+        "vel": [
+          1.0829756827039771,
+          0.9302033813435774
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 31.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          47.56304609783844,
+          7.650283396378037
+        ],
+        "pos_cov": [
+          [
+            0.7066319682860378,
+            -0.3408581497041749
+          ],
+          [
+            -0.3408581497041749,
+            0.9289050097763567
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 31.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 31.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.050890810441468724,
+          0.0531836079548646
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 32.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.421145219305167,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 32.0
+      },
+      "velocity": {
+        "vel": [
+          1.1130953176264577,
+          0.9467932294971904
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 32.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 32.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.08655778742762366,
+          0.08132859683360304
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 33.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.50815852716349,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 33.0
+      },
+      "velocity": {
+        "vel": [
+          1.1107426425232487,
+          0.941156861049333
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 33.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 33.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.09049479211449797,
+          0.0749412461815244
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 34.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.4511301097397435,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 34.0
+      },
+      "velocity": {
+        "vel": [
+          0.9844332798199993,
+          1.019502309080794
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 34.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 34.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.10398295915233302,
+          0.07897796217963547
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 35.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.798794200802336,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 35.0
+      },
+      "velocity": {
+        "vel": [
+          0.8092882847328412,
+          1.2298238191945643
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 35.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 35.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.09865555669792055,
+          0.08344333036734752
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 36.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.127474569330153,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 36.0
+      },
+      "velocity": {
+        "vel": [
+          0.7729798270769151,
+          1.2608266041678688
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 36.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 36.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.12250935102291205,
+          0.055768123630947145
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 37.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.278842999371966,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 37.0
+      },
+      "velocity": {
+        "vel": [
+          0.6624706889205988,
+          1.3287507629765476
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 37.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          51.8147016839814,
+          15.71065567461081
+        ],
+        "pos_cov": [
+          [
+            1.3318646241288672,
+            -0.9986536891783069
+          ],
+          [
+            -0.9986536891783069,
+            1.744551127447742
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 37.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 37.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.12695217733100722,
+          0.05529825559806728
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 38.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.308448423807717,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 38.0
+      },
+      "velocity": {
+        "vel": [
+          0.623192374424181,
+          1.3940897300572939
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 38.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 38.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.12110858073337868,
+          0.03721968538089097
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 39.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.569736165400255,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 39.0
+      },
+      "velocity": {
+        "vel": [
+          0.41752295269722894,
+          1.379209787372362
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 39.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 39.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.09751179099372108,
+          0.018736125449482537
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 40.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.496783524561727,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 40.0
+      },
+      "velocity": {
+        "vel": [
+          0.35157564930823215,
+          1.4293437592631584
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 40.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 40.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.058050267954726044,
+          0.023696708384373474
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 41.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.777292376749931,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 41.0
+      },
+      "velocity": {
+        "vel": [
+          0.21161682924811176,
+          1.496132472296292
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 41.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 41.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.060604436827461285,
+          0.01602800669585959
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 42.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.602638682707001,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 42.0
+      },
+      "velocity": {
+        "vel": [
+          0.23167031558557274,
+          1.5384863293110154
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 42.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 42.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0482096380078871,
+          0.0036573928846729623
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 43.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.873704534683939,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 43.0
+      },
+      "velocity": {
+        "vel": [
+          0.15712486880607607,
+          1.4824774969497359
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 43.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          54.52339377718947,
+          24.180044977546903
+        ],
+        "pos_cov": [
+          [
+            1.2460433301026625,
+            -0.5114591278542133
+          ],
+          [
+            -0.5114591278542133,
+            0.8528797452268793
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 43.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 43.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.024747317170952663,
+          0.0024731620287733874
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 44.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.562351010291495,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 44.0
+      },
+      "velocity": {
+        "vel": [
+          0.0286557783988165,
+          1.4095501271262014
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 44.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 44.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.03918735509260217,
+          0.002504354101179416
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 45.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.714357897259612,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 45.0
+      },
+      "velocity": {
+        "vel": [
+          0.083840078671677,
+          1.3957017833697032
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 45.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 45.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.024441032858976686,
+          -0.0005080041560591116
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 46.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.851696659684047,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 46.0
+      },
+      "velocity": {
+        "vel": [
+          0.071459961326731,
+          1.519234014848628
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 46.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 46.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.02229940849689573,
+          0.003348500897900183
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 47.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.7311354612066845,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 47.0
+      },
+      "velocity": {
+        "vel": [
+          -0.03052566736117289,
+          1.4912668185784392
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 47.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 47.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.04393933081971582,
+          -0.019798780372345427
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 48.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.7518474112248414,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 48.0
+      },
+      "velocity": {
+        "vel": [
+          -0.03700657460886923,
+          1.4701703686734553
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 48.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 48.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0101735735733685,
+          -0.005142714590391659
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 49.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.684612537455692,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 49.0
+      },
+      "velocity": {
+        "vel": [
+          0.004635157985728524,
+          1.4635210793806708
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 49.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          54.92473225173455,
+          33.066934683023604
+        ],
+        "pos_cov": [
+          [
+            0.9747684139571124,
+            -0.5769328520955228
+          ],
+          [
+            -0.5769328520955228,
+            1.1414643757439709
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 49.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 49.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.01121743389399503,
+          -0.003729361521852037
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 50.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.716713958436561,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 50.0
+      },
+      "velocity": {
+        "vel": [
+          0.04122266350546896,
+          1.5012845875896978
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 50.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 50.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.06369175408178773,
+          -0.0013651014286673773
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 51.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.861003046025057,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 51.0
+      },
+      "velocity": {
+        "vel": [
+          -0.02919279626051547,
+          1.5717564681340732
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 51.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 51.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.12615655863323727,
+          -0.012598225085996374
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 52.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.758481574891118,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 52.0
+      },
+      "velocity": {
+        "vel": [
+          -0.15496149191770855,
+          1.4112850571438682
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 52.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 52.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.37101529991882615,
+          -0.21828444719646373
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 53.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.92136314391025,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 53.0
+      },
+      "velocity": {
+        "vel": [
+          -0.5498908304798722,
+          1.2455835083095348
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 53.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 53.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.25150720256551806,
+          -0.1775256251836689
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 54.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.9108281551757065,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 54.0
+      },
+      "velocity": {
+        "vel": [
+          -0.7506585745504774,
+          1.0041064273653126
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 54.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 54.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.193025267704281,
+          -0.15131647180103078
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 55.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.114041318004345,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 55.0
+      },
+      "velocity": {
+        "vel": [
+          -1.0223585682288179,
+          0.8113859948644527
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 55.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          53.874746551227844,
+          39.565948046946744
+        ],
+        "pos_cov": [
+          [
+            1.3332409232600786,
+            -0.8707587244238147
+          ],
+          [
+            -0.8707587244238147,
+            1.3144182294253093
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 55.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 55.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.13860520496572773,
+          -0.1263937229068069
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 56.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.059538842979327,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 56.0
+      },
+      "velocity": {
+        "vel": [
+          -1.2430905817460947,
+          0.7468589926074979
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 56.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 56.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.11607476025239054,
+          -0.10583270000075193
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 57.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.822005671186411,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 57.0
+      },
+      "velocity": {
+        "vel": [
+          -1.2624364255144114,
+          0.6358465312593894
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 57.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 57.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0702253626234189,
+          -0.09836840226313859
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 58.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.906339271568771,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 58.0
+      },
+      "velocity": {
+        "vel": [
+          -1.329995057863653,
+          0.5578319224731115
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 58.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 58.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.05907347006655322,
+          -0.10955100770089095
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 59.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.919238275108185,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 59.0
+      },
+      "velocity": {
+        "vel": [
+          -1.3950172005670223,
+          0.38556158795906825
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 59.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 59.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0477080323750715,
+          -0.08419480550137395
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 60.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.963561839735595,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 60.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4694581262846016,
+          0.3966562376930751
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 60.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 60.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.029194368619445882,
+          -0.05891468618519441
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 61.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.6944885797635525,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 61.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4039112171541026,
+          0.3720544420587375
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 61.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          44.57220694776999,
+          43.347692535957236
+        ],
+        "pos_cov": [
+          [
+            0.3333333333333333,
+            4.0604319286805186e-29
+          ],
+          [
+            4.0604319286805186e-29,
+            0.5334849719879042
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 61.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 61.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.008573844540386377,
+          -0.06935302100122245
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 62.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.908655861075392,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 62.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4560766769069253,
+          0.29163842905497767
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 62.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 62.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.024128644313675084,
+          -0.060224917480120356
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 63.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.813579154661037,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 63.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4398994888377337,
+          0.25637257452903045
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 63.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 63.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0015934649359994127,
+          -0.04725034993035342
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 64.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.004330750673207,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 64.0
+      },
+      "velocity": {
+        "vel": [
+          -1.5350804327446652,
+          0.14090426733806197
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 64.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 64.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.025579875782517122,
+          -0.02244630543452212
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 65.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.082503462838096,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 65.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4643521342205061,
+          0.09105624937301834
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 65.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 65.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.0037700898323885564,
+          -0.021601428010421805
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 66.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.886423589583279,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 66.0
+      },
+      "velocity": {
+        "vel": [
+          -1.5128992569585469,
+          0.19849666386547504
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 66.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 66.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.007189469439751382,
+          -0.006547392263934821
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 67.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.103265860604157,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 67.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4989237067039707,
+          0.018110061103950525
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 67.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          37.620965891612386,
+          44.755229987636234
+        ],
+        "pos_cov": [
+          [
+            1.4215064070991936,
+            -0.5204012332425227
+          ],
+          [
+            -0.5204012332425227,
+            1.14104671829342
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 67.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 67.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.005704789093110023,
+          -0.01172576065578738
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 68.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.017586126991153,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 68.0
+      },
+      "velocity": {
+        "vel": [
+          -1.370560336385316,
+          0.13265289710298767
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 68.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 68.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.002377741728984544,
+          -0.025563431314184096
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 69.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.038162308476961,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 69.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4537975397754637,
+          0.0109886223194171
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 69.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 69.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.00618340030347596,
+          0.0002626834898047468
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 70.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.896895559014676,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 70.0
+      },
+      "velocity": {
+        "vel": [
+          -1.578343324465301,
+          0.02269285499772459
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 70.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 70.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.006149644804768408,
+          -0.01601287637367633
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 71.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 8.26418545358048,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 71.0
+      },
+      "velocity": {
+        "vel": [
+          -1.458111854115448,
+          0.050850048780981
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 71.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 71.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.011620783316657253,
+          -0.07242504297692172
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 72.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 7.936952862895773,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 72.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4914182092859543,
+          -0.1258094432849072
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 72.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 72.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.03947644435966563,
+          -0.26035044512586275
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 73.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.572315308516336,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 73.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4744850174479658,
+          -0.37658593518300604
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 73.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          26.886711065745057,
+          45.03229313010631
+        ],
+        "pos_cov": [
+          [
+            0.3333333333333333,
+            0.0
+          ],
+          [
+            0.0,
+            0.3333333333333333
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 73.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 73.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.022667871301162053,
+          -0.17483148971838156
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 74.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 6.213109654727573,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 74.0
+      },
+      "velocity": {
+        "vel": [
+          -1.5095443444549446,
+          -0.4891952085109155
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 74.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 74.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.0412469912780285,
+          -0.13982927013634278
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 75.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 5.100977304710884,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 75.0
+      },
+      "velocity": {
+        "vel": [
+          -1.3455634993837304,
+          -0.6106958240084976
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 75.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 75.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.04027222936666326,
+          -0.09300954713525195
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 76.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 4.947435998068321,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 76.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4400637661187052,
+          -0.7525592926499354
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 76.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 76.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.017619073783035684,
+          -0.08421718014561884
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 77.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 4.017984029105269,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 77.0
+      },
+      "velocity": {
+        "vel": [
+          -1.4079677236320618,
+          -0.8278463276814747
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 77.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 77.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.023529936749027924,
+          -0.07836701421933046
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 78.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 3.30134322320459,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 78.0
+      },
+      "velocity": {
+        "vel": [
+          -1.2555490352363237,
+          -0.88239889690744
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 78.0
+      },
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 78.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.036067090332032065,
+          -0.06791256487697611
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 79.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 3.0534146820272805,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 79.0
+      },
+      "velocity": {
+        "vel": [
+          -1.2850022583370975,
+          -0.8696882971195622
+        ],
+        "cov": [
+          [
+            0.0025000000000000005,
+            0.0
+          ],
+          [
+            0.0,
+            0.0025000000000000005
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 79.0
+      },
+      "bathymetry": {
+        "pos_fix": [
+          18.202016829637504,
+          41.569429900341994
+        ],
+        "pos_cov": [
+          [
+            0.7634516853231639,
+            -0.028912971150872678
+          ],
+          [
+            -0.028912971150872678,
+            1.0488155207671281
+          ]
+        ],
+        "feature_pos": null,
+        "range_m": null,
+        "bearing_rad": null,
+        "range_var": 4.0,
+        "bearing_var": 0.0027415567780803775,
+        "feature_cov": [
+          [
+            25.0,
+            0.0
+          ],
+          [
+            0.0,
+            25.0
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 79.0
+      },
+      "mode_hint": null,
+      "timestamp_s": 79.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.032141729882098756,
+          -0.07141098518773702
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 80.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 2.712789338253774,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 80.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 80.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.024687697487075333,
+          -0.053327201128638126
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 81.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 2.6066740379127182,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 81.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 81.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.03910059073948126,
+          -0.05787857699525226
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 82.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 1.9507956153222001,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 82.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 82.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.04158746854224822,
+          -0.051361143286367136
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 83.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 1.5211247303089606,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 83.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 83.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.02070920313422408,
+          -0.022570772231772042
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 84.0
+      },
+      "gps": null,
+      "depth": {
+        "depth_m": 1.654357231869412,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 84.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 84.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.022894486275498317,
+          -0.0248079819808662
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 85.0
+      },
+      "gps": {
+        "pos": [
+          10.140493958212787,
+          34.51240390376214
+        ],
+        "vel": [
+          -1.143515439161492,
+          -1.1647353439012118
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 85.0
+      },
+      "depth": {
+        "depth_m": 1.4475708362012467,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 85.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 85.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.02965481772330102,
+          -0.04185402437906373
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 86.0
+      },
+      "gps": {
+        "pos": [
+          10.914722465471034,
+          32.22771573984015
+        ],
+        "vel": [
+          -1.0915219525147457,
+          -1.079870292450542
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 86.0
+      },
+      "depth": {
+        "depth_m": 1.239853663668498,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 86.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 86.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.022355451332787053,
+          -0.015155481761000227
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 87.0
+      },
+      "gps": {
+        "pos": [
+          8.534826796626431,
+          34.34127132557837
+        ],
+        "vel": [
+          -1.0702439311765588,
+          -1.231927842806774
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 87.0
+      },
+      "depth": {
+        "depth_m": 1.1900190003042999,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 87.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 87.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.03429382936232493,
+          -0.027769292137497688
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 88.0
+      },
+      "gps": {
+        "pos": [
+          7.8716881957888685,
+          31.262431109186963
+        ],
+        "vel": [
+          -1.083646945804793,
+          -1.1950854042354526
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 88.0
+      },
+      "depth": {
+        "depth_m": 1.4611005095061183,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 88.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 88.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.01554089786374931,
+          -0.018915830165222226
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 89.0
+      },
+      "gps": {
+        "pos": [
+          9.1065330758757,
+          31.443580234171716
+        ],
+        "vel": [
+          -0.9516262452820365,
+          -1.2684658073014516
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 89.0
+      },
+      "depth": {
+        "depth_m": 0.8398795767225253,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 89.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 89.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.00536748184443038,
+          -0.012233686919364323
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 90.0
+      },
+      "gps": {
+        "pos": [
+          7.329086137515116,
+          27.828024191083
+        ],
+        "vel": [
+          -0.9530137255192026,
+          -1.3699911338247845
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 90.0
+      },
+      "depth": {
+        "depth_m": 0.6678965654179161,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 90.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 90.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.012416934359968995,
+          0.0021823661256663296
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 91.0
+      },
+      "gps": {
+        "pos": [
+          5.3498182049130065,
+          27.139709793771768
+        ],
+        "vel": [
+          -0.8579339974290541,
+          -1.232099169475837
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 91.0
+      },
+      "depth": {
+        "depth_m": 0.6866431916482933,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 91.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 91.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.00603629852907727,
+          0.006507068913868799
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 92.0
+      },
+      "gps": {
+        "pos": [
+          6.482851323471165,
+          27.692744600151045
+        ],
+        "vel": [
+          -0.9911439552133166,
+          -1.053262675128456
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 92.0
+      },
+      "depth": {
+        "depth_m": 0.7620619806231638,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 92.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 92.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.007163340331737682,
+          -0.020126606699473328
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 93.0
+      },
+      "gps": {
+        "pos": [
+          3.36052483693491,
+          24.99048456936238
+        ],
+        "vel": [
+          -1.0048762159202644,
+          -1.3477660436168852
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 93.0
+      },
+      "depth": {
+        "depth_m": 0.21797451168621457,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 93.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 93.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.35405598357561796,
+          0.46112159099806077
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 94.0
+      },
+      "gps": {
+        "pos": [
+          3.5198948333624096,
+          23.98636964084429
+        ],
+        "vel": [
+          -0.6831650264035796,
+          -0.9630608985892873
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 94.0
+      },
+      "depth": {
+        "depth_m": 0.8241320738178389,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 94.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 94.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.19922668154408824,
+          0.2710961872931394
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 95.0
+      },
+      "gps": {
+        "pos": [
+          4.124185582256679,
+          21.6378036351757
+        ],
+        "vel": [
+          -0.3278710739747476,
+          -0.6640463245391945
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 95.0
+      },
+      "depth": {
+        "depth_m": 0.2400572476141362,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 95.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 95.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.1396195990898209,
+          0.20495135806793743
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 96.0
+      },
+      "gps": {
+        "pos": [
+          -0.7818771789194785,
+          21.294084909193145
+        ],
+        "vel": [
+          -0.31436428087173207,
+          -0.3518445442460516
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 96.0
+      },
+      "depth": {
+        "depth_m": 0.4210186492219167,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 96.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 96.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.09508136928930873,
+          0.1280749601715234
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 97.0
+      },
+      "gps": {
+        "pos": [
+          1.8372630331833653,
+          21.865707917015754
+        ],
+        "vel": [
+          -0.226719824105389,
+          -0.15686429995581896
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 97.0
+      },
+      "depth": {
+        "depth_m": 0.16327850989358045,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 97.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 97.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.023361021060917343,
+          0.08629717164240899
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 98.0
+      },
+      "gps": {
+        "pos": [
+          4.9536081279696,
+          23.646716117575377
+        ],
+        "vel": [
+          -0.037133226214883575,
+          -0.05274524726871119
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 98.0
+      },
+      "depth": {
+        "depth_m": 0.3744490783451602,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 98.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 98.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.04135084422958422,
+          0.049564201555741545
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 99.0
+      },
+      "gps": {
+        "pos": [
+          1.843325251937446,
+          24.708588576828586
+        ],
+        "vel": [
+          -0.04273987438098288,
+          -0.16575912274876675
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 99.0
+      },
+      "depth": {
+        "depth_m": 0.19533792911596462,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 99.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 99.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.03767508199657038,
+          0.03635038034751031
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 100.0
+      },
+      "gps": {
+        "pos": [
+          3.8430416023665463,
+          22.507110828347976
+        ],
+        "vel": [
+          -0.06129718182917099,
+          -0.1922215061375886
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 100.0
+      },
+      "depth": {
+        "depth_m": 0.026105553599012954,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 100.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 100.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.02885510037646532,
+          0.017605922513850868
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 101.0
+      },
+      "gps": {
+        "pos": [
+          2.781938320775609,
+          21.276132161706435
+        ],
+        "vel": [
+          0.013299289078717254,
+          0.012407977143205205
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 101.0
+      },
+      "depth": {
+        "depth_m": 0.26299929419947715,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 101.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 101.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.010951111089065796,
+          0.02786447145069973
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 102.0
+      },
+      "gps": {
+        "pos": [
+          2.587522161950769,
+          20.513423798537882
+        ],
+        "vel": [
+          -0.07918564447287266,
+          0.05747111648258241
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 102.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 102.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 102.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0001519295717164141,
+          0.020417206799538203
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 103.0
+      },
+      "gps": {
+        "pos": [
+          1.6110153995491074,
+          22.40913944539655
+        ],
+        "vel": [
+          0.023484420441806313,
+          -0.09551092856443076
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 103.0
+      },
+      "depth": {
+        "depth_m": 0.011812341880471339,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 103.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 103.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.0031709145766980872,
+          0.004238518828076317
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 104.0
+      },
+      "gps": {
+        "pos": [
+          0.8655476973576077,
+          18.46274482367509
+        ],
+        "vel": [
+          -0.0676370584424201,
+          0.041765618309925874
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 104.0
+      },
+      "depth": {
+        "depth_m": 0.1820931446192463,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 104.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 104.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.004215528936614331,
+          0.008397774282171422
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 105.0
+      },
+      "gps": {
+        "pos": [
+          3.1220494087528667,
+          21.920773324964113
+        ],
+        "vel": [
+          0.08800430469201355,
+          -0.09005734809633593
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 105.0
+      },
+      "depth": {
+        "depth_m": 0.18063894653541643,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 105.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 105.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0033492542890664573,
+          0.02192638714091298
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 106.0
+      },
+      "gps": {
+        "pos": [
+          -0.3684864249488735,
+          26.17153014764409
+        ],
+        "vel": [
+          -0.1298056652974585,
+          0.04724766975164577
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 106.0
+      },
+      "depth": {
+        "depth_m": 0.10875573617219592,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 106.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 106.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.00220203313773373,
+          0.009546417839759444
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 107.0
+      },
+      "gps": {
+        "pos": [
+          3.8164474341913017,
+          25.412665057007
+        ],
+        "vel": [
+          -0.009366010271533434,
+          0.09680412863680246
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 107.0
+      },
+      "depth": {
+        "depth_m": 0.2019159494338852,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 107.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 107.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -7.998770808257337e-06,
+          0.013269892831884613
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 108.0
+      },
+      "gps": {
+        "pos": [
+          3.0328784698822466,
+          24.59715590918436
+        ],
+        "vel": [
+          -0.025514608778138437,
+          -0.12952164213982942
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 108.0
+      },
+      "depth": {
+        "depth_m": 0.32127040019473974,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 108.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 108.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.005067690630285773,
+          -0.018834185835911017
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 109.0
+      },
+      "gps": {
+        "pos": [
+          3.4816297036084762,
+          20.91647661717877
+        ],
+        "vel": [
+          0.017161449811715575,
+          0.07885050891095555
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 109.0
+      },
+      "depth": {
+        "depth_m": 0.1680296764644789,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 109.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 109.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0021942169060357,
+          -0.017711187843401744
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 110.0
+      },
+      "gps": {
+        "pos": [
+          3.6402255656464355,
+          19.781828666629067
+        ],
+        "vel": [
+          0.022138014776218937,
+          0.1009813461085569
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 110.0
+      },
+      "depth": {
+        "depth_m": 0.23438368172570373,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 110.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 110.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.013038465409272665,
+          -0.001718411458382017
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 111.0
+      },
+      "gps": {
+        "pos": [
+          0.9189048824152573,
+          22.07562902042991
+        ],
+        "vel": [
+          -0.019347261580714727,
+          0.035775083596314636
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 111.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 111.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 111.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.004120147161355402,
+          -0.02117349618176429
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 112.0
+      },
+      "gps": {
+        "pos": [
+          4.208211791853381,
+          21.31205777204207
+        ],
+        "vel": [
+          -0.043170419903722404,
+          -0.18752242505921904
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 112.0
+      },
+      "depth": {
+        "depth_m": 0.0730087546889702,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 112.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 112.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.005090269615847005,
+          0.0044934460673263016
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 113.0
+      },
+      "gps": {
+        "pos": [
+          2.2755071328074044,
+          20.81312193621195
+        ],
+        "vel": [
+          0.06255142613708747,
+          -0.037990124686338694
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 113.0
+      },
+      "depth": {
+        "depth_m": 0.17095885928195723,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 113.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 113.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.002879027706349575,
+          -0.008597673160048506
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 114.0
+      },
+      "gps": {
+        "pos": [
+          -0.4230357384540815,
+          20.948429486994087
+        ],
+        "vel": [
+          -0.07132149737598453,
+          -0.021196086691159126
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 114.0
+      },
+      "depth": {
+        "depth_m": 0.35785776489449234,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 114.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 114.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.006359065273243806,
+          -0.012193055059076795
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 115.0
+      },
+      "gps": {
+        "pos": [
+          2.2381761110738796,
+          22.511896112615943
+        ],
+        "vel": [
+          0.11452109056989267,
+          -0.07782450382802443
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 115.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 115.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 115.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.0037313396034529774,
+          0.010000744594828444
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 116.0
+      },
+      "gps": {
+        "pos": [
+          4.01969636800213,
+          22.175415539384627
+        ],
+        "vel": [
+          -0.018149241312152883,
+          -0.03726328742748936
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 116.0
+      },
+      "depth": {
+        "depth_m": 0.0984276402125114,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 116.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 116.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -7.198763791593866e-05,
+          0.004467705208504449
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 117.0
+      },
+      "gps": {
+        "pos": [
+          3.2623502924610177,
+          21.728691110083965
+        ],
+        "vel": [
+          -0.05218986327618957,
+          0.04100849751444233
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 117.0
+      },
+      "depth": {
+        "depth_m": 0.046389236854201175,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 117.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 117.0
+    },
+    {
+      "imu": {
+        "accel": [
+          0.015490449053942163,
+          0.02171227867381265
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 118.0
+      },
+      "gps": {
+        "pos": [
+          3.2381063214641577,
+          20.237277980445572
+        ],
+        "vel": [
+          0.0704495964958305,
+          0.22853914950296345
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 118.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 118.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 118.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.017903714350941614,
+          0.015988145446944248
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 119.0
+      },
+      "gps": {
+        "pos": [
+          2.4149265740417336,
+          21.4812630292485
+        ],
+        "vel": [
+          -0.2242528789240327,
+          -0.023504291638080474
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 119.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 119.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 119.0
+    },
+    {
+      "imu": {
+        "accel": [
+          -0.009792563753378176,
+          -0.021254662074633546
+        ],
+        "dt": 1.0,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 120.0
+      },
+      "gps": {
+        "pos": [
+          2.67655045201583,
+          21.17102417777682
+        ],
+        "vel": [
+          0.042441711861745356,
+          -0.003582559575432124
+        ],
+        "pos_cov": [
+          [
+            2.25,
+            0.0
+          ],
+          [
+            0.0,
+            2.25
+          ]
+        ],
+        "vel_cov": [
+          [
+            0.0064,
+            0.0
+          ],
+          [
+            0.0,
+            0.0064
+          ]
+        ],
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 120.0
+      },
+      "depth": {
+        "depth_m": 0.0,
+        "var": 0.0225,
+        "quality": {
+          "available": true,
+          "scale": 1.0
+        },
+        "timestamp_s": 120.0
+      },
+      "velocity": null,
+      "bathymetry": null,
+      "mode_hint": null,
+      "timestamp_s": 120.0
+    }
+  ]
+}
