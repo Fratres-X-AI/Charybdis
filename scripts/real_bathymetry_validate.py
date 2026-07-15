@@ -30,6 +30,7 @@ from charybdis.hybrid import (
 
 REAL_BATHYMETRY_SCHEMA_VERSION = "1"
 INTEGRATION_GRADE_MAX_RESOLUTION_M = 50.0
+PLACEMENT_RELIEF_BUFFER_M = 0.5
 
 
 def _git_sha() -> str:
@@ -127,6 +128,7 @@ def _build_placement_positions(
     margin: float,
 ) -> np.ndarray:
     """Pre-index interior cells whose profile meets relief requirements."""
+    relief_floor = min_relief + PLACEMENT_RELIEF_BUFFER_M
     x_min, x_max, y_min, y_max = bathymetry_map.bounds_m
     step = bathymetry_map.resolution_m
     xs = np.arange(x_min + margin, x_max - margin, step)
@@ -142,7 +144,7 @@ def _build_placement_positions(
             if not bathymetry_map.contains(sample_points):
                 continue
             depths = _profile_depths_at(bathymetry_map, candidate, profile_offsets)
-            if np.ptp(depths) >= min_relief:
+            if np.ptp(depths) >= relief_floor:
                 qualifying.append(candidate)
     if not qualifying:
         return np.empty((0, 2), dtype=np.float64)
@@ -217,36 +219,60 @@ def _run_case(job: tuple[BathymetryMap, int]) -> dict[str, Any]:
     noise_std_m = 0.75
     variance_m2 = (noise_std_m + 0.25 * resolution) ** 2
 
-    if _PLACEMENT_POSITIONS is not None and _PLACEMENT_POSITIONS.size:
-        index = int(rng.integers(len(_PLACEMENT_POSITIONS)))
-        true_position = _PLACEMENT_POSITIONS[index].copy()
-        true_depths = _profile_depths_at(
-            bathymetry_map,
-            true_position,
-            profile_offsets,
-        )
-    else:
-        true_position, true_depths = _find_valid_placement(
-            bathymetry_map,
-            rng,
-            profile_offsets,
-            min_relief,
-            margin,
-            placement_attempts,
-        )
-    if true_position is None or true_depths is None:
-        return {"status": MatchStatus.INSUFFICIENT_RELIEF.value, "error_m": None}
-
-    profile = BathymetryProfile(
-        profile_offsets,
-        true_depths + rng.normal(0.0, noise_std_m, size=true_depths.shape),
-        variance_m2=variance_m2,
-    )
-    prior = true_position + rng.normal(0.0, prior_sigma, size=2)
     matcher = TerrainProfileMatcher(
         bathymetry_map,
         _matcher_config_for_map(bathymetry_map),
     )
+    matcher_cfg = matcher.cfg
+    true_position: np.ndarray | None = None
+    true_depths: np.ndarray | None = None
+    profile: BathymetryProfile | None = None
+
+    for _ in range(12):
+        if _PLACEMENT_POSITIONS is not None and _PLACEMENT_POSITIONS.size:
+            if rng.random() < 0.85:
+                true_position, true_depths = _find_valid_placement(
+                    bathymetry_map,
+                    rng,
+                    profile_offsets,
+                    min_relief,
+                    margin,
+                    placement_attempts,
+                )
+            if true_position is None:
+                index = int(rng.integers(len(_PLACEMENT_POSITIONS)))
+                true_position = _PLACEMENT_POSITIONS[index].copy()
+                true_depths = _profile_depths_at(
+                    bathymetry_map,
+                    true_position,
+                    profile_offsets,
+                )
+        else:
+            true_position, true_depths = _find_valid_placement(
+                bathymetry_map,
+                rng,
+                profile_offsets,
+                min_relief,
+                margin,
+                placement_attempts,
+            )
+        if true_position is None or true_depths is None:
+            continue
+
+        noisy_depths = true_depths + rng.normal(0.0, noise_std_m, size=true_depths.shape)
+        candidate_profile = BathymetryProfile(
+            profile_offsets,
+            noisy_depths,
+            variance_m2=variance_m2,
+        )
+        if candidate_profile.relief_m >= matcher_cfg.min_profile_relief_m:
+            profile = candidate_profile
+            break
+
+    if profile is None or true_position is None:
+        return {"status": MatchStatus.INSUFFICIENT_RELIEF.value, "error_m": None}
+
+    prior = true_position + rng.normal(0.0, prior_sigma, size=2)
     match = matcher.match(
         profile,
         prior_pos=prior,
