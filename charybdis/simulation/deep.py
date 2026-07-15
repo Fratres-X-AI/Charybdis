@@ -72,9 +72,9 @@ def _default_fusion_config() -> HybridFusionConfig:
     return HybridFusionConfig(
         init_pos_std=8.0,
         init_vel_std=0.4,
-        init_depth_std=3.0,
+        init_depth_std=3.5,
         init_depth_rate_std=0.2,
-        depth_process_noise=0.8,
+        depth_process_noise=1.0,
         depth_rate_noise=0.25,
         depth_rate_tau_s=12.0,
         max_recent_rejections=250,

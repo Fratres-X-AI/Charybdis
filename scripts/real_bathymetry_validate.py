@@ -109,37 +109,131 @@ def _resolution_class(resolution_m: float) -> str:
     return "coarse_characterization"
 
 
-def _run_case(job: tuple[BathymetryMap, int]) -> dict[str, Any]:
-    bathymetry_map, seed = job
-    rng = np.random.default_rng(seed)
-    resolution = bathymetry_map.resolution_m
-    profile_offsets, prior_sigma, min_relief = _profile_sampling_for_map(bathymetry_map)
-    x_min, x_max, y_min, y_max = bathymetry_map.bounds_m
-    margin = 8.0 * resolution
-
-    noise_std_m = 0.75
-    variance_m2 = (noise_std_m + 0.25 * resolution) ** 2
-
-    true_position: np.ndarray | None = None
-    true_depths: np.ndarray | None = None
-    placement_attempts = (
-        500 if resolution <= INTEGRATION_GRADE_MAX_RESOLUTION_M else 200
+def _profile_depths_at(
+    bathymetry_map: BathymetryMap,
+    position: np.ndarray,
+    profile_offsets: np.ndarray,
+) -> np.ndarray:
+    return np.asarray(
+        bathymetry_map.sample(position + profile_offsets),
+        dtype=np.float64,
     )
-    for _ in range(placement_attempts):
+
+
+def _build_placement_positions(
+    bathymetry_map: BathymetryMap,
+    profile_offsets: np.ndarray,
+    min_relief: float,
+    margin: float,
+) -> np.ndarray:
+    """Pre-index interior cells whose profile meets relief requirements."""
+    x_min, x_max, y_min, y_max = bathymetry_map.bounds_m
+    step = bathymetry_map.resolution_m
+    xs = np.arange(x_min + margin, x_max - margin, step)
+    ys = np.arange(y_min + margin, y_max - margin, step)
+    if xs.size == 0 or ys.size == 0:
+        return np.empty((0, 2), dtype=np.float64)
+
+    qualifying: list[np.ndarray] = []
+    for x in xs:
+        for y in ys:
+            candidate = np.array([x, y], dtype=np.float64)
+            sample_points = candidate + profile_offsets
+            if not bathymetry_map.contains(sample_points):
+                continue
+            depths = _profile_depths_at(bathymetry_map, candidate, profile_offsets)
+            if np.ptp(depths) >= min_relief:
+                qualifying.append(candidate)
+    if not qualifying:
+        return np.empty((0, 2), dtype=np.float64)
+    return np.asarray(qualifying, dtype=np.float64)
+
+
+def _find_valid_placement(
+    bathymetry_map: BathymetryMap,
+    rng: np.random.Generator,
+    profile_offsets: np.ndarray,
+    min_relief: float,
+    margin: float,
+    max_attempts: int,
+) -> tuple[np.ndarray | None, np.ndarray | None]:
+    """Pick a placement where the sampled profile meets relief requirements."""
+    x_min, x_max, y_min, y_max = bathymetry_map.bounds_m
+
+    for _ in range(max_attempts):
         candidate = np.array(
             [
                 rng.uniform(x_min + margin, x_max - margin),
                 rng.uniform(y_min + margin, y_max - margin),
             ]
         )
-        depths = np.asarray(
-            bathymetry_map.sample(candidate + profile_offsets),
-            dtype=np.float64,
-        )
+        sample_points = candidate + profile_offsets
+        if not bathymetry_map.contains(sample_points):
+            continue
+        depths = _profile_depths_at(bathymetry_map, candidate, profile_offsets)
         if np.ptp(depths) >= min_relief:
-            true_position = candidate
-            true_depths = depths
-            break
+            return candidate, depths
+
+    step = bathymetry_map.resolution_m
+    xs = np.arange(x_min + margin, x_max - margin, step)
+    ys = np.arange(y_min + margin, y_max - margin, step)
+    if xs.size == 0 or ys.size == 0:
+        return None, None
+
+    qualifying: list[tuple[np.ndarray, np.ndarray]] = []
+    for x in xs:
+        for y in ys:
+            candidate = np.array([x, y], dtype=np.float64)
+            sample_points = candidate + profile_offsets
+            if not bathymetry_map.contains(sample_points):
+                continue
+            depths = _profile_depths_at(bathymetry_map, candidate, profile_offsets)
+            if np.ptp(depths) >= min_relief:
+                qualifying.append((candidate, depths))
+    if not qualifying:
+        return None, None
+    index = int(rng.integers(len(qualifying)))
+    return qualifying[index]
+
+
+_PLACEMENT_POSITIONS: np.ndarray | None = None
+
+
+def _init_placement_worker(positions: np.ndarray | None) -> None:
+    global _PLACEMENT_POSITIONS
+    _PLACEMENT_POSITIONS = positions
+
+
+def _run_case(job: tuple[BathymetryMap, int]) -> dict[str, Any]:
+    bathymetry_map, seed = job
+    rng = np.random.default_rng(seed)
+    resolution = bathymetry_map.resolution_m
+    profile_offsets, prior_sigma, min_relief = _profile_sampling_for_map(bathymetry_map)
+    margin = 8.0 * resolution
+    placement_attempts = (
+        500 if resolution <= INTEGRATION_GRADE_MAX_RESOLUTION_M else 200
+    )
+
+    noise_std_m = 0.75
+    variance_m2 = (noise_std_m + 0.25 * resolution) ** 2
+
+    if _PLACEMENT_POSITIONS is not None and _PLACEMENT_POSITIONS.size:
+        index = int(rng.integers(len(_PLACEMENT_POSITIONS)))
+        true_position = _PLACEMENT_POSITIONS[index].copy()
+        true_depths = _profile_depths_at(
+            bathymetry_map,
+            true_position,
+            profile_offsets,
+        )
+    else:
+        true_position, true_depths = _find_valid_placement(
+            bathymetry_map,
+            rng,
+            profile_offsets,
+            min_relief,
+            margin,
+            placement_attempts,
+        )
     if true_position is None or true_depths is None:
         return {"status": MatchStatus.INSUFFICIENT_RELIEF.value, "error_m": None}
 
@@ -218,12 +312,37 @@ def main() -> int:
             f"limit {INTEGRATION_GRADE_MAX_RESOLUTION_M:.3f} m"
         )
     seeds = load_validation_seeds(args.seeds, limit=runs)
+    profile_offsets, _, min_relief = _profile_sampling_for_map(bathymetry_map)
+    margin = 8.0 * bathymetry_map.resolution_m
+    placement_positions: np.ndarray | None = None
+    if bathymetry_map.resolution_m <= INTEGRATION_GRADE_MAX_RESOLUTION_M:
+        placement_positions = _build_placement_positions(
+            bathymetry_map,
+            profile_offsets,
+            min_relief,
+            margin,
+        )
+        if placement_positions.size == 0:
+            parser.error(
+                "no integration-grade placement cells meet relief requirements on tile"
+            )
+        print(
+            f"placement_index cells={placement_positions.shape[0]} "
+            f"min_relief={min_relief:.3f}m",
+            flush=True,
+        )
+
     started = time.perf_counter()
     jobs = [(bathymetry_map, seed) for seed in seeds]
     if args.workers == 1:
+        _init_placement_worker(placement_positions)
         cases = [_run_case(job) for job in jobs]
     else:
-        with Pool(args.workers) as pool:
+        with Pool(
+            args.workers,
+            initializer=_init_placement_worker,
+            initargs=(placement_positions,),
+        ) as pool:
             cases = pool.map(_run_case, jobs)
     elapsed = time.perf_counter() - started
 
