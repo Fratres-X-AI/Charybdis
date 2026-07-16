@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate frozen holdout seeds disjoint from seeds_v1."""
+
 from __future__ import annotations
 
 import pathlib
