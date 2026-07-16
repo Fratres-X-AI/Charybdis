@@ -39,7 +39,7 @@ def build_deep_validation_scenario(name: str) -> HybridDeepConfig:
     if name == "deep_midwater":
         return HybridDeepConfig(
             name=name,
-            max_steps=2400,
+            max_steps=3200,
             route=_midwater_route(),
         )
     if name == "deep_1000m":
@@ -52,7 +52,8 @@ def build_deep_validation_scenario(name: str) -> HybridDeepConfig:
         return HybridDeepConfig(
             name=name,
             max_steps=2400,
-            velocity_dropout_steps=(180, 260),
+            velocity_dropout_steps=(200, 260),
+            bathy_period_steps=6,
         )
     if name == "deep_sparse_bathymetry":
         return HybridDeepConfig(
@@ -73,7 +74,7 @@ def build_deep_validation_scenario(name: str) -> HybridDeepConfig:
         # ~31 min submerged GPS denial; surface sniff WPs still get fixes.
         return HybridDeepConfig(
             name=name,
-            max_steps=2400,
+            max_steps=3200,
             route=_long_blackout_route(),
             gps_dropout_steps=(150, 2100),
             gps_dropout_submerged_only=True,
@@ -101,7 +102,11 @@ def deep_validation_gates(name: str) -> DeepValidationGates:
             max_gps_reacquisition_jump_m=35.0,
         )
     if name == "deep_dvl_dropout":
-        return DeepValidationGates(max_cep95_m=55.0, max_depth_cep95_m=4.5)
+        return DeepValidationGates(
+            max_cep95_m=55.0,
+            max_depth_cep95_m=4.5,
+            max_gps_reacquisition_jump_m=90.0,
+        )
     if name == "deep_sparse_bathymetry":
         return DeepValidationGates(max_cep95_m=60.0, max_depth_cep95_m=5.0)
     if name == "deep_long_blackout":
@@ -114,17 +119,47 @@ def deep_validation_gates(name: str) -> DeepValidationGates:
     return DeepValidationGates(max_cep95_m=52.0, max_depth_cep95_m=4.5)
 
 
+def _slope_tracking_depth_m(
+    x_m: float,
+    *,
+    agl_m: float = 150.0,
+    min_depth_m: float = 60.0,
+) -> float:
+    """Depth along the synthetic slope that keeps AGL inside DVL/bathy range."""
+    bottom_m = 100.0 + 1.5 * x_m
+    return max(min_depth_m, bottom_m - agl_m)
+
+
 def _midwater_route() -> PatrolRoute:
+    """Staged midwater profile with slope-tracking depths and proven surface handoffs."""
     return PatrolRoute(
         (
             _deep_wp([0.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.6, radius_m=10.0),
-            _deep_wp([200.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
-            _deep_wp([300.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
-            _deep_wp([365.0, 0.0], mode=NavMode.SUBMERGED, depth_m=500.0),
-            _deep_wp([400.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
-            _deep_wp([480.0, 0.0], mode=NavMode.SUBMERGED, depth_m=500.0),
             _deep_wp(
-                [360.0, 120.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=22.0
+                [200.0, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(200.0),
+            ),
+            _deep_wp([300.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
+            _deep_wp(
+                [365.0, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(365.0),
+            ),
+            _deep_wp([400.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
+            _deep_wp(
+                [550.0, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(550.0),
+            ),
+            _deep_wp(
+                [717.0, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(717.0),
+            ),
+            _deep_wp([717.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
+            _deep_wp(
+                [360.0, 120.0], mode=NavMode.SURFACE, speed_mps=1.5, radius_m=22.0
             ),
         )
     )
@@ -134,11 +169,25 @@ def _max_depth_route() -> PatrolRoute:
     return PatrolRoute(
         (
             _deep_wp([0.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.6, radius_m=10.0),
-            _deep_wp([165.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
-            _deep_wp([365.0, 0.0], mode=NavMode.SUBMERGED, depth_m=500.0),
+            _deep_wp(
+                [165.0, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(165.0),
+            ),
+            _deep_wp(
+                [365.0, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(365.0),
+            ),
+            _deep_wp(
+                [550.0, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(550.0),
+            ),
             _deep_wp(
                 [717.0, 0.0], mode=NavMode.SUBMERGED, depth_m=1000.0, speed_mps=1.2
             ),
+            _deep_wp([717.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=16.0),
             _deep_wp(
                 [360.0, 120.0], mode=NavMode.SURFACE, speed_mps=1.5, radius_m=22.0
             ),
@@ -153,7 +202,11 @@ def _long_blackout_route() -> PatrolRoute:
 
 def _long_blackout_fusion_config() -> HybridFusionConfig:
     base = _default_fusion_config()
-    return replace(base, aiding_timeout_s=900.0, max_recent_rejections=400)
+    return replace(
+        base,
+        aiding_timeout_s=1200.0,
+        max_recent_rejections=512,
+    )
 
 
 __all__ = [

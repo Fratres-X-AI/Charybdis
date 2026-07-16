@@ -32,6 +32,9 @@ for f in \
   pod_cpu_loop.log pod_cpu_loop_stdout.log \
   pod_integration_grade.log pod_integration_grade_stdout.log \
   pod_highres_bathy.log pod_release_grade_stdout.log \
+  pod_validation_day.log pod_validation_day_stdout.log \
+  pod_full_pass.log pod_full_pass_stdout.log \
+  pod_holdout_deep_rerun.log pod_holdout_deep_rerun_stdout.log \
   pod_int_harbor.log pod_int_deep.log pod_rel_harbor.log pod_rel_deep.log \
   pod_worst_harbor.log pod_worst_deep.log; do
   scp -P "$POD_PORT" -i "$POD_KEY" \

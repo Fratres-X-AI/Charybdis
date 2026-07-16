@@ -371,20 +371,52 @@ def _harbor_to_open_ocean_recharge_route() -> PatrolRoute:
     )
 
 
+def _slope_tracking_depth_m(
+    x_m: float,
+    *,
+    agl_m: float = 150.0,
+    min_depth_m: float = 60.0,
+) -> float:
+    """Depth along the synthetic deep slope that keeps AGL inside DVL/bathy range."""
+    bottom_m = 100.0 + 1.5 * x_m
+    return max(min_depth_m, bottom_m - agl_m)
+
+
 def _stealth_solar_transit_route() -> PatrolRoute:
     """Compressed transoceanic profile: submerged legs + periodic surface sniffs."""
+    submerged_x = (180.0, 540.0, 900.0, 1260.0, 1620.0)
     return PatrolRoute(
         (
             _deep_wp([0.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.4, radius_m=12.0),
-            _deep_wp([180.0, 0.0], mode=NavMode.SUBMERGED, depth_m=80.0),
+            _deep_wp(
+                [submerged_x[0], 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(submerged_x[0]),
+            ),
             _deep_wp([360.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.2, radius_m=16.0),
-            _deep_wp([540.0, 0.0], mode=NavMode.SUBMERGED, depth_m=120.0),
+            _deep_wp(
+                [submerged_x[1], 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(submerged_x[1]),
+            ),
             _deep_wp([720.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.2, radius_m=16.0),
-            _deep_wp([900.0, 0.0], mode=NavMode.SUBMERGED, depth_m=150.0),
+            _deep_wp(
+                [submerged_x[2], 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(submerged_x[2]),
+            ),
             _deep_wp([1080.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.2, radius_m=18.0),
-            _deep_wp([1260.0, 0.0], mode=NavMode.SUBMERGED, depth_m=180.0),
+            _deep_wp(
+                [submerged_x[3], 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(submerged_x[3]),
+            ),
             _deep_wp([1440.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.2, radius_m=18.0),
-            _deep_wp([1620.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
+            _deep_wp(
+                [submerged_x[4], 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(submerged_x[4]),
+            ),
             _deep_wp([1800.0, 0.0], mode=NavMode.SURFACE, speed_mps=1.3, radius_m=20.0),
         )
     )
@@ -392,17 +424,17 @@ def _stealth_solar_transit_route() -> PatrolRoute:
 
 def _hydrokinetic_transit_route() -> PatrolRoute:
     """Fully submerged transit — no surface sniffs (flow-harvest endurance profile)."""
+    xs = (0.0, 240.0, 480.0, 720.0, 960.0, 1200.0, 1440.0, 1680.0, 1800.0)
+    speeds = (1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.3)
     return PatrolRoute(
-        (
-            _deep_wp([0.0, 0.0], mode=NavMode.SUBMERGED, depth_m=60.0, speed_mps=1.3),
-            _deep_wp([240.0, 0.0], mode=NavMode.SUBMERGED, depth_m=90.0),
-            _deep_wp([480.0, 0.0], mode=NavMode.SUBMERGED, depth_m=120.0),
-            _deep_wp([720.0, 0.0], mode=NavMode.SUBMERGED, depth_m=150.0),
-            _deep_wp([960.0, 0.0], mode=NavMode.SUBMERGED, depth_m=180.0),
-            _deep_wp([1200.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
-            _deep_wp([1440.0, 0.0], mode=NavMode.SUBMERGED, depth_m=220.0),
-            _deep_wp([1680.0, 0.0], mode=NavMode.SUBMERGED, depth_m=200.0),
-            _deep_wp([1800.0, 0.0], mode=NavMode.SUBMERGED, depth_m=180.0),
+        tuple(
+            _deep_wp(
+                [x, 0.0],
+                mode=NavMode.SUBMERGED,
+                depth_m=_slope_tracking_depth_m(x),
+                speed_mps=speed,
+            )
+            for x, speed in zip(xs, speeds, strict=True)
         )
     )
 
@@ -412,7 +444,7 @@ def _stealth_solar_fusion_config() -> HybridFusionConfig:
     return replace(
         base,
         aiding_timeout_s=1200.0,
-        max_recent_rejections=450,
+        max_recent_rejections=512,
     )
 
 

@@ -357,10 +357,20 @@ def run_hybrid_deep_simulation(
         )
         pos_before = state.pos.copy()
         gps_now = packet.gps is not None
-        cycle = navigator.step(packet)
+        gps_reacquire = gps_now and not had_gps_prev and had_gps_ever
+        if gps_reacquire and packet.gps is not None:
+            gps = packet.gps
+            cycle = navigator.resume(
+                gps.pos,
+                vel=gps.vel,
+                pos_cov=gps.pos_cov,
+                depth_m=state.depth_m,
+            )
+        else:
+            cycle = navigator.step(packet)
         state = cycle.state
         command = cycle.command
-        if gps_now and not had_gps_prev and had_gps_ever:
+        if gps_reacquire:
             gps_reacquisition_jumps.append(
                 float(np.linalg.norm(state.pos - pos_before))
             )

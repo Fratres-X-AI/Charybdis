@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Active RunPod endpoint — update when pod changes.
-export POD_NAME=global_turquoise_carp
-export POD_HOST=root@213.173.110.108
-export POD_PORT=23143
-export POD_KEY="${HOME}/.ssh/id_ed25519"
+export POD_NAME=far_scarlet_mandrill
+export POD_HOST=root@91.199.227.82
+export POD_PORT=16062
+export POD_KEY="/c/Users/Besn Daddy/.ssh/id_ed25519"
