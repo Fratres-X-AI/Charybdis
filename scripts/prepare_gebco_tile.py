@@ -53,8 +53,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if all(
-        v is not None
-        for v in (args.lat_min, args.lat_max, args.lon_min, args.lon_max)
+        v is not None for v in (args.lat_min, args.lat_max, args.lon_min, args.lon_max)
     ):
         args.url = gebco_erddap_url(
             args.lat_min, args.lat_max, args.lon_min, args.lon_max

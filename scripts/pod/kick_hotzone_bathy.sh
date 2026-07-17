@@ -18,7 +18,11 @@ ssh -o StrictHostKeyChecking=no -p "$POD_PORT" -i "$POD_KEY" "$POD_HOST" <<'REMO
 set -euo pipefail
 cd /workspace/Charybdis
 for f in scripts/pod/pod_hotzone_bathy.sh; do sed -i 's/\r$//' "$f"; chmod +x "$f"; done
-source .venv/bin/activate
+if [[ -f .venv/bin/activate ]]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
+export PYTHONPATH=.
 
 if pgrep -f pod_hotzone_bathy >/dev/null 2>&1; then
   echo "hotzone already running"

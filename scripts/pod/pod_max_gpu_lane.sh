@@ -11,15 +11,20 @@ ts() { date -u +"%H:%M:%S"; }
 log() { echo "[$(ts)] gpu${GPU_ID} lane=${LANE} $*" | tee -a "$LOG"; }
 
 cd "$REPO"
-source .venv/bin/activate
+if [[ -f .venv/bin/activate ]]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
 export PYTHONPATH=.
 export CUDA_VISIBLE_DEVICES="$GPU_ID"
 export OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 MKL_NUM_THREADS=8
 export PYTHONUNBUFFERED=1
+PY=python3
+command -v python >/dev/null 2>&1 && PY=python
 
-log "probe $(python -c "import torch; print(torch.cuda.get_device_name(0))")"
+log "probe $($PY -c "import torch; print(torch.cuda.get_device_name(0))")"
 
-python - <<PY | tee -a "$LOG"
+"$PY" - <<PY | tee -a "$LOG"
 from __future__ import annotations
 
 import os

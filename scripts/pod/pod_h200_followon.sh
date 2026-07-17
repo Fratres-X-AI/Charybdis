@@ -10,8 +10,13 @@ ts() { date -u +"%H:%M:%S"; }
 log() { echo "[$(ts)] $*" | tee -a "$LOG"; }
 
 cd "$REPO"
-source .venv/bin/activate
+if [[ -f .venv/bin/activate ]]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
 export PYTHONPATH=.
+PY=python3
+command -v python >/dev/null 2>&1 && PY=python
 
 log "H200_FOLLOWON waiting for round-1 lanes..."
 while pgrep -f 'pod_max_gpu_lane.sh' >/dev/null 2>&1; do
@@ -22,7 +27,7 @@ while pgrep -f 'pod_quad_gpu_max.sh' >/dev/null 2>&1; do
 done
 log "round-1 finished — promoting best lane"
 
-python3 - <<'PY' | tee -a "$LOG"
+"$PY" - <<'PY' | tee -a "$LOG"
 import re
 import shutil
 from pathlib import Path
@@ -71,7 +76,7 @@ while pgrep -f 'pod_h200_max_gpu_lane.sh' >/dev/null 2>&1; do
 done
 
 log "round-2 finished — promoting best H200 lane"
-python3 - <<'PY' | tee -a "$LOG"
+"$PY" - <<'PY' | tee -a "$LOG"
 import re
 import shutil
 from pathlib import Path
