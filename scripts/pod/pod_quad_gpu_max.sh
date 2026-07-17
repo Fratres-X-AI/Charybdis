@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Max all 4 GPUs in parallel — promote best lane to tcm_so2.pt.
+# Max up to 4 visible GPUs in parallel, then promote the best lane to tcm_so2.pt.
 set -euo pipefail
 REPO=/workspace/Charybdis
 LOG=/tmp/pod_quad_gpu.log
@@ -20,7 +20,10 @@ if [[ ! -f models/tcm_so2.pt ]]; then
 fi
 
 NGPU=$(nvidia-smi -L 2>/dev/null | wc -l)
-log "quad GPU max start gpus=${NGPU}"
+if (( NGPU > 4 )); then
+  NGPU=4
+fi
+log "GPU max start gpus=${NGPU}"
 
 PIDS=()
 for gpu in 0 1 2 3; do
@@ -71,10 +74,14 @@ for lane_log in sorted(Path("/tmp").glob("pod_gpu_lane*.log")):
         best_path = candidate
         print(f"promote lane gpu={gpu} after_mean={mean_f:.1f}m", flush=True)
 
-shutil.copy(best_path, ROOT / "tcm_so2.pt")
-shutil.copy(best_path, ROOT / "tcm_so2_best.pt")
-shutil.copy(best_path, ROOT / "charybdis/models/tcm_so2.pt")
+for dst in (
+    ROOT / "tcm_so2.pt",
+    ROOT / "tcm_so2_best.pt",
+    Path("/workspace/Charybdis/charybdis/models/tcm_so2.pt"),
+):
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(best_path, dst)
 print(f"saved models/tcm_so2.pt from {best_path.name}", flush=True)
 PY
 
-log "QUAD_GPU_MAX_COMPLETE"
+log "GPU_MAX_COMPLETE"

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "hormuz",
+    "label": "Strait of Hormuz (channel)",
+    "lat_min": 26.55,
+    "lat_max": 26.95,
+    "lon_min": 56.45,
+    "lon_max": 57.05,
+    "tier": "engineering"
+  },
+  {
+    "id": "black_sea_crimea",
+    "label": "Black Sea south of Crimea",
+    "lat_min": 44.35,
+    "lat_max": 44.95,
+    "lon_min": 33.85,
+    "lon_max": 34.65,
+    "tier": "engineering"
+  },
+  {
+    "id": "baltic_kaliningrad",
+    "label": "Baltic open water (off Kaliningrad)",
+    "lat_min": 55.05,
+    "lat_max": 55.45,
+    "lon_min": 19.85,
+    "lon_max": 20.35,
+    "tier": "engineering"
+  },
+  {
+    "id": "barents_murmansk",
+    "label": "Barents Sea (off Murmansk)",
+    "lat_min": 69.85,
+    "lat_max": 70.45,
+    "lon_min": 21.0,
+    "lon_max": 22.5,
+    "tier": "engineering"
+  },
+  {
+    "id": "taiwan_strait",
+    "label": "Taiwan Strait (mid-channel)",
+    "lat_min": 24.25,
+    "lat_max": 24.95,
+    "lon_min": 119.85,
+    "lon_max": 120.65,
+    "tier": "engineering"
+  },
+  {
+    "id": "south_china_sea",
+    "label": "South China Sea (open ocean patch)",
+    "lat_min": 9.5,
+    "lat_max": 11.0,
+    "lon_min": 113.5,
+    "lon_max": 115.0,
+    "tier": "engineering"
+  },
+  {
+    "id": "red_sea_bab",
+    "label": "Red Sea (off Bab el-Mandeb)",
+    "lat_min": 12.85,
+    "lat_max": 13.45,
+    "lon_min": 43.25,
+    "lon_max": 43.95,
+    "tier": "engineering"
+  },
+  {
+    "id": "eastern_med",
+    "label": "Eastern Med (off Levant)",
+    "lat_min": 34.25,
+    "lat_max": 34.95,
+    "lon_min": 34.85,
+    "lon_max": 35.65,
+    "tier": "engineering"
+  }
+]

@@ -114,9 +114,15 @@ inventories completed artifacts.
 Deterministic packet-log replay is available under `charybdis.evaluation` for
 integrator verification without hardware.
 
+Optional remote GPU workflows add parallel CPU validation during matcher
+retraining, integration-grade NOAA highres characterization, regional GEBCO
+characterization, and completion scoring documented in
+[`REMOTE_VALIDATION.md`](REMOTE_VALIDATION.md).
+
 The release tier is blocking for all declared synthetic gates, including the
 GPS-reacquisition-jump bound. The GEBCO phase uses a real map but synthetic
-positions and observations.
+positions and observations. Coarse hot-zone tiles use engineering-tier gates
+scaled to map resolution.
 
 This evidence does not provide hardware-in-the-loop results, field or sea-trial
 data, an independent implementation, operational acceptance, or certification.

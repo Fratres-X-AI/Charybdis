@@ -93,4 +93,5 @@ contract and no known silent failure path in covered scenarios.
 
 Promotion is an API and evidence decision, not a claim of operational readiness.
 Detailed labels are in [`MATURITY.md`](MATURITY.md); reproducible commands and
-limitations are in [`VALIDATION.md`](VALIDATION.md).
+limitations are in [`VALIDATION.md`](VALIDATION.md); GPU pod operations are in
+[`RUNPOD.md`](RUNPOD.md).

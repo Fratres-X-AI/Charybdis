@@ -90,6 +90,7 @@ See `[examples/terrain_profile_matching.py](../examples/terrain_profile_matching
   recommended adapter → navigator → command handoff structure.
 - Read `[docs/PRODUCTION_INTEGRATION.md](PRODUCTION_INTEGRATION.md)` before
   connecting real logs or hardware.
-- Read `[docs/VALIDATION.md](VALIDATION.md)` for CI, RunPod, and Phase 2
+- Read `[docs/VALIDATION.md](VALIDATION.md)` for CI, RunPod Phase 2, and
   validation commands.
+- Read `[docs/RUNPOD.md](RUNPOD.md)` for GPU pod training and the green gate.
 

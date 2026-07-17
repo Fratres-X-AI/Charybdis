@@ -86,6 +86,9 @@ navigation-certified or sea-trial-validated software. See
 [`../docs/VALIDATION.md`](../docs/VALIDATION.md) for exact commands, confidence
 gates, artifacts, and limitations.
 
+For GPU NN retraining and pod validation workflows, see
+[`../docs/RUNPOD.md`](../docs/RUNPOD.md).
+
 ## Development checks
 
 ```bash

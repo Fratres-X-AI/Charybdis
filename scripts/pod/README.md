@@ -1,32 +1,31 @@
-# RunPod / ephemeral GPU helpers
+# Remote validation helpers
 
-These scripts are **operational tooling**, not the product API.
+Scripts for ephemeral cloud GPU instances. Not part of the installable package.
+Run from Git Bash on the mission-control host.
 
-- Prefer product scripts in `scripts/` (`stress_run.py`, `pmf_sweep.py`, `mc_real_region.py`, …).
-- Hard rule: max **31** workers for standalone MC; never nest pools under `pytest -n`.
-- Paths often assume `/workspace/Charybdis` on RunPod images.
+Full guide: [`docs/REMOTE_VALIDATION.md`](../../docs/REMOTE_VALIDATION.md)
 
-See `docs/MATURITY.md` (CI / pod policy), `docs/KNOWN_LIMITS.md`, and `docs/MISSION.md`.
-
-## Bronze / A100 helpers
+## Release verification (no GPU)
 
 ```bash
-bash scripts/pod/launch_bronze_military.sh   # full Phase 2 eng+release
-bash scripts/pod/launch_bronze_beach.sh      # beach pytest + eng matrix
-bash scripts/pod/poll_bronze.sh
-bash scripts/pod/pull_pod_bronze.sh
+bash scripts/pod/verify_release_cpu.sh
 ```
 
-
-## Finish today (RunPod)
+## Optional GPU retraining
 
 ```bash
-cd /workspace
-git clone https://github.com/Fratres-X-AI/Charybdis.git   # or git pull
-cd Charybdis
-bash scripts/pod/pod_today.sh              # synthetic MC + stress + full pytest
-bash scripts/pod/pod_today.sh /path/tile.npz # same, on real bathy tile
+# Edit scripts/pod/pod_env.sh first
+bash scripts/pod/launch_gpu_train.sh
+bash scripts/pod/kick_saturate_h200.sh
+bash scripts/pod/go_monitor_pipeline.sh
+bash scripts/pod/pod_pipeline_green.sh
 ```
 
-Log: `pod_today.log`. Required gates: Phase 1–3 green; Phase 4 documents CEP.  
-Optional: `TODAY_TRAIN=1 bash scripts/pod/pod_today.sh` for GPU NN retrain.
+## Phase 2 baseline
+
+```bash
+bash scripts/pod/pod_hybrid_phase2.sh
+```
+
+Internal script names under `scripts/pod/` are operational only and are not
+referenced in release documentation.

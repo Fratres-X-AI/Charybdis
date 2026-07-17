@@ -6,7 +6,14 @@ ssh -o StrictHostKeyChecking=no -p "$POD_PORT" -i "$POD_KEY" "$POD_HOST" <<'REMO
 cd /workspace/Charybdis/models 2>/dev/null || exit 1
 echo "=== $(date -u +%H:%M:%SZ) ==="
 ls -lh tcm_so2*.pt 2>/dev/null | tail -10
-for g in 0 1 2 3; do
+NGPU=$(nvidia-smi -L 2>/dev/null | wc -l)
+if ! [[ "$NGPU" =~ ^[0-9]+$ ]] || (( NGPU < 1 )); then
+  NGPU=4
+fi
+if (( NGPU > 4 )); then
+  NGPU=4
+fi
+for ((g=0; g<NGPU; g++)); do
   echo -n "gpu${g}: "
   grep -E 'PASS 5/5|FINAL|lane complete|new_best' /tmp/pod_gpu_lane${g}.log 2>/dev/null | tail -2 || echo idle
 done

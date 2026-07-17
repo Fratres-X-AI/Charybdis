@@ -417,3 +417,16 @@ settings reduce, but do not prove the absence of all runtime oversubscription.
 Any reported result must identify the artifact directory, source revision,
 tier, scenario or tile, seeds, run counts, worker count, code modifications,
 and these limitations.
+
+## Remote GPU validation (optional)
+
+For optional NN matcher retraining on cloud GPUs, see
+[`REMOTE_VALIDATION.md`](REMOTE_VALIDATION.md). Release-tier CPU gates do not
+require additional GPU spend. Verify a local pull with:
+
+```bash
+bash scripts/pod/verify_release_cpu.sh
+```
+
+An optional full profile also checks GPU training completion and regional GEBCO
+characterization when a remote instance is active.

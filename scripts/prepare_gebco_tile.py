@@ -20,6 +20,19 @@ DEFAULT_URL = (
 EARTH_RADIUS_M = 6_371_000.0
 
 
+def gebco_erddap_url(
+    lat_min: float,
+    lat_max: float,
+    lon_min: float,
+    lon_max: float,
+) -> str:
+    """Build a NOAA ERDDAP subset URL for GEBCO_2020."""
+    return (
+        "https://coastwatch.pfeg.noaa.gov/erddap/griddap/GEBCO_2020.nc"
+        f"?elevation%5B({lat_min}):1:({lat_max})%5D%5B({lon_min}):1:({lon_max})%5D"
+    )
+
+
 def main() -> int:
     """Fetch, project, and save one provenance-tracked bathymetry tile."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -32,7 +45,20 @@ def main() -> int:
         "--download",
         default="artifacts/validation/real_bathymetry/gebco_subset.nc",
     )
+    parser.add_argument("--lat-min", type=float, default=None)
+    parser.add_argument("--lat-max", type=float, default=None)
+    parser.add_argument("--lon-min", type=float, default=None)
+    parser.add_argument("--lon-max", type=float, default=None)
+    parser.add_argument("--min-underwater-fraction", type=float, default=0.95)
     args = parser.parse_args()
+
+    if all(
+        v is not None
+        for v in (args.lat_min, args.lat_max, args.lon_min, args.lon_max)
+    ):
+        args.url = gebco_erddap_url(
+            args.lat_min, args.lat_max, args.lon_min, args.lon_max
+        )
 
     destination = Path(args.output)
     download = Path(args.download)
@@ -74,8 +100,12 @@ def main() -> int:
         np.column_stack((grid_y.ravel(), grid_x.ravel()))
     ).reshape(grid_x.shape)
     depth_m = -projected_elevation
-    if float(np.mean(depth_m > 0.0)) < 0.95:
-        raise ValueError("selected GEBCO tile is not predominantly underwater")
+    underwater_fraction = float(np.mean(depth_m > 0.0))
+    if underwater_fraction < args.min_underwater_fraction:
+        raise ValueError(
+            "selected GEBCO tile is not predominantly underwater: "
+            f"{underwater_fraction:.3f} < {args.min_underwater_fraction:.3f}"
+        )
 
     extent_m = np.array(
         [0.0, projected_x[-1], 0.0, projected_y[-1]],

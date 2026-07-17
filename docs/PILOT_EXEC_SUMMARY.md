@@ -25,10 +25,15 @@ See `docs/STABLE_API.md` for the full contract.
 
 | Gate | Result | Notes |
 |------|--------|-------|
-| CI (`cc4321b`) | PASS | Lint, types, architecture, tests |
+| CI (`main`) | PASS | Lint, types, architecture, tests |
 | Integration grade | PASS | Harbor 7/7 + deep 7/7 @ 64 runs |
 | Release grade | PASS | Harbor 7/7 + deep 7/7 @ 256 runs |
-| High-res bathymetry | PASS | NOAA P080 @ ~10.3 m, 253/256 accepted, CEP95 12.15 m |
+| Holdout matrices | PASS | Harbor + deep 7/7 @ 256 runs |
+| Mission engineering | PASS | 6/6 @ 256 runs |
+| High-res bathymetry | PASS | NOAA P080 @ ~10.3 m, CEP95 **9.78 m**, 256/256 accepted |
+| NN SO(2) matcher | Research | Promoted `tcm_so2.pt`; pod retrain improves hard-eval tail |
+
+See [`KNOWN_LIMITS.md`](KNOWN_LIMITS.md) for the current baseline SHA and artifact paths.
 
 ## What this is NOT
 

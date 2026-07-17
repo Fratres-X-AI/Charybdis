@@ -36,18 +36,20 @@ sensor packet policy, health handoff, and required external supervision.
 
 | Field | Value |
 |---|---|
-| Git SHA | `d960562` |
-| CI | PASS (`29499556631`) |
-| Mission matrix | 6/6 PASS at 256 runs |
-| Holdout harbor release | 7/7 PASS at 256 runs |
-| Holdout deep release | 7/7 PASS at 256 runs |
-| Highres NOAA | PASS; CEP95 ~9.78 m |
+| Git SHA | `df01730` (`main`) |
+| CI | PASS on `main` — see GitHub Actions |
+| Mission matrix | 6/6 PASS @ 256 runs |
+| Holdout harbor release | 7/7 PASS @ 256 runs |
+| Holdout deep release | 7/7 PASS @ 256 runs |
+| Harbor + deep release | 7/7 PASS @ 256 runs each |
+| Highres NOAA Monterey | PASS; CEP95 **9.78 m**; 256/256 accepted |
+| NN matcher (SO(2)) | `models/tcm_so2.pt` (A100 baseline; optional retrain) |
+| Validation pull | `artifacts/pod_h200_final_20260717T143729Z` |
 | Stable API | `docs/STABLE_API.md` |
 | Replay harness | `charybdis.evaluation.packet_replay`, schema version `1` |
-| Promoted matcher | `models/tcm_so2.pt` (A100 pass 5, ~66 m after_mean hard eval) |
-| L40S stamp | `artifacts/pod_l40s_pull_20260714T180953Z` |
-| A100 stamp | `20260714T132210Z-ad7fa3e` |
+| RunPod ops | `docs/REMOTE_VALIDATION.md` |
+| Release CPU verify | `bash scripts/pod/verify_release_cpu.sh` |
 
-Artifact trees with `SHA256SUMS` or pull manifests live under
-`artifacts/pod_*_pull_20260714*/` and
-`artifacts/pod_final_pull_20260716T122643Z/`.
+Artifact trees with `SHA256SUMS` or pull manifests live under `artifacts/pod_*`.
+Do not commit large validation trees or pod logs to git unless a maintainer
+requests them.
