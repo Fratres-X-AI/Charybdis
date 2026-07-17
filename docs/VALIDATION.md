@@ -144,6 +144,10 @@ python scripts/hybrid_validate_matrix.py \
 first `N` seeds, so the 64 engineering seeds are a subset of the 256 release
 seeds; the tiers are not statistically independent.
 
+`validation/seeds_holdout_v1.txt` is the frozen holdout set introduced after
+the July 16 pod characterization. It is disjoint from `seeds_v1` and is reserved
+for post-tuning confirmation runs, not parameter selection.
+
 Both tiers run these seven named configurations:
 
 - `harbor_nominal` — the default surface, dive, submerged patrol, and
@@ -395,7 +399,8 @@ settings reduce, but do not prove the absence of all runtime oversubscription.
 - Confidence bounds quantify sampling uncertainty within the fixed seed set;
   they do not make the seed set or modeled faults representative of deployment.
 - The engineering and release tiers share seeds, models, implementation, and
-  gates. There is no independent holdout set or external reference estimator.
+  gates. The frozen holdout seed set provides a post-tuning regression check,
+  but it is still synthetic and does not replace an external reference estimator.
 - The interval checks do not correct for multiple comparisons across scenarios
   and metrics.
 - Aggregate artifacts omit per-step trajectories and most per-run values,

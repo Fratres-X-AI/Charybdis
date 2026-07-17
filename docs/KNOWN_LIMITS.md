@@ -22,8 +22,9 @@ not operational deployment, certification, or safety assurance.
   outages, and outliers.
 - GEBCO characterization uses a real grid with **synthetic** positions and matcher
   observations.
-- Engineering (64 runs) and release (256 runs) tiers share seeds and implementation;
-  there is no independent holdout set.
+- Engineering (64 runs) and release (256 runs) tiers share seeds and implementation.
+  `validation/seeds_holdout_v1.txt` is a disjoint synthetic holdout set for
+  post-tuning confirmation, not field validation.
 - Wilson and bootstrap interval checks do not correct for multiple comparisons.
 
 ## Integrator responsibilities
@@ -35,11 +36,12 @@ sensor packet policy, health handoff, and required external supervision.
 
 | Field | Value |
 |---|---|
-| Git SHA | `164ea68` |
-| CI | PASS (`29357300247`) |
-| Harbor release | 7/7 PASS (CEP95 ~1.0–1.4 m) |
-| Deep release | 7/7 PASS (CEP95 ~1.1–1.3 m) |
-| Deep long blackout | PASS; CEP95 ~1.16 m in 512-run worst sweep |
+| Git SHA | `d960562` |
+| CI | PASS (`29499556631`) |
+| Mission matrix | 6/6 PASS at 256 runs |
+| Holdout harbor release | 7/7 PASS at 256 runs |
+| Holdout deep release | 7/7 PASS at 256 runs |
+| Highres NOAA | PASS; CEP95 ~9.78 m |
 | Stable API | `docs/STABLE_API.md` |
 | Replay harness | `charybdis.evaluation.packet_replay`, schema version `1` |
 | Promoted matcher | `models/tcm_so2.pt` (A100 pass 5, ~66 m after_mean hard eval) |
@@ -47,4 +49,5 @@ sensor packet policy, health handoff, and required external supervision.
 | A100 stamp | `20260714T132210Z-ad7fa3e` |
 
 Artifact trees with `SHA256SUMS` or pull manifests live under
-`artifacts/pod_*_pull_20260714*/`.
+`artifacts/pod_*_pull_20260714*/` and
+`artifacts/pod_final_pull_20260716T122643Z/`.
