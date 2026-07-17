@@ -1,0 +1,25 @@
+---
+description: Mandatory RunPod operating procedure for all agents
+alwaysApply: true
+---
+
+# RunPod Operations Are Strict
+
+When working with RunPod or any remote GPU pod, follow this procedure exactly.
+
+1. Use **Git Bash only** for pod operations. Do not use PowerShell for SSH, SCP, heredocs, inline remote commands, `source`, or paths with spaces.
+2. Use direct TCP SSH only when artifacts must move. Proxied SSH is not acceptable for SCP/SFTP.
+3. Before launching work, verify:
+   - `scripts/pod/pod_env.sh` has the current pod name, host, port, and key.
+   - `ssh ... 'echo OK; nvidia-smi -L'` succeeds.
+   - A real CUDA smoke test succeeds on the target GPU, not just `torch.cuda.is_available()`.
+4. For Blackwell GPUs, verify PyTorch supports the device with an actual CUDA op such as `Conv2d(...).cuda()(x)`. If it fails with `no kernel image`, install a compatible CUDA 12.8+ PyTorch build before training.
+5. Do not say a pod can be stopped unless all required completion gates are green **and** artifacts have been pulled locally.
+6. Required completion gates for full remote validation:
+   - GPU training lanes reached `FINAL` if GPU retraining is in scope.
+   - CPU validation matrices passed.
+   - High-resolution bathymetry validation passed.
+   - Any requested regional bathymetry characterization completed or was explicitly removed from scope.
+   - Final artifacts were pulled and their local path was reported.
+7. If a job is idle or failing, state the exact blocker and next corrective action. Do not imply progress from queued scripts, background monitors, or installed packages.
+8. Keep cost visible. If a high-cost GPU is not required, say so and prefer the cheapest viable path.
