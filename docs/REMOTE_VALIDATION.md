@@ -81,8 +81,8 @@ Use the cheapest GPU that satisfies the gate:
 
 ### Release CPU (no additional GPU cost)
 
-Synthetic and integration-grade CPU gates **already passed** on the July 2026
-pull (`artifacts/pod_h200_final_20260717T143729Z/`):
+Synthetic and integration-grade CPU gates are verified from retained validation
+artifacts outside the repository:
 
 - Mission engineering 6/6
 - Holdout harbor + deep 7/7
@@ -111,9 +111,9 @@ Dual-GPU runs train two lanes in parallel; single-GPU runs sequentially.
 **A100 80GB** or **L40S** is sufficient at lower batch sizes — H200 is not required.
 
 ```text
-launch_gpu_train.sh     → sync + round-1 training lanes
-kick_saturate_h200.sh     → parallel CPU validation + follow-on watcher
-go_monitor_pipeline.sh  → poll until completion gates pass, then pull
+launch_gpu_train.sh      → sync + round-1 training lanes
+run_remote_validation.sh → CPU validation, bathymetry characterization, follow-on checks
+go_monitor_pipeline.sh   → poll until completion gates pass, then pull
 ```
 
 ## Completion gates
@@ -132,7 +132,7 @@ Monitor until all gates pass:
 
 ```bash
 bash scripts/pod/launch_gpu_train.sh
-bash scripts/pod/kick_saturate_h200.sh
+bash scripts/pod/run_remote_validation.sh
 bash scripts/pod/go_monitor_pipeline.sh
 ```
 

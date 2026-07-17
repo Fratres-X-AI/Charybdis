@@ -4,37 +4,40 @@
 
 # Charybdis
 
-Hybrid-first navigation and patrol research for surface/submerged UUVs.
-Hardware-neutral sensor contracts, conservative 8-state fusion, bathymetric
-terrain aiding, navigation-health diagnostics, and waypoint guidance — with
-reproducible validation gates and an explicit production integration boundary.
+Hybrid navigation and terrain-aiding research for surface/submerged UUVs.
+Charybdis provides hardware-neutral sensor contracts, conservative state
+estimation, bathymetric terrain matching, navigation-health diagnostics, and
+waypoint guidance behind a small auditable Python API.
 
 Charybdis is research and simulation software. It is not certified vehicle
 software, a safety controller, or evidence of real-world mission validation.
 
-## Validation snapshot
+## What Is Finished
 
-Current `main` — see [`docs/VALIDATION.md`](docs/VALIDATION.md) and
-[`docs/KNOWN_LIMITS.md`](docs/KNOWN_LIMITS.md).
+The current release baseline has completed the software validation gates below.
+See [`docs/VALIDATION.md`](docs/VALIDATION.md) for exact commands and
+[`docs/KNOWN_LIMITS.md`](docs/KNOWN_LIMITS.md) for scope.
 
 | Gate | Result |
 |------|--------|
-| CI | PASS on `main` |
-| Mission engineering | PASS 6/6 @ 256 runs |
-| Holdout harbor + deep | PASS 7/7 each @ 256 runs |
-| Harbor + deep release | PASS 7/7 each @ 256 runs |
-| NOAA Monterey highres | PASS — CEP95 9.78 m, 256/256 accepted |
-| Promoted matcher | `models/tcm_so2.pt` |
+| Stable public API | Curated `charybdis` root exports only hybrid navigation primitives |
+| CI-quality checks | Lint, format, typing, tests, coverage, and wheel smoke checks |
+| Mission engineering matrix | PASS — 6/6 scenarios at 256 runs |
+| Harbor release matrix | PASS — 7/7 scenarios at 256 runs |
+| Deep-ocean release matrix | PASS — 7/7 scenarios at 256 runs |
+| Holdout harbor/deep matrices | PASS — 7/7 scenarios each on disjoint seeds |
+| High-resolution bathymetry | PASS — NOAA Monterey P080, 256/256 accepted, CEP95 9.78 m |
+| Replay harness | Deterministic packet replay with versioned artifacts |
 
-Release-tier CPU validation artifacts:
-`artifacts/pod_h200_final_20260717T143729Z/`. Verify locally:
+Verify the retained release artifact pull locally:
 
 ```bash
 bash scripts/pod/verify_release_cpu.sh
 ```
 
-Optional GPU matcher retraining is documented in [`docs/REMOTE_VALIDATION.md`](docs/REMOTE_VALIDATION.md).
-It is not required for the release CPU gates above.
+Optional remote GPU workflows are documented separately in
+[`docs/REMOTE_VALIDATION.md`](docs/REMOTE_VALIDATION.md). They are not required
+for the release gates listed above.
 
 ## Quick start
 
@@ -47,7 +50,15 @@ python examples/run_hybrid_patrol.py
 python examples/verify_pilot_replay.py
 ```
 
-## Hybrid-first public API
+## Stable Public API
+
+`import charybdis` exposes the supported hybrid API only:
+
+- `BathymetryMap`, `TerrainProfileMatcher`
+- `NavMode`, `SensorPacket`
+- `HybridNavState`, `HybridSensorFusion`
+- `HybridNavigator`, `HybridStepResult`
+- `PatrolExecutor`
 
 ```python
 from charybdis import (
@@ -66,7 +77,40 @@ from charybdis.hybrid import (
 )
 ```
 
-Contract: [`docs/STABLE_API.md`](docs/STABLE_API.md).
+`HybridNavigator.step()` is the primary integration point: it consumes one
+coherent `SensorPacket` and returns `HybridStepResult` with navigation state,
+diagnostics, and guidance. Contract: [`docs/STABLE_API.md`](docs/STABLE_API.md).
+
+## Architecture Boundary
+
+```text
+sensor/log adapters
+        |
+        v
+SensorPacket -> HybridSensorFusion -> HybridNavState
+                                          |
+                                          v
+                                    PatrolExecutor
+                                          |
+                                          v
+                                    PatrolCommand
+```
+
+Charybdis returns state and guidance. Integrators remain responsible for sensor
+drivers, timing, frame transforms, bathymetry provenance, mission supervision,
+collision avoidance, controls, actuators, and independent safety systems.
+
+## Repository Layout
+
+| Path | Purpose |
+|------|---------|
+| `charybdis/hybrid/` | Stable hybrid navigation and guidance path |
+| `charybdis/bathy.py` | Bathymetry map loading and contracts |
+| `charybdis/evaluation/` | Confidence bounds, scenario matrices, replay artifacts |
+| `examples/` | Deterministic public API examples |
+| `scripts/` | Validation, bathymetry preparation, and release tooling |
+| `scripts/pod/` | Operational remote validation helpers |
+| `docs/` | Architecture, validation, handoff, and operating guidance |
 
 ## Documentation
 
@@ -78,6 +122,15 @@ Contract: [`docs/STABLE_API.md`](docs/STABLE_API.md).
 | [`docs/REMOTE_VALIDATION.md`](docs/REMOTE_VALIDATION.md) | Optional cloud GPU workflows |
 | [`docs/INTEGRATION_HANDOFF.md`](docs/INTEGRATION_HANDOFF.md) | Pilot handoff bundle |
 | [`docs/KNOWN_LIMITS.md`](docs/KNOWN_LIMITS.md) | What PASS does not mean |
+| [`docs/PILOT_EXEC_SUMMARY.md`](docs/PILOT_EXEC_SUMMARY.md) | Executive-ready pilot summary |
+
+## Status Language
+
+Charybdis has completed the declared software validation gates for the current
+research baseline. That means the fixed-seed synthetic scenarios and high-res
+real-map characterization passed their documented checks. It does **not** mean
+field-proven, certified, navigation-grade, or deployment-ready without an
+integrator's hardware-in-the-loop and sea-trial evidence.
 
 ## License
 

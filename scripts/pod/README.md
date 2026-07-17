@@ -16,7 +16,7 @@ bash scripts/pod/verify_release_cpu.sh
 ```bash
 # Edit scripts/pod/pod_env.sh first
 bash scripts/pod/launch_gpu_train.sh
-bash scripts/pod/kick_saturate_h200.sh
+bash scripts/pod/run_remote_validation.sh
 bash scripts/pod/go_monitor_pipeline.sh
 bash scripts/pod/pod_pipeline_green.sh
 ```

@@ -1,8 +1,8 @@
 # Charybdis Pilot Integration — Executive Summary
 
 **Package:** Charybdis hybrid terrain-aware UUV navigation  
-**Preview tag:** `v0.1-integration-preview`  
-**Purpose:** Hardware-free evaluation of GPS-denied / submerged navigation aiding
+**Purpose:** Hardware-free evaluation of GPS-denied / submerged navigation aiding  
+**Audience:** UUV integrators evaluating packet-to-guidance navigation software
 
 ## What it is
 
@@ -25,15 +25,17 @@ See `docs/STABLE_API.md` for the full contract.
 
 | Gate | Result | Notes |
 |------|--------|-------|
-| CI (`main`) | PASS | Lint, types, architecture, tests |
+| CI (`main`) | PASS | Lint, typing, architecture, tests, packaging |
 | Integration grade | PASS | Harbor 7/7 + deep 7/7 @ 64 runs |
 | Release grade | PASS | Harbor 7/7 + deep 7/7 @ 256 runs |
 | Holdout matrices | PASS | Harbor + deep 7/7 @ 256 runs |
 | Mission engineering | PASS | 6/6 @ 256 runs |
 | High-res bathymetry | PASS | NOAA P080 @ ~10.3 m, CEP95 **9.78 m**, 256/256 accepted |
-| NN SO(2) matcher | Research | Promoted `tcm_so2.pt`; pod retrain improves hard-eval tail |
+| Replay harness | PASS | Deterministic packet replay for integrator smoke testing |
+| Terrain matcher baseline | Included | `models/tcm_so2.pt` |
 
-See [`KNOWN_LIMITS.md`](KNOWN_LIMITS.md) for the current baseline SHA and artifact paths.
+See [`VALIDATION.md`](VALIDATION.md) for reproducible commands and
+[`KNOWN_LIMITS.md`](KNOWN_LIMITS.md) for scope boundaries.
 
 ## What this is NOT
 

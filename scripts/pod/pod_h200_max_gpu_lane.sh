@@ -64,6 +64,27 @@ else:
     ]
 
 print(f"h200 lane={lane} device={torch.cuda.get_device_name(0)}", flush=True)
+import subprocess
+try:
+    mem_mib = int(
+        subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+            text=True,
+        ).strip().splitlines()[0]
+    )
+except Exception:
+    mem_mib = 32768
+if mem_mib >= 75000:
+    train_bs = 8192
+    infer_bs = 8192
+elif mem_mib >= 40000:
+    train_bs = 4096
+    infer_bs = 4096
+else:
+    train_bs = 2048
+    infer_bs = 2048
+print(f"vram_mib={mem_mib} train_bs={train_bs} infer_bs={infer_bs}", flush=True)
+passes = [(ep, ns, train_bs, nt, lr, seed) for ep, ns, _bs, nt, lr, seed in passes]
 best_score = 1e9
 best_pass = 0
 
@@ -91,7 +112,7 @@ for i, (ep, ns, bs, nt, lr, seed) in enumerate(passes, 1):
     model.cuda().eval()
     terrains = [Terrain.synthetic(SimConfig(seed=seed + j)) for j in range(nt)]
     rng = np.random.default_rng(seed + 9999)
-    hm = eval_hard(model, terrains, 350.0, "cuda", rng, n=32768, infer_batch=8192)
+    hm = eval_hard(model, terrains, 350.0, "cuda", rng, n=32768, infer_batch=infer_bs)
     score = hm["after_mean"] + 0.35 * hm["after_p95"]
     print(
         f"eval gpu={gpu} lane={lane} pass={i} after_mean={hm['after_mean']:.1f}m "
@@ -111,7 +132,7 @@ model.load_state_dict(state)
 model.cuda().eval()
 terrains = [Terrain.synthetic(SimConfig(seed=j)) for j in range(48)]
 rng = np.random.default_rng(42 + int(gpu))
-final = eval_hard(model, terrains, 350.0, "cuda", rng, n=65536, infer_batch=8192)
+final = eval_hard(model, terrains, 350.0, "cuda", rng, n=65536, infer_batch=infer_bs)
 print(f"H200 FINAL gpu={gpu} lane={lane} best_pass={best_pass} {final}", flush=True)
 PY
 
