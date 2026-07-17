@@ -6,7 +6,7 @@ package. Use **Git Bash** on the mission-control host.
 
 ## Prerequisites
 
-- SSH access to an active GPU instance (direct TCP port)
+- SSH access to an active GPU instance through **SSH over exposed TCP**
 - Repository checkout with baseline weights at `models/tcm_so2.pt`
 - Configure [`scripts/pod/pod_env.sh`](../scripts/pod/pod_env.sh):
 
@@ -16,6 +16,66 @@ export POD_HOST=root@<ip>
 export POD_PORT=<ssh_port>
 export POD_KEY="/c/Users/<you>/.ssh/id_ed25519"
 ```
+
+## RunPod SSH / TCP rules
+
+RunPod exposes two SSH modes:
+
+| Mode | Example | SCP/SFTP | Use for |
+|------|---------|----------|---------|
+| Basic SSH proxy | `ssh <pod-id>@ssh.runpod.io -i ~/.ssh/id_ed25519` | No | Emergency shell only |
+| SSH over exposed TCP | `ssh root@<public-ip> -p <external-port> -i ~/.ssh/id_ed25519` | Yes | All repo sync, artifact pull, Cursor Remote-SSH |
+
+Operational rules:
+
+- Use **Git Bash only** for all pod commands from Windows.
+- Do not use the proxied `ssh.runpod.io` command for workflows that need SCP/SFTP.
+- The pod must expose TCP port `22`, run `sshd`, and show a Direct TCP mapping such as `<ip>:<external-port> -> :22`.
+- Public IPs and external port mappings can change when a pod resets, especially on Community Cloud. Re-check the Connect tab and update `pod_env.sh` after every restart or migration.
+- HTTP proxy ports are for web services like Jupyter (`8888/http`), not SSH/SCP.
+- Direct TCP is for SSH and other raw TCP protocols. RunPod does not support UDP pod exposure.
+
+## GPU / PyTorch compatibility
+
+Before training, verify both inventory and a real CUDA operation:
+
+```bash
+python - <<'PY'
+import torch
+import torch.nn as nn
+print(torch.__version__, torch.version.cuda, torch.cuda.device_count())
+for i in range(torch.cuda.device_count()):
+    print(i, torch.cuda.get_device_name(i), torch.cuda.get_device_capability(i))
+    x = torch.randn(8, 1, 32, 32, device=f"cuda:{i}")
+    y = nn.Conv2d(1, 4, 3).to(f"cuda:{i}")(x)
+    torch.cuda.synchronize(i)
+    print("conv_ok", i, tuple(y.shape))
+PY
+```
+
+`torch.cuda.is_available()` is not enough. If this test fails, do not launch
+training.
+
+Blackwell GPUs (`RTX 50xx`, `RTX PRO 4500/6000`, `B200`) need a compatible
+CUDA 12.8+ PyTorch build. Prefer RunPod's official `PyTorch 2.8 + CUDA 12.8`
+template for Blackwell pods. The failure signature for an incompatible build is:
+
+```text
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+```
+
+## GPU selection policy
+
+Use the cheapest GPU that satisfies the gate:
+
+| Goal | Recommended path |
+|------|------------------|
+| Release CPU validation | No GPU required |
+| Small CUDA smoke / script debugging | Cheap 24GB GPU if compatible |
+| Optional SO(2) retrain | L40S, RTX 6000 Ada, or A100 with adjusted batch |
+| High-VRAM experiments | A100 80GB / H100 only if needed |
+| H200 | Only if explicitly requested or >100GB VRAM is truly required |
+| Blackwell cards | Use PyTorch 2.8 + CUDA 12.8 template before any training |
 
 ## Validation profiles
 

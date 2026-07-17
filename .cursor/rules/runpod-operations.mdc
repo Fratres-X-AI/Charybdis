@@ -8,18 +8,26 @@ alwaysApply: true
 When working with RunPod or any remote GPU pod, follow this procedure exactly.
 
 1. Use **Git Bash only** for pod operations. Do not use PowerShell for SSH, SCP, heredocs, inline remote commands, `source`, or paths with spaces.
-2. Use direct TCP SSH only when artifacts must move. Proxied SSH is not acceptable for SCP/SFTP.
-3. Before launching work, verify:
+2. RunPod has two SSH modes:
+   - **Basic SSH** goes through `ssh.runpod.io`. It is for quick shell access only and does **not** support SCP/SFTP.
+   - **SSH over exposed TCP** uses `root@<public-ip> -p <external-port>` and is required for SCP/SFTP, Cursor Remote-SSH, and artifact pulls.
+3. Only use direct TCP SSH for mission-control operations. The pod must expose TCP port `22`, have an SSH daemon running, and show a Direct TCP mapping such as `<ip>:<external-port> -> :22`.
+4. Record connection data in `scripts/pod/pod_env.sh`. Because the Windows key path contains a space, any direct shell command must quote `"$POD_KEY"` or use a copied key path without spaces.
+5. Before launching work, verify:
    - `scripts/pod/pod_env.sh` has the current pod name, host, port, and key.
    - `ssh ... 'echo OK; nvidia-smi -L'` succeeds.
    - A real CUDA smoke test succeeds on the target GPU, not just `torch.cuda.is_available()`.
-4. For Blackwell GPUs, verify PyTorch supports the device with an actual CUDA op such as `Conv2d(...).cuda()(x)`. If it fails with `no kernel image`, install a compatible CUDA 12.8+ PyTorch build before training.
-5. Do not say a pod can be stopped unless all required completion gates are green **and** artifacts have been pulled locally.
-6. Required completion gates for full remote validation:
+6. For Blackwell GPUs (RTX 50xx, RTX PRO 4500/6000, B200), use a CUDA 12.8+ PyTorch image/build such as RunPod's PyTorch 2.8 + CUDA 12.8 template. Verify with an actual op such as `Conv2d(...).cuda()(x)`. If it fails with `no kernel image`, fix PyTorch before training.
+7. Cost policy:
+   - Release CPU validation does not require GPU spend.
+   - For optional retraining, prefer the cheapest compatible GPU with enough VRAM.
+   - Avoid H200 unless the user explicitly asks for it or the workload truly needs 141GB VRAM.
+   - A100/L40S/RTX 6000 Ada are normally better cost/performance choices for this repo than H200.
+8. Do not say a pod can be stopped unless all required completion gates are green **and** artifacts have been pulled locally.
+9. Required completion gates for full remote validation:
    - GPU training lanes reached `FINAL` if GPU retraining is in scope.
    - CPU validation matrices passed.
    - High-resolution bathymetry validation passed.
    - Any requested regional bathymetry characterization completed or was explicitly removed from scope.
    - Final artifacts were pulled and their local path was reported.
-7. If a job is idle or failing, state the exact blocker and next corrective action. Do not imply progress from queued scripts, background monitors, or installed packages.
-8. Keep cost visible. If a high-cost GPU is not required, say so and prefer the cheapest viable path.
+10. If a job is idle or failing, state the exact blocker and next corrective action. Do not imply progress from queued scripts, background monitors, or installed packages.
