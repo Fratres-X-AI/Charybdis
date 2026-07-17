@@ -7,6 +7,7 @@ source "$SCRIPT_DIR/pod_env.sh"
 
 echo "=== HEAL H200 pod=${POD_NAME} ==="
 
+bash "$SCRIPT_DIR/ensure_pod_cuda.sh" || true
 bash "$SCRIPT_DIR/kick_saturate_h200.sh"
 
 tar -C "$LOCAL_ROOT" --no-same-owner --no-same-permissions -cf - \
@@ -48,10 +49,32 @@ if (( r1_done >= 2 )) && ! pgrep -f pod_h200_followon >/dev/null 2>&1; then
 fi
 
 if ! pgrep -f pod_cpu_elite_parallel >/dev/null 2>&1; then
-  cpu_root=$(ls -1d artifacts/validation/*/cpu_elite 2>/dev/null | tail -1 || true)
-  if [[ -z "$cpu_root" ]] || ! grep -q CPU_ELITE_COMPLETE /tmp/pod_cpu_elite.log 2>/dev/null; then
-    echo "[heal] cpu elite dead — relaunch"
-    nohup bash scripts/pod/pod_cpu_elite_parallel.sh > /tmp/pod_cpu_elite_stdout.log 2>&1 &
+  # Prefer any completed green cpu_elite tree — do not thrash re-runs inside a 2h window.
+  cpu_green=0
+  if python3 - <<'PY'
+import json
+from pathlib import Path
+jobs = ["mission_engineering","holdout_harbor","holdout_deep","harbor_release","deep_release"]
+for root in sorted(Path("artifacts/validation").glob("*/cpu_elite")):
+    ok = True
+    for job in jobs:
+        p = root / job / "matrix_summary.json"
+        if not p.is_file() or not json.loads(p.read_text()).get("passed"):
+            ok = False
+            break
+    if ok:
+        raise SystemExit(0)
+raise SystemExit(1)
+PY
+  then
+    cpu_green=1
+    echo "[heal] cpu elite already green — leave alone"
+  fi
+  if (( cpu_green == 0 )); then
+    if [[ ! -f /tmp/pod_cpu_elite.log ]] || ! grep -q CPU_ELITE_COMPLETE /tmp/pod_cpu_elite.log 2>/dev/null; then
+      echo "[heal] cpu elite incomplete — relaunch"
+      nohup bash scripts/pod/pod_cpu_elite_parallel.sh > /tmp/pod_cpu_elite_stdout.log 2>&1 &
+    fi
   fi
 fi
 

@@ -10,7 +10,10 @@ ts() { date -u +"%H:%M:%S"; }
 log() { echo "[$(ts)] $*" | tee -a "$LOG"; }
 
 cd "$REPO"
-source .venv/bin/activate
+if [[ -f .venv/bin/activate ]]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
 export PYTHONPATH=.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg
 

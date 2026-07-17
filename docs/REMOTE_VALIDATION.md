@@ -7,15 +7,19 @@ package. Use **Git Bash** on the mission-control host.
 ## Prerequisites
 
 - SSH access to an active GPU instance through **SSH over exposed TCP**
-- Repository checkout with baseline weights at `models/tcm_so2.pt`
-- Configure [`scripts/pod/pod_env.sh`](../scripts/pod/pod_env.sh):
+- Repository checkout with baseline / resume weights under `models/` or a prior artifact pull
+- Configure local credentials (gitignored):
 
 ```bash
+cp scripts/pod/pod_env.local.sh.example scripts/pod/pod_env.local.sh
+# edit:
 export POD_NAME=<instance_name>
 export POD_HOST=root@<ip>
 export POD_PORT=<ssh_port>
-export POD_KEY="/c/Users/<you>/.ssh/id_ed25519"
+export POD_KEY="${HOME}/.ssh/id_ed25519"
 ```
+
+`pod_env.sh` loads `pod_env.local.sh` automatically when present.
 
 ## RunPod SSH / TCP rules
 
@@ -104,17 +108,24 @@ Use `VALIDATION_PROFILE=release_cpu` when checking remote completion status
 VALIDATION_PROFILE=release_cpu bash scripts/pod/pod_pipeline_green.sh
 ```
 
-### Full GPU retrain (optional)
+### Full GPU retrain — 2× H200 SXM (one command)
 
-For NN SO(2) matcher retraining, any CUDA instance with **≥1 GPU** works.
-Dual-GPU runs train two lanes in parallel; single-GPU runs sequentially.
-**A100 80GB** or **L40S** is sufficient at lower batch sizes — H200 is not required.
+When you explicitly want the high-VRAM ladder (batch 8192, dual lanes):
 
-```text
-launch_gpu_train.sh      → sync + round-1 training lanes
-run_remote_validation.sh → CPU validation, bathymetry characterization, follow-on checks
-go_monitor_pipeline.sh   → poll until completion gates pass, then pull
+```bash
+# 1) Rent 2× H200 SXM (PyTorch CUDA 12.x, /workspace volume)
+# 2) Fill scripts/pod/pod_env.local.sh from Connect → SSH over exposed TCP
+# 3) From Git Bash:
+bash scripts/pod/go_h200_sxm.sh
 ```
+
+That entrypoint runs preflight → bootstrap → CUDA smoke → sync → resume
+checkpoints → round-1 + round-2 + CPU elite + hotzone → babysit until
+`pod_pipeline_green.sh` is green → final pull.
+
+For cheaper optional retrains (A100 / L40S), use the same scripts with adjusted
+batch sizing already present in the lane scripts; H200 is only required when
+you want the full 8192-batch ladder.
 
 ## Completion gates
 
@@ -128,12 +139,10 @@ Check status:
 bash scripts/pod/pod_pipeline_green.sh
 ```
 
-Monitor until all gates pass:
+Monitor until all gates pass (preferred — single command for 2× H200 SXM):
 
 ```bash
-bash scripts/pod/launch_gpu_train.sh
-bash scripts/pod/run_remote_validation.sh
-bash scripts/pod/go_monitor_pipeline.sh
+bash scripts/pod/go_h200_sxm.sh
 ```
 
 Incremental monitoring (5 min pulls):

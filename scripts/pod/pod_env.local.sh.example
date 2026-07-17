@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Copy to pod_env.local.sh and fill in Direct TCP SSH from the RunPod Connect tab.
+# Do NOT use ssh.runpod.io — SCP and babysit require exposed TCP -> :22.
+#
+#   cp scripts/pod/pod_env.local.sh.example scripts/pod/pod_env.local.sh
+#
+# Pod target: 2x H200 SXM, PyTorch CUDA 12.x template, volume mounted at /workspace
+export POD_NAME="your_pod_name"
+export POD_HOST="root@YOUR.PUBLIC.IP"
+export POD_PORT="12345"
+export POD_KEY="${HOME}/.ssh/id_ed25519"

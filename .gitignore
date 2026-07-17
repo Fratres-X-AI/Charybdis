@@ -19,3 +19,4 @@ models/_test*.pt
 models/*_pkg.pt
 mypy_out.txt
 phase1_pod.log
+scripts/pod/pod_env.local.sh

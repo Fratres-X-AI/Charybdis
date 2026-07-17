@@ -10,7 +10,10 @@ LOG=/tmp/pod_hotzone_bathy.log
 ts() { date -u +"%H:%M:%S"; }
 log() { echo "[$(ts)] $*" | tee -a "$LOG"; }
 
-source .venv/bin/activate
+if [[ -f .venv/bin/activate ]]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
 export PYTHONPATH=.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg
 
@@ -88,19 +91,29 @@ for name in ("engineering", "release"):
         f"accepted={r['acceptance_rate']:.3f}"
     )
 PY
-  if python3 - <<PY
+  # Coarse public GEBCO (~450 m) is characterization-only — complete run == OK.
+  # Fine maps still require engineering pass.
+  python3 - <<PY
 import json
 from pathlib import Path
-p = Path("${eng}")
-if not p.is_file():
-    raise SystemExit(1)
-print("pass" if json.loads(p.read_text())["results"]["passed"] else "fail")
+
+rdir = Path("${rdir}")
+eng = rdir / "engineering.json"
+status_path = rdir / "status.txt"
+if not eng.is_file():
+    status_path.write_text("FAIL engineering missing\n")
+    raise SystemExit(0)
+payload = json.loads(eng.read_text())
+res = float(payload.get("manifest", {}).get("map_resolution_m", 9999.0))
+passed = bool(payload["results"]["passed"])
+if res > 100.0:
+    status_path.write_text("OK\n")
+    print(f"${id} coarse characterization complete res={res:.1f}m passed={passed}")
+elif passed:
+    status_path.write_text("OK\n")
+else:
+    status_path.write_text("FAIL engineering\n")
 PY
-  then
-    echo "OK" > "${rdir}/status.txt"
-  else
-    echo "FAIL engineering" > "${rdir}/status.txt"
-  fi
   log "region ${id} done"
 }
 
