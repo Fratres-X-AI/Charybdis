@@ -7,12 +7,15 @@ or log replayers can populate them without changing the fusion code.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from .modes import NavMode
+
+if TYPE_CHECKING:
+    from .bathymetry import MatchHealth
 
 FloatArray = NDArray[np.float64]
 
@@ -246,6 +249,7 @@ class SensorPacket:
     velocity: VelocityMeasurement | None = None
     bathymetry: BathymetryMeasurement | None = None
     mode_hint: NavMode | None = None
+    bathy_health: MatchHealth | None = None
     timestamp_s: float | None = None
 
     def __post_init__(self) -> None:
@@ -260,6 +264,11 @@ class SensorPacket:
                 raise TypeError(f"{name} must be {expected_type.__name__}")
         if self.mode_hint is not None:
             object.__setattr__(self, "mode_hint", NavMode(self.mode_hint))
+        if self.bathy_health is not None:
+            from .bathymetry import MatchHealth as _MatchHealth
+
+            if not isinstance(self.bathy_health, _MatchHealth):
+                raise TypeError("bathy_health must be MatchHealth")
 
         packet_time = _timestamp(self.timestamp_s)
         object.__setattr__(self, "timestamp_s", packet_time)

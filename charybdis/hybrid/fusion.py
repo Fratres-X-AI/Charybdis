@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import NamedTuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from .bathymetry import MatchHealth
+from .frames import compensate_measurement_latency
 from .modes import ModeManager, ModeManagerConfig, NavMode
 from .sensors import (
     BathymetryMeasurement,
@@ -20,6 +23,14 @@ from .sensors import (
 )
 
 FloatArray = NDArray[np.float64]
+
+
+class NavDegradationLevel(StrEnum):
+    """Explicit navigation health tier for downstream autonomy."""
+
+    NOMINAL = "nominal"
+    DEGRADED = "degraded"
+    FAULT = "fault"
 
 
 @dataclass(frozen=True)
@@ -102,6 +113,9 @@ class FusionDiagnostics:
     total_rejections: int = 0
     recent_rejections: tuple[FusionRejection, ...] = ()
     aiding_sources: frozenset[str] = frozenset()
+    degradation_level: NavDegradationLevel = NavDegradationLevel.NOMINAL
+    bathy_confidence: float = 1.0
+    bathy_trusted: bool = True
 
 
 @dataclass(frozen=True)
@@ -180,6 +194,11 @@ class HybridNavState:
         """Return recently accepted aiding source names."""
         return self.diagnostics.aiding_sources
 
+    @property
+    def degradation_level(self) -> NavDegradationLevel:
+        """Return the current navigation degradation tier."""
+        return self.diagnostics.degradation_level
+
 
 class HybridSensorFusion:
     """Conservative 8D fusion for surface/submerged UUV navigation.
@@ -237,6 +256,10 @@ class HybridSensorFusion:
             maxlen=self.cfg.rejection_history_size
         )
         self._total_rejections = 0
+        self._bathy_confidence = 1.0
+        self._bathy_trusted = True
+        self._degradation_level = NavDegradationLevel.NOMINAL
+        self._consecutive_bathy_failures = 0
 
     @property
     def t(self) -> float:
@@ -282,8 +305,21 @@ class HybridSensorFusion:
         if packet.depth is not None:
             self.update_depth(packet.depth)
         if packet.bathymetry is not None and mode == NavMode.SUBMERGED:
-            if self.update_bathymetry(packet.bathymetry):
-                self._last_bathy_t = self._t
+            if packet.bathy_health is not None:
+                self._apply_bathy_health(packet.bathy_health)
+            if (
+                self._bathy_trusted
+                and self._degradation_level != NavDegradationLevel.FAULT
+            ):
+                if self.update_bathymetry(packet.bathymetry):
+                    self._last_bathy_t = self._t
+                    self._consecutive_bathy_failures = 0
+                else:
+                    self._consecutive_bathy_failures += 1
+            elif packet.bathymetry is not None:
+                self._consecutive_bathy_failures += 1
+        elif packet.bathy_health is not None:
+            self._apply_bathy_health(packet.bathy_health)
         if packet.gps is not None and mode == NavMode.SURFACE:
             if self.update_gps(packet.gps):
                 self._last_gps_t = self._t
@@ -334,8 +370,13 @@ class HybridSensorFusion:
         """Fuse a pressure/depth measurement; return whether it was accepted."""
         if not meas.quality.available or not np.isfinite(meas.depth_m):
             return False
+        value = float(meas.depth_m)
+        if meas.timestamp_s is not None:
+            lag = self._t - float(meas.timestamp_s)
+            if lag > 1e-9:
+                value += float(self._x[self.DEPTH_RATE]) * lag
         return self._update_linear(
-            np.array([float(meas.depth_m)]),
+            np.array([value]),
             meas.quality.apply(np.array([[float(meas.var)]])),
             [self.DEPTH],
             self.cfg.depth_gate_chi2,
@@ -346,8 +387,16 @@ class HybridSensorFusion:
         """Fuse GPS position and optional velocity; return acceptance status."""
         if not gps.quality.available:
             return False
+        pos = np.asarray(gps.pos, dtype=float)
+        if gps.timestamp_s is not None and float(gps.timestamp_s) < self._t - 1e-9:
+            pos = compensate_measurement_latency(
+                pos,
+                self._x[self.VEL],
+                measurement_time_s=float(gps.timestamp_s),
+                filter_time_s=self._t,
+            )
         ok_pos = self._update_linear(
-            gps.pos,
+            pos,
             gps.quality.apply(gps.pos_cov),
             [0, 1],
             self.cfg.gps_gate_chi2,
@@ -355,9 +404,17 @@ class HybridSensorFusion:
         )
         ok_vel = False
         if gps.vel is not None:
+            vel = np.asarray(gps.vel, dtype=float)
+            if gps.timestamp_s is not None and float(gps.timestamp_s) < self._t - 1e-9:
+                vel = compensate_measurement_latency(
+                    vel,
+                    np.zeros(2),
+                    measurement_time_s=float(gps.timestamp_s),
+                    filter_time_s=self._t,
+                )
             cov = gps.vel_cov if gps.vel_cov is not None else np.diag([0.15, 0.15]) ** 2
             ok_vel = self._update_linear(
-                gps.vel,
+                vel,
                 gps.quality.apply(cov),
                 [3, 4],
                 self.cfg.velocity_gate_chi2,
@@ -369,8 +426,16 @@ class HybridSensorFusion:
         """Fuse a DVL-style horizontal velocity measurement."""
         if not vel.quality.available:
             return False
+        velocity = np.asarray(vel.vel, dtype=float)
+        if vel.timestamp_s is not None and float(vel.timestamp_s) < self._t - 1e-9:
+            velocity = compensate_measurement_latency(
+                velocity,
+                np.zeros(2),
+                measurement_time_s=float(vel.timestamp_s),
+                filter_time_s=self._t,
+            )
         return self._update_linear(
-            vel.vel,
+            velocity,
             vel.quality.apply(vel.cov),
             [3, 4],
             self.cfg.velocity_gate_chi2,
@@ -382,6 +447,18 @@ class HybridSensorFusion:
         if not meas.quality.available:
             return False
         pos, cov = meas.as_position_fix()
+        if meas.timestamp_s is not None and float(meas.timestamp_s) < self._t - 1e-9:
+            pos = compensate_measurement_latency(
+                pos,
+                self._x[self.VEL],
+                measurement_time_s=float(meas.timestamp_s),
+                filter_time_s=self._t,
+            )
+        if self._degradation_level != NavDegradationLevel.NOMINAL:
+            cov = (
+                np.asarray(cov, dtype=float)
+                * (1.0 / max(self._bathy_confidence, 0.25)) ** 2
+            )
         return self._update_linear(
             pos,
             cov,
@@ -447,7 +524,25 @@ class HybridSensorFusion:
             and np.sqrt(max(np.linalg.eigvalsh(self._P[0:2, 0:2]).max(), 0.0))
             <= self.cfg.max_position_std_m
             and len(recent) <= self.cfg.max_recent_rejections
+            and self._degradation_level != NavDegradationLevel.FAULT
         )
+        if self._consecutive_bathy_failures >= 3:
+            self._degradation_level = NavDegradationLevel.DEGRADED
+        elif (
+            self._degradation_level == NavDegradationLevel.DEGRADED
+            and self._bathy_trusted
+            and self._consecutive_bathy_failures == 0
+            and len(recent) <= max(1, self.cfg.max_recent_rejections // 2)
+        ):
+            self._degradation_level = NavDegradationLevel.NOMINAL
+        if not healthy and self._degradation_level == NavDegradationLevel.NOMINAL:
+            self._degradation_level = NavDegradationLevel.DEGRADED
+        if (
+            not np.all(np.isfinite(self._x))
+            or np.sqrt(max(np.linalg.eigvalsh(self._P[0:2, 0:2]).max(), 0.0))
+            > self.cfg.max_position_std_m * 2.0
+        ):
+            self._degradation_level = NavDegradationLevel.FAULT
         return HybridNavState(
             pos=self._x[self.POS],
             vel=self._x[self.VEL],
@@ -463,6 +558,9 @@ class HybridSensorFusion:
                 total_rejections=self._total_rejections,
                 recent_rejections=recent,
                 aiding_sources=aiding,
+                degradation_level=self._degradation_level,
+                bathy_confidence=float(self._bathy_confidence),
+                bathy_trusted=bool(self._bathy_trusted),
             ),
         )
 
@@ -517,6 +615,12 @@ class HybridSensorFusion:
         ):
             raise ValueError("sensor packet timestamps must be monotonic")
         self._last_packet_timestamp_s = timestamp
+
+    def _apply_bathy_health(self, health: MatchHealth) -> None:
+        self._bathy_confidence = float(health.confidence)
+        self._bathy_trusted = bool(health.trusted)
+        if health.degraded:
+            self._degradation_level = NavDegradationLevel.DEGRADED
 
     def _record_rejection(self, source: str, nis: float, gate: float) -> None:
         self._total_rejections += 1

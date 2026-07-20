@@ -187,6 +187,55 @@ class MatchStatus(StrEnum):
     OUT_OF_BOUNDS = "out_of_bounds"
     HIGH_RESIDUAL = "high_residual"
     AMBIGUOUS = "ambiguous"
+    MAP_RESOLUTION_MISMATCH = "map_resolution_mismatch"
+    STALE_CHART = "stale_chart"
+    UNTRUSTED = "untrusted"
+
+
+@dataclass(frozen=True)
+class MatchHealth:
+    """Conservative terrain-match trust signal for fusion degradation."""
+
+    confidence: float
+    trusted: bool
+    consecutive_failures: int
+    degraded: bool
+
+    def __post_init__(self) -> None:
+        confidence = float(self.confidence)
+        if not np.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
+            raise ValueError("confidence must be finite and in [0, 1]")
+        failures = int(self.consecutive_failures)
+        if failures < 0:
+            raise ValueError("consecutive_failures must be non-negative")
+        if not isinstance(self.trusted, bool) or not isinstance(self.degraded, bool):
+            raise TypeError("trusted and degraded must be bool")
+
+
+@dataclass(frozen=True)
+class MatchHealthConfig:
+    """Thresholds for bathymetry trust and degraded-mode entry."""
+
+    min_confidence: float = 0.35
+    max_consecutive_failures: int = 3
+    confidence_decay: float = 0.18
+    confidence_recovery: float = 0.22
+    chart_coarser_than_obs_ratio: float = 2.0
+    stale_chart_relief_m: float = 1.5
+
+    def __post_init__(self) -> None:
+        for name in (
+            "min_confidence",
+            "confidence_decay",
+            "confidence_recovery",
+            "chart_coarser_than_obs_ratio",
+            "stale_chart_relief_m",
+        ):
+            value = float(getattr(self, name))
+            if not np.isfinite(value) or value <= 0.0:
+                raise ValueError(f"{name} must be finite and positive")
+        if self.max_consecutive_failures <= 0:
+            raise ValueError("max_consecutive_failures must be positive")
 
 
 @dataclass(frozen=True)
@@ -199,6 +248,7 @@ class BathymetryMatch:
     cost_margin: float | None = None
     vertical_bias_m: float | None = None
     candidates_evaluated: int = 0
+    health: MatchHealth | None = None
 
     @property
     def accepted(self) -> bool:
@@ -336,11 +386,148 @@ class TerrainProfileMatcher:
         )
 
 
+def estimate_profile_resolution_m(profile: BathymetryProfile) -> float:
+    """Estimate the mean spacing of profile samples in metres."""
+    offsets = cast(FloatArray, profile.offsets_xy_m)
+    if offsets.shape[0] < 2:
+        raise ValueError("profile requires at least two offsets")
+    distances = np.linalg.norm(offsets[:, None, :] - offsets[None, :, :], axis=2)
+    positive = distances[distances > 1e-9]
+    if positive.size == 0:
+        return 1.0
+    return float(np.median(positive))
+
+
+class TerrainMatchMonitor:
+    """Track terrain-match confidence and force conservative degraded mode."""
+
+    def __init__(
+        self,
+        *,
+        map_resolution_m: float,
+        cfg: MatchHealthConfig | None = None,
+        stale_chart_offset_m: tuple[float, float] = (0.0, 0.0),
+    ) -> None:
+        resolution = _positive(map_resolution_m, name="map_resolution_m")
+        offset = tuple(float(value) for value in stale_chart_offset_m)
+        if len(offset) != 2 or not np.all(np.isfinite(offset)):
+            raise ValueError("stale_chart_offset_m must contain two finite values")
+        self.map_resolution_m = resolution
+        self.cfg = cfg or MatchHealthConfig()
+        self.stale_chart_offset_m = offset
+        self.confidence = 1.0
+        self.consecutive_failures = 0
+
+    def assess(
+        self,
+        match: BathymetryMatch,
+        profile: BathymetryProfile,
+    ) -> BathymetryMatch:
+        """Attach health metadata and downgrade untrusted accepted matches."""
+        obs_resolution = estimate_profile_resolution_m(profile)
+        stale_offset = float(np.linalg.norm(self.stale_chart_offset_m))
+        if stale_offset >= self.cfg.stale_chart_relief_m:
+            health = self._health(trusted=False, degraded=True)
+            return BathymetryMatch(
+                MatchStatus.STALE_CHART,
+                measurement=None,
+                best_cost=match.best_cost,
+                cost_margin=match.cost_margin,
+                vertical_bias_m=match.vertical_bias_m,
+                candidates_evaluated=match.candidates_evaluated,
+                health=health,
+            )
+
+        if (
+            self.map_resolution_m
+            > obs_resolution * self.cfg.chart_coarser_than_obs_ratio
+        ):
+            health = self._health(trusted=False, degraded=True)
+            return BathymetryMatch(
+                MatchStatus.MAP_RESOLUTION_MISMATCH,
+                measurement=None,
+                best_cost=match.best_cost,
+                cost_margin=match.cost_margin,
+                vertical_bias_m=match.vertical_bias_m,
+                candidates_evaluated=match.candidates_evaluated,
+                health=health,
+            )
+
+        if match.accepted:
+            self.consecutive_failures = 0
+            self.confidence = min(
+                1.0,
+                self.confidence + self.cfg.confidence_recovery,
+            )
+            margin = match.cost_margin if match.cost_margin is not None else 0.0
+            cost_conf = float(np.exp(-max(match.best_cost or 0.0, 0.0) / 4.0))
+            margin_conf = float(np.tanh(max(margin, 0.0)))
+            relief_conf = float(np.tanh(profile.relief_m / 4.0))
+            self.confidence = min(
+                1.0,
+                0.5 * self.confidence
+                + 0.2 * cost_conf
+                + 0.15 * margin_conf
+                + 0.15 * relief_conf,
+            )
+            trusted = self.confidence >= self.cfg.min_confidence
+            degraded = not trusted
+            health = self._health(trusted=trusted, degraded=degraded)
+            if not trusted:
+                return BathymetryMatch(
+                    MatchStatus.UNTRUSTED,
+                    measurement=None,
+                    best_cost=match.best_cost,
+                    cost_margin=match.cost_margin,
+                    vertical_bias_m=match.vertical_bias_m,
+                    candidates_evaluated=match.candidates_evaluated,
+                    health=health,
+                )
+            return BathymetryMatch(
+                match.status,
+                measurement=match.measurement,
+                best_cost=match.best_cost,
+                cost_margin=match.cost_margin,
+                vertical_bias_m=match.vertical_bias_m,
+                candidates_evaluated=match.candidates_evaluated,
+                health=health,
+            )
+
+        self.consecutive_failures += 1
+        self.confidence = max(0.0, self.confidence - self.cfg.confidence_decay)
+        degraded = (
+            self.consecutive_failures >= self.cfg.max_consecutive_failures
+            or self.confidence < self.cfg.min_confidence
+        )
+        health = self._health(trusted=False, degraded=degraded)
+        return BathymetryMatch(
+            match.status,
+            measurement=None,
+            best_cost=match.best_cost,
+            cost_margin=match.cost_margin,
+            vertical_bias_m=match.vertical_bias_m,
+            candidates_evaluated=match.candidates_evaluated,
+            health=health,
+        )
+
+    def _health(self, *, trusted: bool, degraded: bool) -> MatchHealth:
+        return MatchHealth(
+            confidence=float(self.confidence),
+            trusted=bool(trusted),
+            consecutive_failures=int(self.consecutive_failures),
+            degraded=bool(degraded),
+        )
+
+
 __all__ = [
     "BathymetryMap",
     "BathymetryMatch",
     "BathymetryProfile",
+    "MatchHealth",
+    "MatchHealthConfig",
     "MatchStatus",
+    "TerrainMatchMonitor",
     "TerrainMatcherConfig",
     "TerrainProfileMatcher",
+    "estimate_profile_resolution_m",
 ]

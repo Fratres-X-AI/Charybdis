@@ -12,6 +12,7 @@ from ..hybrid.bathymetry import (
     BathymetryProfile,
     MatchStatus,
     TerrainMatcherConfig,
+    TerrainMatchMonitor,
     TerrainProfileMatcher,
 )
 from ..hybrid.fusion import HybridFusionConfig, HybridNavState, HybridSensorFusion
@@ -24,6 +25,7 @@ from ..hybrid.power import (
     init_power_state,
     step_power_budget,
 )
+from ..hybrid.sensor_plant import SensorPlant, SensorPlantConfig
 from ..hybrid.sensors import (
     DepthMeasurement,
     GpsMeasurement,
@@ -31,6 +33,7 @@ from ..hybrid.sensors import (
     SensorPacket,
     VelocityMeasurement,
 )
+from ..hybrid.vehicle import VehiclePlant, VehiclePlantConfig, VehicleState
 
 FloatArray = NDArray[np.float64]
 
@@ -131,6 +134,10 @@ class HybridDeepConfig:
     fusion: HybridFusionConfig = field(default_factory=_default_fusion_config)
     matcher: TerrainMatcherConfig = field(default_factory=_default_matcher_config)
     power: PowerBudgetConfig = field(default_factory=PowerBudgetConfig)
+    sensor_plant: SensorPlantConfig = field(default_factory=SensorPlantConfig)
+    vehicle_plant: VehiclePlantConfig = field(default_factory=VehiclePlantConfig)
+    chart_stale_offset_m: tuple[float, float] = (0.0, 0.0)
+    use_realistic_plant: bool = True
 
     def __post_init__(self) -> None:
         positive = {
@@ -183,6 +190,15 @@ class HybridDeepConfig:
             raise ValueError("bathy_outlier_steps must be non-negative")
         if not isinstance(self.power, PowerBudgetConfig):
             raise TypeError("power must be PowerBudgetConfig")
+        if not isinstance(self.sensor_plant, SensorPlantConfig):
+            raise TypeError("sensor_plant must be SensorPlantConfig")
+        if not isinstance(self.vehicle_plant, VehiclePlantConfig):
+            raise TypeError("vehicle_plant must be VehiclePlantConfig")
+        if not isinstance(self.use_realistic_plant, bool):
+            raise TypeError("use_realistic_plant must be bool")
+        offset = tuple(float(value) for value in self.chart_stale_offset_m)
+        if len(offset) != 2 or not np.all(np.isfinite(offset)):
+            raise ValueError("chart_stale_offset_m must contain two finite values")
 
 
 @dataclass(frozen=True)
@@ -204,6 +220,7 @@ class HybridDeepResult:
     final_state: HybridNavState
     bathymetry_map: BathymetryMap
     max_gps_reacquisition_jump_m: float = 0.0
+    bathy_degraded_steps: int = 0
     power_energy_frac: FloatArray | None = None
     power_rtb_triggered: bool = False
     power_energy_depleted: bool = False
@@ -235,6 +252,11 @@ class HybridDeepResult:
             "last_gps_t": self.final_state.last_gps_t,
             "last_bathy_t": self.final_state.last_bathy_t,
             "max_gps_reacquisition_jump_m": float(self.max_gps_reacquisition_jump_m),
+            "bathy_degraded_steps": int(self.bathy_degraded_steps),
+            "final_degradation_level": self.final_state.degradation_level.value,
+            "final_bathy_confidence": float(
+                self.final_state.diagnostics.bathy_confidence
+            ),
         }
         if self.power_energy_frac is not None:
             payload.update(
@@ -247,6 +269,23 @@ class HybridDeepResult:
                 }
             )
         return payload
+
+
+def build_navigation_chart_map(
+    truth_map: BathymetryMap,
+    stale_offset_m: tuple[float, float] = (0.0, 0.0),
+) -> BathymetryMap:
+    """Build the chart used by terrain matching, optionally stale vs truth."""
+    origin = truth_map.origin_xy_m
+    shifted = (
+        origin[0] - float(stale_offset_m[0]),
+        origin[1] - float(stale_offset_m[1]),
+    )
+    return BathymetryMap(
+        truth_map.depth_grid_m,
+        truth_map.resolution_m,
+        origin_xy_m=shifted,
+    )
 
 
 def build_synthetic_deep_map(seed: int = 202) -> BathymetryMap:
@@ -276,7 +315,38 @@ def run_hybrid_deep_simulation(
     cfg = cfg or HybridDeepConfig()
     rng = np.random.default_rng(cfg.seed)
     bathymetry_map = build_synthetic_deep_map()
-    matcher = TerrainProfileMatcher(bathymetry_map, cfg.matcher)
+    chart_map = build_navigation_chart_map(
+        bathymetry_map,
+        cfg.chart_stale_offset_m,
+    )
+    matcher = TerrainProfileMatcher(chart_map, cfg.matcher)
+    match_monitor = TerrainMatchMonitor(
+        map_resolution_m=chart_map.resolution_m,
+        stale_chart_offset_m=cfg.chart_stale_offset_m,
+    )
+    sensor_cfg = SensorPlantConfig(
+        imu_accel_noise_mps2=cfg.accel_noise_mps2,
+        depth_noise_m=cfg.depth_noise_m,
+        gps_noise_m=cfg.gps_noise_m,
+        gps_vel_noise_mps=cfg.gps_vel_noise_mps,
+        dvl_noise_mps=cfg.velocity_noise_mps,
+        seed=cfg.seed + 31,
+    )
+    sensor_plant = SensorPlant(sensor_cfg, rng=rng)
+    vehicle_cfg = VehiclePlantConfig(
+        depth_tau_s=cfg.depth_tau_s,
+        current_xy_mps=cfg.current_xy_mps,
+    )
+    truth_pos = np.asarray(cfg.route.waypoints[0].pos, dtype=float).copy()
+    vehicle = VehiclePlant(
+        VehicleState(
+            pos=truth_pos.copy(),
+            vel=np.zeros(2),
+            heading_rad=0.0,
+            depth_m=float(cfg.route.waypoints[0].depth_m),
+        ),
+        vehicle_cfg,
+    )
     patrol = PatrolExecutor(
         cfg.route,
         max_turn_rate_radps=np.deg2rad(90.0),
@@ -284,7 +354,6 @@ def run_hybrid_deep_simulation(
         hold_when_unhealthy=False,
     )
 
-    truth_pos = np.asarray(cfg.route.waypoints[0].pos, dtype=float).copy()
     initial_error = np.asarray(cfg.initial_pos_error_xy_m, dtype=float)
     fusion = HybridSensorFusion(
         pos0=truth_pos + initial_error,
@@ -306,6 +375,7 @@ def run_hybrid_deep_simulation(
 
     truth_vel = np.zeros(2)
     truth_depth = float(cfg.route.waypoints[0].depth_m)
+    truth_heading = 0.0
     last_vel = truth_vel.copy()
     truth_pos_history: list[FloatArray] = []
     est_pos_history: list[FloatArray] = []
@@ -316,6 +386,7 @@ def run_hybrid_deep_simulation(
     position_nees: list[float] = []
     depth_nees: list[float] = []
     match_statuses: list[MatchStatus | None] = []
+    bathy_degraded_steps = 0
     gps_reacquisition_jumps: list[float] = []
     had_gps_prev = False
     had_gps_ever = False
@@ -323,13 +394,25 @@ def run_hybrid_deep_simulation(
     power_history: list[float] = []
 
     for step in range(cfg.max_steps):
-        truth_pos, truth_vel, truth_depth = _propagate_truth(
-            truth_pos,
-            truth_vel,
-            truth_depth,
-            command,
-            cfg,
-        )
+        if cfg.use_realistic_plant:
+            vehicle_state = vehicle.step(command, cfg.dt)
+            truth_pos = vehicle_state.pos.copy()
+            truth_vel = vehicle_state.vel.copy()
+            truth_depth = vehicle_state.depth_m
+            truth_heading = vehicle_state.heading_rad
+        else:
+            truth_pos, truth_vel, truth_depth = _propagate_truth(
+                truth_pos,
+                truth_vel,
+                truth_depth,
+                command,
+                cfg,
+            )
+            truth_heading = float(
+                np.arctan2(command.desired_vel[1], command.desired_vel[0])
+                if np.linalg.norm(command.desired_vel) > 1e-9
+                else 0.0
+            )
         if power_state is not None:
             _update_power(
                 power_state,
@@ -347,12 +430,15 @@ def run_hybrid_deep_simulation(
             truth_pos,
             truth_vel,
             truth_depth,
+            truth_heading,
             acceleration,
             state,
             command,
             bathymetry_map,
             matcher,
+            match_monitor,
             cfg,
+            sensor_plant if cfg.use_realistic_plant else None,
             rng,
         )
         pos_before = state.pos.copy()
@@ -389,6 +475,8 @@ def run_hybrid_deep_simulation(
         depth_error = state.depth_m - truth_depth
         depth_nees.append(float(depth_error**2 / max(state.cov[2, 2], 1e-12)))
         match_statuses.append(match_status)
+        if packet.bathy_health is not None and packet.bathy_health.degraded:
+            bathy_degraded_steps += 1
         if command.route_complete:
             break
 
@@ -415,6 +503,7 @@ def run_hybrid_deep_simulation(
         final_state=state,
         bathymetry_map=bathymetry_map,
         max_gps_reacquisition_jump_m=max_gps_jump,
+        bathy_degraded_steps=bathy_degraded_steps,
         power_energy_frac=(
             np.asarray(power_history, dtype=np.float64) if power_history else None
         ),
@@ -513,12 +602,15 @@ def _make_packet(
     pos: FloatArray,
     vel: FloatArray,
     depth: float,
+    heading_rad: float,
     accel: FloatArray,
     prior_state: HybridNavState,
     command: PatrolCommand,
-    bathymetry_map: BathymetryMap,
+    truth_map: BathymetryMap,
     matcher: TerrainProfileMatcher,
+    match_monitor: TerrainMatchMonitor,
     cfg: HybridDeepConfig,
+    sensor_plant: SensorPlant | None,
     rng: np.random.Generator,
 ) -> tuple[SensorPacket, MatchStatus | None]:
     timestamp = (step + 1) * cfg.dt
@@ -527,20 +619,23 @@ def _make_packet(
         commanding_surface and depth <= cfg.fusion.mode.submerged_depth_m
     )
     submerged = depth >= cfg.fusion.mode.submerged_depth_m
-    altitude = _altitude_above_bottom(pos, depth, bathymetry_map)
+    altitude = _altitude_above_bottom(pos, depth, truth_map)
 
     gps = None
     gps_blocked = _in_window(step, cfg.gps_dropout_steps)
     if cfg.gps_dropout_submerged_only and surface:
         gps_blocked = False
     if surface and not gps_blocked:
-        gps = GpsMeasurement(
-            pos + rng.normal(0.0, cfg.gps_noise_m, size=2),
-            vel + rng.normal(0.0, cfg.gps_vel_noise_mps, size=2),
-            pos_cov=np.diag([cfg.gps_noise_m] * 2) ** 2,
-            vel_cov=np.diag([cfg.gps_vel_noise_mps] * 2) ** 2,
-            timestamp_s=timestamp,
-        )
+        if sensor_plant is not None:
+            gps = sensor_plant.gps(pos, vel, timestamp_s=timestamp)
+        else:
+            gps = GpsMeasurement(
+                pos + rng.normal(0.0, cfg.gps_noise_m, size=2),
+                vel + rng.normal(0.0, cfg.gps_vel_noise_mps, size=2),
+                pos_cov=np.diag([cfg.gps_noise_m] * 2) ** 2,
+                vel_cov=np.diag([cfg.gps_vel_noise_mps] * 2) ** 2,
+                timestamp_s=timestamp,
+            )
 
     velocity = None
     if (
@@ -548,21 +643,29 @@ def _make_packet(
         and _dvl_bottom_lock(altitude, cfg)
         and not _in_window(step, cfg.velocity_dropout_steps)
     ):
-        velocity = VelocityMeasurement(
-            vel + rng.normal(0.0, cfg.velocity_noise_mps, size=2),
-            cov=np.diag([cfg.velocity_noise_mps] * 2) ** 2,
-            timestamp_s=timestamp,
-        )
+        if sensor_plant is not None:
+            velocity = sensor_plant.dvl(
+                vel,
+                heading_rad,
+                timestamp_s=timestamp,
+            )
+        else:
+            velocity = VelocityMeasurement(
+                vel + rng.normal(0.0, cfg.velocity_noise_mps, size=2),
+                cov=np.diag([cfg.velocity_noise_mps] * 2) ** 2,
+                timestamp_s=timestamp,
+            )
 
     bathymetry = None
     match_status = None
+    bathy_health = None
     bathy_due = submerged and step % cfg.bathy_period_steps == 0
     if bathy_due and not _in_window(step, cfg.bathy_dropout_steps):
         profile_offsets = _profile_offsets()
-        sample_pos = _clamp_to_map(pos, bathymetry_map)
+        sample_pos = _clamp_to_map(pos, truth_map)
         query = sample_pos + profile_offsets
-        if bathymetry_map.contains(query):
-            profile_depths = bathymetry_map.sample(query)
+        if truth_map.contains(query):
+            profile_depths = truth_map.sample(query)
             profile_depths = profile_depths + rng.normal(
                 0.0,
                 cfg.bathy_profile_noise_m,
@@ -581,33 +684,43 @@ def _make_packet(
                 variance_m2=cfg.bathy_profile_noise_m**2,
                 timestamp_s=timestamp,
             )
-            match = matcher.match(
+            raw_match = matcher.match(
                 profile,
                 prior_pos=prior_state.pos,
                 prior_cov=prior_state.pos_cov,
             )
-            match_status = match.status
-            bathymetry = match.measurement
+            assessed = match_monitor.assess(raw_match, profile)
+            match_status = assessed.status
+            bathy_health = assessed.health
+            bathymetry = assessed.measurement
 
-    measured_depth = max(
-        depth + float(rng.normal(0.0, cfg.depth_noise_m)),
-        0.0,
-    )
+    if sensor_plant is not None:
+        imu = sensor_plant.imu(accel, dt=cfg.dt, timestamp_s=timestamp)
+        depth_meas = sensor_plant.depth(depth, dt=cfg.dt, timestamp_s=timestamp)
+    else:
+        measured_depth = max(
+            depth + float(rng.normal(0.0, cfg.depth_noise_m)),
+            0.0,
+        )
+        imu = ImuMeasurement(
+            accel + rng.normal(0.0, cfg.accel_noise_mps2, size=2),
+            dt=cfg.dt,
+            timestamp_s=timestamp,
+        )
+        depth_meas = DepthMeasurement(
+            measured_depth,
+            var=cfg.depth_noise_m**2,
+            timestamp_s=timestamp,
+        )
+
     return (
         SensorPacket(
-            imu=ImuMeasurement(
-                accel + rng.normal(0.0, cfg.accel_noise_mps2, size=2),
-                dt=cfg.dt,
-                timestamp_s=timestamp,
-            ),
+            imu=imu,
             gps=gps,
-            depth=DepthMeasurement(
-                measured_depth,
-                var=cfg.depth_noise_m**2,
-                timestamp_s=timestamp,
-            ),
+            depth=depth_meas,
             velocity=velocity,
             bathymetry=bathymetry,
+            bathy_health=bathy_health,
             mode_hint=command.target_mode if cfg.use_mode_hints else None,
             timestamp_s=timestamp,
         ),
@@ -628,6 +741,7 @@ def _in_window(step: int, window: tuple[int, int] | None) -> bool:
 __all__ = [
     "HybridDeepConfig",
     "HybridDeepResult",
+    "build_navigation_chart_map",
     "build_synthetic_deep_map",
     "run_hybrid_deep_simulation",
 ]

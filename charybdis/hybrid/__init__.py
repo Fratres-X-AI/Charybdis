@@ -11,14 +11,17 @@ from __future__ import annotations
 from .bathymetry import (
     BathymetryMap,
     BathymetryProfile,
+    MatchHealth,
     MatchStatus,
     TerrainMatcherConfig,
+    TerrainMatchMonitor,
     TerrainProfileMatcher,
 )
 from .fusion import (
     HybridFusionConfig,
     HybridNavState,
     HybridSensorFusion,
+    NavDegradationLevel,
 )
 from .modes import NavMode
 from .navigator import HybridNavigator, HybridStepResult
@@ -38,7 +41,10 @@ __all__ = [
     "NavMode",
     "BathymetryMap",
     "BathymetryProfile",
+    "MatchHealth",
     "MatchStatus",
+    "NavDegradationLevel",
+    "TerrainMatchMonitor",
     "TerrainMatcherConfig",
     "TerrainProfileMatcher",
     "SensorQuality",
