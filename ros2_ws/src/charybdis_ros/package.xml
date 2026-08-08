@@ -4,7 +4,7 @@
   <version>0.1.0</version>
   <description>ROS2 bridge for Charybdis UUV navigation simulation</description>
   <maintainer email="dev@local">Charybdis</maintainer>
-  <license>MIT</license>
+  <license>Proprietary</license>
   <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>

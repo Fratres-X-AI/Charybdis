@@ -4,6 +4,9 @@
 
 # Charybdis
 
+> **Distribution:** Private repository · proprietary license ([LICENSE](LICENSE)) ·
+> **Public API** below means the stable integration contract, not open-source distribution.
+
 Hybrid navigation and terrain-aiding research for surface/submerged UUVs.
 Charybdis provides hardware-neutral sensor contracts, conservative state
 estimation, bathymetric terrain matching, navigation-health diagnostics, and
