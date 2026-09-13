@@ -88,7 +88,7 @@ reproducing evidence from a checkout, not for import by production runtime code.
 
 Run local CI gates before integration changes. Run RunPod Phase 1 for package
 acceptance and Phase 2 when fusion, matcher, scenario, or validation behavior
-changes. See `[docs/VALIDATION.md](VALIDATION.md)` for exact commands and
+changes. See [`docs/VALIDATION.md`](VALIDATION.md) for exact commands and
 limitations.
 
 ## Deterministic log replay
