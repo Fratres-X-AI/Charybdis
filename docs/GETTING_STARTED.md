@@ -82,15 +82,15 @@ control allocation.
 
 Use `BathymetryMap`, `BathymetryProfile`, and `TerrainProfileMatcher` to create
 a quality-gated `BathymetryMeasurement`. Fuse only accepted terrain matches.
-See `[examples/terrain_profile_matching.py](../examples/terrain_profile_matching.py)`.
+See [`examples/terrain_profile_matching.py`](../examples/terrain_profile_matching.py).
 
 ## Next Steps
 
-- Run `[examples/adapter_pattern.py](../examples/adapter_pattern.py)` for the
+- Run [`examples/adapter_pattern.py`](../examples/adapter_pattern.py) for the
   recommended adapter → navigator → command handoff structure.
-- Read `[docs/PRODUCTION_INTEGRATION.md](PRODUCTION_INTEGRATION.md)` before
+- Read [`docs/PRODUCTION_INTEGRATION.md`](PRODUCTION_INTEGRATION.md) before
   connecting real logs or hardware.
-- Read `[docs/VALIDATION.md](VALIDATION.md)` for CI, RunPod Phase 2, and
+- Read [`docs/VALIDATION.md`](VALIDATION.md) for CI, RunPod Phase 2, and
   validation commands.
-- Read `[docs/RUNPOD.md](RUNPOD.md)` for GPU pod training and the green gate.
+- Read [`docs/REMOTE_VALIDATION.md`](REMOTE_VALIDATION.md) for GPU pod training and the green gate.
 

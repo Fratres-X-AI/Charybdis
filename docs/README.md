@@ -12,8 +12,8 @@
 | [PILOT_EXEC_SUMMARY.md](PILOT_EXEC_SUMMARY.md) | Executives | One-page pilot summary |
 | [PRODUCTION_INTEGRATION.md](PRODUCTION_INTEGRATION.md) | Integrators | Frames, health, supervision |
 | [KNOWN_LIMITS.md](KNOWN_LIMITS.md) | Everyone | What PASS does **not** mean |
-| [MATURITY.md](MATURITY.md) | Stable / beta / experimental labels |
-| [MISSION.md](MISSION.md) | Scope and non-goals |
+| [MATURITY.md](MATURITY.md) | Everyone | Stable / beta / experimental labels |
+| [MISSION.md](MISSION.md) | Everyone | Scope and non-goals |
 
 Examples: [`../examples/README.md`](../examples/README.md).
 

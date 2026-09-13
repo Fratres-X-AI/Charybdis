@@ -87,7 +87,7 @@ navigation-certified or sea-trial-validated software. See
 gates, artifacts, and limitations.
 
 For GPU NN retraining and pod validation workflows, see
-[`../docs/RUNPOD.md`](../docs/RUNPOD.md).
+[`../docs/REMOTE_VALIDATION.md`](../docs/REMOTE_VALIDATION.md).
 
 ## Development checks
 
