@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-cd "$(dirname "$0")/../.."
-chmod +x scripts/pod/*.sh
-exec bash scripts/pod/babysit_h200_elite.sh

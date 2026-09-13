@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-ssh -p 40077 -i ~/.ssh/id_ed25519 root@213.192.2.94 'grep harbor_nominal /tmp/pod_sprint.log; grep long_submerge /tmp/pod_sprint.log; grep gps_dvl_dropout /tmp/pod_sprint.log; grep sparse_outlier_bathymetry /tmp/pod_sprint.log; grep steady_current /tmp/pod_sprint.log; grep large_initial_error /tmp/pod_sprint.log; grep repeated_mode_transitions /tmp/pod_sprint.log; grep real_bathymetry /tmp/pod_sprint.log; grep "Phase 1 pod" /tmp/pod_sprint.log; grep "SPRINT COMPLETE" /tmp/pod_sprint.log'
