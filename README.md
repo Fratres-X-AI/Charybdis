@@ -4,7 +4,7 @@
 
 # Charybdis
 
-> **Distribution:** Private repository · proprietary license ([LICENSE](LICENSE)) ·
+> **Distribution:** Public repository Â· proprietary license ([LICENSE](LICENSE)) Â·
 > **Public API** below means the stable integration contract, not open-source distribution.
 
 Hybrid navigation and terrain-aiding research for surface/submerged UUVs.
@@ -25,11 +25,11 @@ See [`docs/VALIDATION.md`](docs/VALIDATION.md) for exact commands and
 |------|--------|
 | Stable public API | Curated `charybdis` root exports only hybrid navigation primitives |
 | CI-quality checks | Lint, format, typing, tests, coverage, and wheel smoke checks |
-| Mission engineering matrix | PASS — 6/6 scenarios at 256 runs |
-| Harbor release matrix | PASS — 7/7 scenarios at 256 runs |
-| Deep-ocean release matrix | PASS — 7/7 scenarios at 256 runs |
-| Holdout harbor/deep matrices | PASS — 7/7 scenarios each on disjoint seeds |
-| High-resolution bathymetry | PASS — NOAA Monterey P080, 256/256 accepted, CEP95 9.78 m |
+| Mission engineering matrix | PASS â€” 6/6 scenarios at 256 runs |
+| Harbor release matrix | PASS â€” 7/7 scenarios at 256 runs |
+| Deep-ocean release matrix | PASS â€” 7/7 scenarios at 256 runs |
+| Holdout harbor/deep matrices | PASS â€” 7/7 scenarios each on disjoint seeds |
+| High-resolution bathymetry | PASS â€” NOAA Monterey P080, 256/256 accepted, CEP95 9.78 m |
 | Replay harness | Deterministic packet replay with versioned artifacts |
 
 Verify the retained release artifact pull locally:
