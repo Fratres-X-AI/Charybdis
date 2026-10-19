@@ -39,7 +39,8 @@ formats in a privileged environment.
 
 ## Safety notice
 
-This repository is proprietary research and simulation software. It is not
+This repository is dual-licensed research and simulation software (see
+[`LICENSE`](LICENSE)). It is not
 certified vehicle software and must not be relied on as the sole navigation,
 control, collision-avoidance, or emergency system. A navigation-health flag or
 zero-velocity guidance command is not a complete safety mechanism.

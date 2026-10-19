@@ -1,8 +1,9 @@
 # Contributing
 
-Charybdis is proprietary and confidential. Contributions are accepted only
-from people authorized by Fratres-X-AI. Access to source code does not grant
-permission to use or distribute it; see [`LICENSE`](LICENSE).
+Charybdis is dual-licensed (MIT public tier + prime terms in
+[`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md)). Contributions are welcome via
+pull request; by contributing you agree your changes are licensed under the same
+MIT terms as [`LICENSE`](LICENSE) unless a separate written agreement says otherwise.
 
 ## Development setup
 

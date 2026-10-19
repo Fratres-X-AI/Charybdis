@@ -15,7 +15,7 @@ setup(
     maintainer="Charybdis",
     maintainer_email="dev@local",
     description="ROS2 bridge for Charybdis UUV navigation",
-    license="Proprietary",
+    license="MIT",
     entry_points={
         "console_scripts": [
             "nav_sim = charybdis_ros.nav_node:main",

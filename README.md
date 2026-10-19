@@ -1,11 +1,11 @@
-<p align="center">
+﻿<p align="center">
   <img src="docs/assets/charybdis-hero.png" alt="Charybdis hybrid UUV navigation" width="920">
 </p>
 
 # Charybdis
 
-> **Distribution:** Public repository · proprietary license ([LICENSE](LICENSE)) ·
-> **Public API** below means the stable integration contract, not open-source distribution.
+> **Distribution:** Public repository · dual license ([MIT + prime terms](LICENSE)) ·
+> **Public API** below is the stable integration contract for the open MIT tier.
 
 Hybrid navigation and terrain-aiding research for surface/submerged UUVs.
 Charybdis provides hardware-neutral sensor contracts, conservative state
@@ -137,4 +137,12 @@ integrator's hardware-in-the-loop and sea-trial evidence.
 
 ## License
 
-Proprietary and confidential. See [`LICENSE`](LICENSE).
+Dual-licensed:
+
+| Tier | Document |
+|------|----------|
+| **Public (MIT)** | [`LICENSE`](LICENSE) |
+| **Prime / Program** | [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md) |
+
+Research and simulation software — not certified vehicle software. See the Charybdis
+program notice in [`LICENSE`](LICENSE).
