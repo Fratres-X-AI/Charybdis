@@ -1,7 +1,9 @@
-"""Synthetic Digital Elevation Model (DEM) with bilinear query and gradient.
+"""Synthetic digital elevation model (DEM) with bilinear query and gradient.
 
-Represents the stored terrain map the interceptor carries on-board and the
-"real" ground it flies over. Elevation is a function of local ENU (x, y).
+Used by legacy terrain-aided navigation simulations and shared evaluation
+helpers. Elevation is a function of local ENU (x, y). The supported UUV
+product path is ``charybdis.hybrid`` with bathymetry maps, not this legacy
+altimeter-chain stack.
 """
 
 from __future__ import annotations

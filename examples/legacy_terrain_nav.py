@@ -1,4 +1,4 @@
-"""Use the maintained interceptor Navigator through its explicit legacy API."""
+"""Use the maintained legacy terrain-aided Navigator through ``charybdis.legacy``."""
 
 from __future__ import annotations
 

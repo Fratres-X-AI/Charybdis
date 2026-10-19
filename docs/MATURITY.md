@@ -63,8 +63,8 @@ parameters are research defaults, not field-calibrated values.
 
 ## Maintained legacy
 
-`charybdis.legacy` contains the interceptor `Navigator`, `NavEstimate`, TERCOM,
-EKF, particle filter, and point-mass filter. Shared interceptor support modules
+`charybdis.legacy` contains the legacy TAN `Navigator`, `NavEstimate`, TERCOM,
+EKF, particle filter, and point-mass filter. Shared legacy simulation support modules
 include `config`, `terrain`, `trajectory`, `imu`, `ins`, `action_envelope`,
 `pcrb`, and associated simulation/evaluation code.
 

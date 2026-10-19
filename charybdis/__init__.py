@@ -1,6 +1,6 @@
 """Stable hybrid UUV navigation API.
 
-Legacy interceptor and experimental research APIs require explicit subpackage
+Legacy terrain-aided navigation and experimental research APIs require explicit subpackage
 imports and are never loaded by importing :mod:`charybdis`.
 """
 

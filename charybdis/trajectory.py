@@ -1,4 +1,4 @@
-"""Truth trajectory generation for the interceptor.
+"""Truth trajectory generation for legacy terrain-aided navigation simulations.
 
 Produces a smooth, banking flight path (position, velocity, specific force,
 heading) over the terrain. This is ground-truth only; the navigator never

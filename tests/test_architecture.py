@@ -87,7 +87,7 @@ def test_examples_use_only_approved_charybdis_import_surfaces():
     }
     violations: list[str] = []
     for path in (ROOT / "examples").glob("*.py"):
-        if path.name == "legacy_interceptor.py":
+        if path.name == "legacy_terrain_nav.py":
             allowed_for_file = legacy_example_allowed
         elif path.name in {"run_deep_patrol.py", "run_mission_preview.py"}:
             allowed_for_file = deep_example_allowed

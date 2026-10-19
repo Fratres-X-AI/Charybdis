@@ -7,7 +7,7 @@ posterior is non-Gaussian and often multi-hypothesis. An EKF linearises the
 DEM about a single estimate and can lock onto the wrong local minimum when the
 prior error is large. A particle filter represents the full posterior with a
 weighted sample set and stays consistent through the ambiguity, resolving it as
-the vehicle flies over increasingly distinctive terrain.
+the vehicle crosses increasingly distinctive terrain.
 
 Particle state matches the EKF:  [px, py, vx, vy, bax, bay].
 IMU specific force drives prediction; the radar/baro terrain reading drives the

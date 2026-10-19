@@ -9,7 +9,7 @@ diagnostics, and waypoint guidance.
 
 Three boundaries are intentional:
 
-- `charybdis.legacy` preserves the interceptor TERCOM/EKF/PF/PMF stack.
+- `charybdis.legacy` preserves the legacy TERCOM/EKF/PF/PMF terrain-aided stack.
 - `charybdis.experimental` contains unstable opt-in research.
 - `console/` is paused application source and is not included in the wheel.
 
@@ -140,7 +140,7 @@ Shared modules remain outside the root API:
   validation artifact helpers.
 - `charybdis.bathy` loads or converts external bathymetry into package models.
 - `charybdis.config`, `terrain`, `trajectory`, `imu`, and `ins` support the
-  retained interceptor simulations.
+  retained legacy TAN simulations.
 
 Explicit imports keep application dependencies and research workflows visible:
 
@@ -152,7 +152,7 @@ from charybdis.simulation import HybridHarborConfig
 ## Legacy and experimental stacks
 
 The legacy stack has its own estimator state and sensor assumptions. Use it only
-for interceptor simulation, regression work, or maintained consumers:
+for legacy terrain-aided simulation, regression work, or maintained consumers:
 
 ```python
 from charybdis.config import SimConfig

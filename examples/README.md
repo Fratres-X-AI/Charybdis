@@ -64,11 +64,11 @@ The hold is a library behavior, not a complete safety or emergency system.
 ## Explicit legacy usage
 
 ```bash
-python examples/legacy_interceptor.py
+python examples/legacy_terrain_nav.py
 ```
 
-`legacy_interceptor.py` imports `Navigator` from `charybdis.legacy`, constructs
-the shared interceptor configuration and terrain explicitly, and runs one
+`legacy_terrain_nav.py` imports `Navigator` from `charybdis.legacy`, constructs
+the shared legacy simulation configuration and terrain explicitly, and runs one
 EKF/TRN cycle. This import path is retained for legacy simulation and
 comparison. New surface/submerged UUV work should use the hybrid API.
 

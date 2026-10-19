@@ -9,7 +9,7 @@ from dataclasses import dataclass
 class SimConfig:
     # --- Timing ---
     dt: float = 0.02  # IMU / propagation step [s] (50 Hz)
-    duration: float = 180.0  # total flight time [s]
+    duration: float = 180.0  # legacy simulation horizon [s]
     seed: int = 7
 
     # --- Terrain (local ENU grid, metres) ---
@@ -20,7 +20,7 @@ class SimConfig:
     # --- Truth trajectory ---
     start_xy: tuple[float, float] = (4_000.0, 4_000.0)
     cruise_speed: float = 230.0  # [m/s]
-    cruise_alt: float = 600.0  # height above mean terrain [m]
+    cruise_alt: float = 600.0  # legacy altimeter sim: height above terrain [m]
     heading0_deg: float = 38.0
 
     # --- IMU error model ---

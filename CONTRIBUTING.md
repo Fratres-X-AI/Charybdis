@@ -21,7 +21,7 @@ them.
 
 - New surface/submerged work belongs in `charybdis.hybrid`.
 - The package root exports only the curated hybrid API.
-- Legacy interceptor work must remain under `charybdis.legacy`.
+- Legacy terrain-aided navigation work must remain under `charybdis.legacy`.
 - Unstable NN, SLAM, and swarm work must remain under
   `charybdis.experimental`.
 - `charybdis.hybrid` must not depend on legacy, experimental, console, or

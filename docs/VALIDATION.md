@@ -318,7 +318,7 @@ python scripts/stress_run.py 64 \
   | tee "artifacts/validation/<RUN>/legacy_stress.log"
 ```
 
-This exercises retained interceptor stress cases using seeds 1 through 64 and
+This exercises retained legacy terrain-aided stress cases using seeds 1 through 64 and
 a hard-coded maximum of 31 workers. It is separate from the hybrid matrices and
 does not use `validation/seeds_v1.txt`.
 

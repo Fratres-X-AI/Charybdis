@@ -29,7 +29,7 @@ including terrain-profile matching, named synthetic harbor scenarios,
 confidence-bounded Monte Carlo gates, provenance-tracked real-map
 characterization, and auditable validation artifacts.
 
-The interceptor estimator stack in `charybdis.legacy` is maintained for
+The legacy terrain-aided estimator stack in `charybdis.legacy` is maintained for
 comparative research and existing internal use. It is not the architecture for
 new hybrid UUV work.
 

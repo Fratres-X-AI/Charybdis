@@ -1,7 +1,9 @@
-"""Public API for the maintained legacy interceptor navigation stack.
+"""Public API for the maintained legacy terrain-aided navigation (TAN) stack.
 
 New harbor UUV development should use :mod:`charybdis.hybrid`. These exports
-remain available for interceptor simulations and backward-compatible tooling.
+remain available for regression tests, Monte Carlo evaluation, and
+backward-compatible tooling only (synthetic altimeter-chain sim, not the UUV
+product path).
 """
 
 from __future__ import annotations
